@@ -37,8 +37,10 @@
                         <td>{{ twin.role }}</td>
                         <td>
                             <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
-                                <img src="@/assets/aml.png" style="height:25px; width:25px"/>
+                                <img src="@/assets/aml.png"/>
                             </router-link>
+                            <img src="@/assets/share.png" v-on:click="shareTwin(twin.address)" />
+                            <img src="@/assets/trash.png" v-on:click="removeRole(twin.address, twin.roleNo)" />
                         </td>
                     </tr>
                     <tr v-if="twins.length === 0">
@@ -63,6 +65,9 @@
     computed: {
       account () {
         return this.$store.state.user.address
+      },
+      contracts() {
+        return this.$store.state.contracts;
       }
     },
     data() {
@@ -97,13 +102,11 @@
                         .then(function (instance) {
                           return instance.getRole.call(self.user.address, element);
                         })
-                        .then(function (result) {
-                          roleNo = result;
-                          return vm.$utils.enum2String(Number(result));
-                        })
-                        .then(function (role) {
+                        .then(function (roleNo) {
+                          let role = vm.$utils.enum2String(Number(roleNo));
                           if (role !== null) {
                             let twin = {};
+                            twin.roleNo = roleNo;
                             twin.role = role;
                             twin.deviceName = "test";
                             $.getJSON("contracts/Specification.json", function (specificationContract) {
@@ -139,6 +142,108 @@
             });
         });
       },
+
+      async removeRole(twinAddress, role) {
+        let vm = this;
+        this.$swal.fire({
+          type: "warning",
+          title: "Do you really want to remove this device?",
+          showConfirmButton: true,
+          showCancelButton: true,
+          confirmButtonText: "yes",
+          cancelButtonText: "no"
+        })
+        .then(function (result) {
+          if (result.value) {
+            vm.contracts.Authorization.deployed()
+              .then(function (auth) {
+                return auth.removeRole.sendTransaction(vm.account, role, twinAddress, {
+                  from: vm.account
+                });
+              })
+              .then(function () {
+                this.twins = this.twins.filter(function(v){
+                  return v.address !== twinAddress;
+                });
+
+                vm.$swal.fire({
+                  type: "success",
+                  title: "You have successfully removed this device!",
+                  showConfirmButton: false,
+                  timer: 2000
+                });
+              })
+              .catch(function (err) {
+                alert(err.message);
+              });
+          }
+        });
+      },
+
+      async shareTwin(deviceAddress){
+        let self = this.$store.state;
+        let vm = this;
+        this.$swal({
+          title: "Share this device",
+          confirmButtonClass: "confirm-class",
+          cancelButtonClass: "cancel-class",
+          showCancelButton: true,
+          reverseButtons: true,
+          html:
+            "<p>You can allow another account to participate in the life cycle of this device. Specify the account and its role to grant it access.</p>" +
+            "</br>" +
+            "<h5>Address</h5>" +
+            '<input id="swal-input2" class="swal2-input">' +
+            "</br>" +
+            "<h5>Role</h5>" +
+            '<select id="swal-input1" class="swal2-input"> <option value="1">Manufacturer</option><option value="2">Owner</option><option value="3">Distributor</option><option value="4">Maintainer</option></select>'
+        }).then(
+          function (result) {
+            if (result.value) {
+              // function when confirm button clicked
+              let role = $("#swal-input1").val();
+              let address = $("#swal-input2").val();
+
+              self.contracts.Authorization.deployed()
+                .then(function (instance) {
+                  return instance.addRole.sendTransaction(
+                    address,
+                    Number(role),
+                    deviceAddress,
+                    {
+                      from: vm.account
+                    }
+                  );
+                })
+                .then(function (result) {
+                  vm.$swal.fire({
+                    type: "success",
+                    title: "Account has been successfully added.",
+                    showConfirmButton: false,
+                    timer: 2000
+                  });
+                })
+                .catch(function (err) {
+                  alert(err);
+                  vm.$swal.fire({
+                    type: "error",
+                    title: "Oops...",
+                    text: "Something went wrong!",
+                    footer:
+                      "Please check if the account address is correct and keep your privileges in mind!",
+                    showConfirmButton: false,
+                    timer: 6000
+                  });
+                });
+            }
+          },
+          function (dismiss) {
+            if (dismiss == "cancel") {
+              swal("Cancelled", "Device not shared!", "error");
+            }
+          }
+        );
+      }
     },
     beforeMount() {
       this.$store.dispatch('initContracts').then(() => {
@@ -151,5 +256,11 @@
 <style scoped>
     h3 {
         margin: 40px 0 0;
+    }
+    td img {
+        height:25px;
+        width:25px;
+        cursor: pointer;
+        margin-right: 10px;
     }
 </style>
