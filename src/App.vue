@@ -26,10 +26,18 @@
     <router-view/>
   </div>
 </template>
+<script>
+  export default {
+    computed: {
+      account() {
+        return this.$store.state.user.address
+      }
+    }
+  }
+</script>
+
 
 <style>
-#app {
-}
 
 @import'~bootstrap/dist/css/bootstrap.css';
 </style>

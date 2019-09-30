@@ -67,103 +67,83 @@
     },
     data() {
       return {
-        contracts: {},
-        addresses: {},
         twins: [],
-        RBAC: {
-          DEVICEAGENT: 0,
-          MANUFACTURER: 1,
-          OWNER: 2,
-          DISTRIBUTOR: 3,
-          MAINTAINER: 4
-        },
       }
     },
     methods: {
       async loadTwins() {
         let self = this.$store.state;
         let vm = this;
-        await self.contracts.Authorization.deployed()
-          .then(function (instanceA) {
-            return instanceA.deviceAgentAddress.call();
-          })
-          .then(function (deviceAgent) {
-            let isDeviceAgent = vm.account.toLowerCase() === deviceAgent.toLowerCase();
-            vm.$store.commit('setIsDeviceAgent', isDeviceAgent);
-            //after checking, all contracts are retrieved
-            self.contracts.ContractRegistry.deployed()
-              .then(function (instance1) {
-                return instance1.getContracts.call();
-              })
-              .then(function (contracts) {
-                //iteration through all elements
-                if (contracts.length > 0) {
-                  contracts.forEach(element => {
-                    console.log(element);
-                    //check role of user
-                    var roleNo;
-                    self.contracts.Authorization.deployed()
-                      .then(function (instance) {
-                        return instance.getRole.call(vm.account, element);
-                      })
-                      .then(function (result) {
-                        roleNo = result;
-                        console.log(result);
-                        return vm.enum2String(Number(result));
-                      })
-                      .then(function (role) {
-                        if (role !== null) {
-                          let twin = {};
-                          twin.role = role;
-                          $.getJSON("contracts/Specification.json", function (specificationContract) {
-                            // Instantiate a new truffle contract from the artifact
-                            self.contracts.SpecificationContract = TruffleContract(specificationContract);
-                            // Connect provider to interact with contract
-                            self.contracts.SpecificationContract.setProvider(self.web3Provider);
-                          }).then(function () {
-                            self.contracts.SpecificationContract.at(element).then(function (instance1) {
-                              instance1.deviceID.call(function (err, res) {
-                                twin.deviceId = res;
-                              });
-                              instance1.deviceName.call(function (err, res) {
-                                twin.deviceName = res;
-                              });
-                              console.log(twin.deviceName);
-                              twin.address = instance1.address;
+        return new Promise((resolve, reject) => {
+          self.contracts.Authorization.deployed()
+            .then(function (instanceA) {
+              return instanceA.deviceAgentAddress.call();
+            })
+            .then(function (deviceAgent) {
+              let isDeviceAgent = self.user.address.toLowerCase() === deviceAgent.toLowerCase();
+              vm.$store.commit('setIsDeviceAgent', isDeviceAgent);
+              //after checking, all contracts are retrieved
+              self.contracts.ContractRegistry.deployed()
+                .then(function (instance1) {
+                  return instance1.getContracts.call();
+                })
+                .then(function (contracts) {
+                  //iteration through all elements
+                  if (contracts.length > 0) {
+                    contracts.forEach(element => {
+                      //check role of user
+                      var roleNo;
+                      self.contracts.Authorization.deployed()
+                        .then(function (instance) {
+                          return instance.getRole.call(self.user.address, element);
+                        })
+                        .then(function (result) {
+                          roleNo = result;
+                          return vm.$utils.enum2String(Number(result));
+                        })
+                        .then(function (role) {
+                          if (role !== null) {
+                            let twin = {};
+                            twin.role = role;
+                            twin.deviceName = "test";
+                            $.getJSON("contracts/Specification.json", function (specificationContract) {
+                              // Instantiate a new truffle contract from the artifact
+                              self.contracts.SpecificationContract = TruffleContract(specificationContract);
+                              // Connect provider to interact with contract
+                              self.contracts.SpecificationContract.setProvider(self.web3Provider);
+                            })
+                            .then(function () {
+                              self.contracts.SpecificationContract.at(element).then(function (instance1) {
+                                twin.address = instance1.address;
+                                return Promise.all([
+                                    instance1.deviceID.call(function (err, res) {
+                                      twin.deviceId = res;
+                                    }),
+                                    instance1.deviceName.call(function (err, res) {
+                                      twin.deviceName = res;
+                                    })
+                                ]);
+                              }).then(function () {
+                                  vm.twins.push(twin);
+                                  resolve();
+                                });
                             });
-                          }).then(function() {
-                            vm.twins.push(twin);
-                          });
-
-                        }
-                      });
-                  });
-                }
-              })
-              .catch(function (error) {
-                alert(error);
-              })
-          });
+                          }
+                        });
+                    });
+                  }
+                })
+                .catch(function (error) {
+                  reject(error);
+                })
+            });
+        });
       },
-      enum2String(enumVal) {
-        switch (enumVal) {
-          case this.RBAC.DEVICEAGENT:
-            return "Device Agent";
-          case this.RBAC.MANUFACTURER:
-            return "Manufacturer";
-          case this.RBAC.OWNER:
-            return "Owner";
-          case this.RBAC.DISTRIBUTOR:
-            return "Distributor";
-          case this.RBAC.MAINTAINER:
-            return "Maintainer";
-          default:
-            return null;
-        }
-      }
     },
-    async mounted() {
-      await this.loadTwins();
+    beforeMount() {
+      this.$store.dispatch('initContracts').then(() => {
+        this.loadTwins();
+      });
     }
   }
 </script>

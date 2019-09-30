@@ -1,7 +1,7 @@
 <template>
   <div class="container mt-5">
     <div class="col">
-      <h2>Available Contracts: <small class="text-muted">{{ account }}</small></h2>
+      <h2>Available Contracts: <small class="text-muted"></small></h2>
     </div>
     <br>
     <table class="table table-hover">

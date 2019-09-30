@@ -5,19 +5,21 @@ import store from './store'
 import 'bootstrap'
 import TruffleContract from '@truffle/contract'
 
+//plugins
+import utils from './plugins/utils'
+import swarm from './plugins/swarm'
 
+Vue.use(utils)
+Vue.use(swarm)
 Vue.prototype.$TruffleContract = TruffleContract;
 
 Vue.config.productionTip = false
 
-
 new Vue({
   router,
   store,
-  beforeCreate: function () {
-    this.$store.commit('setup');
-    this.$store.commit('initContract');
-    //todo change to action/dispatch
+  beforeCreate: function() {
+    this.$store.dispatch('setup')
   },
   render: h => h(App)
 }).$mount('#app')
