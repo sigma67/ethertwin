@@ -1,24 +1,25 @@
 <template>
     <div class="container mt-5">
-    <h2>Current roles: </h2>
+    <h2>Current roles:  <small class="text-muted">TwinID TwinName</small> </h2>
+        <br>
         <table class="table table-hover">
             <thead class="thead-light">
                 <tr>
-                    <th scope="col">DeviceID</th>
-                    <th scope="col">Device Name</th>
-                    <th scope="col">Role</th> 
+                    <th scope="col">Role</th>
+                    <th scope="col">User address</th>
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td scope="row">52811</td>
-                    <td>Candy Factory Twin</td> 
-                    <td>Maintainer</td> 
+                    <td>Maintainer</td>
+                    <td>hex-Adresse</td>
+                    <td><img src="@/assets/trash.png" v-on:click="removeRole(twin.address, twin.roleNo)" /> review Change-History Icon</td>
                 </tr>
                 <tr>
-                    <td scope="row">272832</td>
-                    <td>Water Treatment Plant Twin</td>
                     <td>Owner</td>
+                    <td>hex-Adresse</td>
+                    <td><img src="@/assets/trash.png" v-on:click="removeRole(twin.address, twin.roleNo)" /> review Change-History Icon</td>
                 </tr>
             </tbody>
         </table>
@@ -28,14 +29,20 @@
 <script>
   export default {
     name: "Roles"
-      //data: alle twins (ID, name) mit jeweiliger rolle der adresse
+      //data:  twin (ID, name)
+      // alle rollen des twins mit jeweiliger adresse
       //{{ twin.deviceID }}
       //{{ twin.deviceName }}
       //{{ twin.role }}
-
   }
 </script>
 
 <style scoped>
+    td img {
+        height:25px;
+        width:25px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
 
 </style>

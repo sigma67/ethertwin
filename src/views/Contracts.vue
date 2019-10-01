@@ -1,7 +1,7 @@
 <template>
   <div class="container mt-5">
     <div class="col">
-      <h2>Available Contracts: <small class="text-muted"></small></h2>
+      <h2>Available Contracts: </h2>
     </div>
     <br>
     <table class="table table-hover">
@@ -16,12 +16,12 @@
         <tr>
           <td scope="row">52811</td>
           <td>Candy Factory Twin</td>
-          <td>contract accordion style</td>
+          <td>contract address </td>
         </tr>
         <tr>
           <td scope="row">272832</td>
           <td>Water Treatment Plant Twin</td>
-          <td>contract accordion style</td>
+          <td>contract address</td>
         </tr>
       </tbody>
     </table>

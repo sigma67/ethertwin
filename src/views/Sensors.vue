@@ -1,6 +1,6 @@
 <template>
     <div class="container mt-5">
-        <h2>Available Sensor Feeds:</h2>
+        <h2>Available Sensor Feeds: </h2>
         <table class="table table-hover">
             <thead>
                 <tr>

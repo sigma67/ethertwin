@@ -13,13 +13,21 @@
 
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="navbar-nav">
-            <li class="nav-item">
-              <router-link to="/" class="nav-link">Twins</router-link>
+            <li class="nav-item dropdown">
+                <router-link to="/" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</router-link>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <router-link to="/" class="dropdown-item">Candy Factory Twin</router-link>
+                <router-link to="/" class="dropdown-item">Water Treatment Plant Twin</router-link>
+              </div>
             </li>
             <li class="nav-item">
               <router-link :to="{ name: 'contracts' }" class="nav-link">Contracts</router-link>
             </li>
           </ul>
+        </div>
+        <div class="nav-item">
+          <button type="button" id="icon" class="btn btn-secondary" data-toggle="tooltip" data-placement="bottom" :title="account">
+          </button>
         </div>
       </div>
     </nav>
@@ -27,18 +35,29 @@
   </div>
 </template>
 <script>
+  const jazzicon = require('jazzicon')
   export default {
     computed: {
       account() {
         return this.$store.state.user.address
       }
+    },
+    //create user-icon based on their address when component is mounted (DOM-reachable)
+    mounted(){
+      var address = parseInt(this.$store.state.user.address,16) //hex-user-address to int
+      var img = jazzicon(50, Math.round(address))
+      document.getElementById("icon").appendChild(img)
     }
   }
 </script>
 
 
 <style>
-
 @import'~bootstrap/dist/css/bootstrap.css';
 @import '~sweetalert2/dist/sweetalert2.min.css';
+
+#icon {
+  background-color: transparent;
+  border-color: transparent;
+}
 </style>

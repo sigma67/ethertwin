@@ -55,7 +55,7 @@ export default new Router({
       props: true
     },
     {
-      path: '/twin/:roles',
+      path: '/twin/:twin/roles',
       name: 'twin',
       component: Roles,
       props: true

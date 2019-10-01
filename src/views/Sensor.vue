@@ -1,6 +1,6 @@
 <template>
     <div class="container mt-5">
-        <h2>Sensor Feed:   <small class="text-muted">SensorName SensorIDt</small>
+        <h2>Sensor Feed:   <small class="text-muted">SensorName SensorID</small>
         </h2>
         <table class="table table-hover">
             <thead>
