@@ -40,6 +40,9 @@
     computed: {
       account() {
         return this.$store.state.user.address
+      },
+      twins() {
+        return this.$store.state.twins
       }
     },
     //create user-icon based on their address when component is mounted (DOM-reachable)
@@ -47,6 +50,13 @@
       var address = parseInt(this.$store.state.user.address,16) //hex-user-address to int
       var img = jazzicon(50, Math.round(address))
       document.getElementById("icon").appendChild(img)
+    },
+    beforeMount() {
+      this.$store.dispatch('initContracts').then(() => {
+        this.$store.dispatch('loadTwins').then(() => {
+          console.log(this.twins);
+        });
+      });
     }
   }
 </script>

@@ -68,81 +68,12 @@
       },
       contracts() {
         return this.$store.state.contracts;
-      }
-    },
-    data() {
-      return {
-        twins: [],
+      },
+      twins() {
+        return this.$store.state.twins;
       }
     },
     methods: {
-      async loadTwins() {
-        let self = this.$store.state;
-        let vm = this;
-        return new Promise((resolve, reject) => {
-          self.contracts.Authorization.deployed()
-            .then(function (instanceA) {
-              return instanceA.deviceAgentAddress.call();
-            })
-            .then(function (deviceAgent) {
-              let isDeviceAgent = self.user.address.toLowerCase() === deviceAgent.toLowerCase();
-              vm.$store.commit('setIsDeviceAgent', isDeviceAgent);
-              //after checking, all contracts are retrieved
-              self.contracts.ContractRegistry.deployed()
-                .then(function (instance1) {
-                  return instance1.getContracts.call();
-                })
-                .then(function (contracts) {
-                  //iteration through all elements
-                  if (contracts.length > 0) {
-                    contracts.forEach(element => {
-                      //check role of user
-                      var roleNo;
-                      self.contracts.Authorization.deployed()
-                        .then(function (instance) {
-                          return instance.getRole.call(self.user.address, element);
-                        })
-                        .then(function (roleNo) {
-                          let role = vm.$utils.enum2String(Number(roleNo));
-                          if (role !== null) {
-                            let twin = {};
-                            twin.roleNo = roleNo;
-                            twin.role = role;
-                            twin.deviceName = "test";
-                            $.getJSON("contracts/Specification.json", function (specificationContract) {
-                              // Instantiate a new truffle contract from the artifact
-                              self.contracts.SpecificationContract = TruffleContract(specificationContract);
-                              // Connect provider to interact with contract
-                              self.contracts.SpecificationContract.setProvider(self.web3Provider);
-                            })
-                            .then(function () {
-                              self.contracts.SpecificationContract.at(element).then(function (instance1) {
-                                twin.address = instance1.address;
-                                return Promise.all([
-                                    instance1.deviceID.call(function (err, res) {
-                                      twin.deviceId = res;
-                                    }),
-                                    instance1.deviceName.call(function (err, res) {
-                                      twin.deviceName = res;
-                                    })
-                                ]);
-                              }).then(function () {
-                                  vm.twins.push(twin);
-                                  resolve();
-                                });
-                            });
-                          }
-                        });
-                    });
-                  }
-                })
-                .catch(function (error) {
-                  reject(error);
-                })
-            });
-        });
-      },
-
       async removeRole(twinAddress, role) {
         let vm = this;
         this.$swal.fire({
@@ -162,9 +93,7 @@
                 });
               })
               .then(function () {
-                this.twins = this.twins.filter(function(v){
-                  return v.address !== twinAddress;
-                });
+                vm.$store.commit('removeTwin', twinAddress);
 
                 vm.$swal.fire({
                   type: "success",
@@ -244,11 +173,6 @@
           }
         );
       }
-    },
-    beforeMount() {
-      this.$store.dispatch('initContracts').then(() => {
-        this.loadTwins();
-      });
     }
   }
 </script>

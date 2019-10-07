@@ -8,5 +8,6 @@ export default {
   user: {
     address: "",
     isDeviceAgent: false
-  }
+  },
+  twins: []
 }

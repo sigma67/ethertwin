@@ -8,14 +8,13 @@ contract ContractRegistry {
 
     address[] public contracts;
 
-    address[] public amlsTmp;
-
     Authorization auth;
     Specification spec;
 
     constructor (address _auth) public {
         auth = Authorization(_auth);
     }
+
     function registerContract(string memory _deviceID, string memory _deviceName, string memory _deviceAML) public {
 
         //require RBAC.DEVICEAGENT PRIVILEGES --> device agent has value 0

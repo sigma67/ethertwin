@@ -43,7 +43,6 @@
         let deviceID = $("#twinID").val();
         let deviceName = $("#twinName").val();
         let deviceAML = $("#twinAML").val();
-        console.log(this.account);
         if (deviceID === "" || deviceName === "" || deviceAML === "") {
           alert("Empty values are not accepted!");
         } else {
@@ -64,8 +63,8 @@
             .then(function (result) {
               $("#content").show();
               $("#loader").hide();
-
-              //todo redirect to start page
+              vm.$store.dispatch('loadTwins');
+              vm.$router.push('/');
             })
             .catch(function (err) {
               alert(err);
