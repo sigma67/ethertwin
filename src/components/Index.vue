@@ -7,7 +7,10 @@
             </div>
             <div class="col text-right"><br/>
                 <router-link :to="{ name: 'twin-create' }">
-                    <button type="submit" class="btn btn-lg btn-dark w-50">Create Twin</button>
+                    <!--<button type="submit" class="btn btn-lg btn-dark w-50">Create Twin</button>-->
+                    <button type="submit" class="acticon">
+                        <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add twin"/>
+                    </button>
                 </router-link>
             </div>
         </div>
@@ -37,10 +40,14 @@
                         <td>{{ twin.role }}</td>
                         <td>
                             <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
-                                <img src="@/assets/aml.png"/>
+                                <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
                             </router-link>
-                            <img src="@/assets/share.png" v-on:click="shareTwin(twin.address)" />
-                            <img src="@/assets/trash.png" v-on:click="removeRole(twin.address, twin.roleNo)" />
+                            <button class="acticon" v-on:click="shareTwin(twin.address)">
+                                <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom" title="share twin"/>
+                            </button>
+                            <button class="acticon"  v-on:click="removeRole(twin.address, twin.roleNo)">
+                                <font-awesome-icon icon="trash" data-placement="bottom" title="remove role"/>
+                            </button>
                         </td>
                     </tr>
                     <tr v-if="twins.length === 0">
@@ -181,10 +188,19 @@
     h3 {
         margin: 40px 0 0;
     }
+    /*
     td img {
         height:25px;
         width:25px;
         cursor: pointer;
         margin-right: 10px;
+    }*/
+    .acticon{
+        border-color: transparent;
+        background-color: transparent;
+    }
+    #createIcon{
+        width: 50px;
+        height: 50px;
     }
 </style>

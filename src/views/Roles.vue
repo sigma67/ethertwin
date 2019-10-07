@@ -14,12 +14,20 @@
                 <tr>
                     <td>Maintainer</td>
                     <td>hex-Adresse</td>
-                    <td><img src="@/assets/trash.png" v-on:click="removeRole(twin.address, twin.roleNo)" /> review Change-History Icon</td>
+                    <td>
+                        <button class="acticon" v-on:click="removeRole(twin.address, twin.roleNo)">
+                            <font-awesome-icon icon="trash"/></button>
+                        review Change-History Icon
+                    </td>
                 </tr>
                 <tr>
                     <td>Owner</td>
                     <td>hex-Adresse</td>
-                    <td><img src="@/assets/trash.png" v-on:click="removeRole(twin.address, twin.roleNo)" /> review Change-History Icon</td>
+                    <td>
+                        <button class="acticon" v-on:click="removeRole(twin.address, twin.roleNo)">
+                        <font-awesome-icon icon="trash"/></button>
+                        review Change-History Icon
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -38,11 +46,9 @@
 </script>
 
 <style scoped>
-    td img {
-        height:25px;
-        width:25px;
-        cursor: pointer;
-        margin-right: 10px;
-    }
+.acticon{
+    border-color: transparent;
+    background-color: transparent;
+}
 
 </style>
