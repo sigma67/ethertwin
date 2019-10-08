@@ -9,18 +9,31 @@ export default {
   install(Vue) {
     Vue.prototype.$swarm = {
       async uploadDoc(content) {
-        try {
-          client.bzz
-            .upload(content, {contentType: 'text/plain'})
-            .then(hash => {
-              client.bzz.list(hash);
-              alert(hash);
-            }).then(contents => {
-            console.log(contents) // Manifest contents describing the uploaded files
-          });
-        } catch (err) {
-          alert(err);
-        }
+        return new Promise((resolve, reject) => {
+          try {
+            client.bzz
+              .upload(content, {contentType: 'text/plain'})
+              .then(hash => {
+                resolve(hash);
+              });
+          } catch (err) {
+            reject(err);
+          }
+        });
+      },
+
+      async downloadDoc(hash){
+        return new Promise((resolve, reject) => {
+          try {
+            client.bzz
+              .download(hash)
+              .then(response => {
+                resolve(response.text());
+              });
+          } catch (err) {
+            reject(err);
+          }
+        });
       },
 
       async createFeed(device, sensor) {
@@ -60,17 +73,17 @@ export default {
           updates.push(content);
 
           //get past updates until time - pastInterval
-          // let meta = await client.bzz.getFeedMetadata(feedHash);
-          // let currentTime = Date.now();
-          // let current = meta.epoch.time - 1;
-          // while(current > currentTime - pastInterval){
-          // 	let content = await client.bzz.getFeedContent({
-          // 		user: meta.feed.user,
-          // 		topic: meta.feed.topic,
-          // 		time: current
-          // 	});
-          // 	content.body.
-          // }
+          let meta = await client.bzz.getFeedMetadata(feedHash);
+          let currentTime = Date.now();
+          let current = meta.epoch.time - 1;
+          while(current > currentTime - pastInterval){
+          	let content = await client.bzz.getFeedContent({
+          		user: meta.feed.user,
+          		topic: meta.feed.topic,
+          		time: current
+          	});
+          	//content.body.
+          }
           //retrieve more updates until time is reached
 
           return updates;

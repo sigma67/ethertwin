@@ -42,7 +42,7 @@
       name: "CreateTwin",
       data() {
           return {
-              selected: 'pleaseSelect',
+              selected: 'Text',
               options: [
                   {text: 'File', value: 'File'},
                   {text: 'Text', value: 'Text'}
@@ -60,36 +60,33 @@
           let vm = this;
           let deviceID = $("#twinID").val();
           let deviceName = $("#twinName").val();
-          let deviceAML = $("#twinAML").val();
+          let deviceAML = $("#twinAML").val();//todo thes Unterscheidung File/Text
           if (deviceID === "" || deviceName === "" || deviceAML === "") {
             alert("Empty values are not accepted!");
           } else {
-            //let devAMLArray = await App.getAMLArray(deviceAML);
-            //is waiting until all addresses are stored
-            //let waitingFor = await App.registerAMLBodies(deviceAML);
-            this.$store.state.contracts.ContractRegistry.deployed()
-              .then(function (instance) {
-                return instance.registerContract.sendTransaction(
-                  deviceID,
-                  deviceName,
-                  deviceAML,
-                  {
-                    from: vm.account
-                  }
-                );
-              })
-              .then(function (result) {
-                $("#content").show();
-                $("#loader").hide();
-                vm.$store.dispatch('loadTwins');
-                vm.$router.push('/');
-              })
-              .catch(function (err) {
-                alert(err);
-              });
+            //upload file to swarm and get swarm hash
+            this.$swarm.uploadDoc(deviceAML).then(hash => {
+              vm.$store.state.contracts.ContractRegistry.deployed()
+                .then(function (instance) {
+                  return instance.registerContract.sendTransaction(
+                    deviceID,
+                    deviceName,
+                    hash,
+                    {
+                      from: vm.account
+                    }
+                  );
+                })
+                .then(function (result) {
+                  vm.$store.dispatch('loadTwins');
+                  vm.$router.push('/');
+                })
+                .catch(function (err) {
+                  alert(err);
+                });
+            });
           }
         },
-
       }
   }
 
