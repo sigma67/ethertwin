@@ -6,8 +6,8 @@
                 <table class="table">
                     <thead>
                     <th width="50%" class="text-center" scope="col">
-                        <p id="textAMLVersion">latest Version: {{ version + 1 }}<br>
-                            author: {{ author }}</p>
+                        <p id="textAMLVersion">Latest Version: {{ versions.length }}<br>
+                            Author: {{ author }}</p>
 
                     </th>
                     <th width="25%" class="text-center" scope="col">
@@ -15,11 +15,11 @@
                         <span class="dropdown">
                             <a href="#" class="btn btn-primary" data-toggle="dropdown" role="button" aria-haspopup="true"
                                aria-expanded="false">
-                                Version <span class="caret">{{ version + 1}}</span>
+                                Version <span class="caret">{{ version }}</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <li v-for="(version, i) in versions">
-                                    <a v-on:click="loadAML(version, i)">V{{ i + ": " + new Date(version*1000).toLocaleString("en-US") }}</a>
+                                    <a v-on:click="loadAML(version, versions.length - i)">V{{(versions.length - i) + ": " + new Date(version*1000).toLocaleString("en-US") }}</a>
                                 </li>
                             </ul>
                         </span>
@@ -77,8 +77,8 @@
         let vm = this;
         let instance1 = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
         await instance1.getAllAMLInfos.call({from: vm.account}, function (err, latest) {
-            vm.versions = latest;
-            vm.loadAML(vm.versions[vm.versions.length - 1], vm.versions.length - 1);
+            vm.versions = latest.reverse();
+            vm.loadAML(vm.versions[0], vm.versions.length);
         });
       },
 
@@ -103,7 +103,6 @@
         let vm = this;
 
         this.$swarm.uploadDoc(newAML).then(hash => {
-          console.log(hash);
           self.contracts.SpecificationContract.at(vm.twinAddress).then(function (instance) {
             instance.createNewAMLVersion.sendTransaction(hash, {from: vm.account});
           });
