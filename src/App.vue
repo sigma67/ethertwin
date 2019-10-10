@@ -15,10 +15,15 @@
           <ul class="navbar-nav">
             <li class="nav-item dropdown">
                 <router-link to="/" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</router-link>
-              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <router-link to="/" class="dropdown-item">Candy Factory Twin</router-link>
-                <router-link to="/" class="dropdown-item">Water Treatment Plant Twin</router-link>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown" >
+                <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
               </div>
+            </li>
+            <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
+              <router-link :to="{ name: 'documents'}" class="nav-link">Documents</router-link>
+            </li>
+            <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
+              <router-link :to="{ name: 'sensors' }" class="nav-link">Sensors</router-link>
             </li>
             <li class="nav-item">
               <router-link :to="{ name: 'contracts' }" class="nav-link">Contracts</router-link>
