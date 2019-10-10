@@ -2,41 +2,37 @@
     <div class="container mt-5">
         <div class="row justify-content-sm-center">
             <div class="col">
-                <h2>AML for Twin {{ twinObject.deviceName }}</h2>
+                <h2>Specification for Twin: <small class="text-muted">{{ twinObject.deviceName }}</small></h2>
                 <table class="table">
                     <thead>
-                    <th width="50%" class="text-center" scope="col">
-                        <p id="textAMLVersion">Latest Version: {{ versions.length }}<br>
-                            Author: {{ author }}</p>
-
+                    <th width="50%" class="text-left" scope="col">
+                        <div id="textAMLVersion" class="container-fluid">
+                            Latest Version: <small class="text-muted">{{ versions.length }}</small><br>
+                            Author: <small class="text-muted">{{ author }}</small>
+                        </div>
                     </th>
                     <th width="25%" class="text-center" scope="col">
-                    <div id="optionscontainer">
                         <span class="dropdown">
-                            <a href="#" class="btn btn-primary" data-toggle="dropdown" role="button" aria-haspopup="true"
-                               aria-expanded="false">
+                            <a href="#" class="btn btn-secondary" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                                 Version <span class="caret">{{ version }}</span>
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 <li v-for="(version, i) in versions">
-                                    <a v-on:click="loadAML(version, versions.length - i)">V{{(versions.length - i) + ": " + new Date(version*1000).toLocaleString("en-US") }}</a>
+                                    <a href="#" v-on:click="loadAML(version, versions.length - i)" class="dropdown-item"><strong>V{{(versions.length - i) + ": " }}</strong> {{new Date(version*1000).toLocaleString("en-US") }}</a>
                                 </li>
                             </ul>
                         </span>
-                    </div>
                     </th>
-                    <th width="25%" class="text-right" scope="col">
-
+                    <th width="25%" class="text-center" scope="col">
                         <form class="text-center" @submit.prevent="saveAML">
-                            <button id="submitAML" class="btn btn-primary" type="submit"
-                                    style="text-align: center">save changes
+                            <button id="submitAML" class="btn btn-secondary" type="submit">
+                                <font-awesome-icon icon="save" data-toggle="tooltip" data-placement="bottom" title="save changes"/>
                             </button>
                         </form>
                     </th>
-
                     </thead>
                 </table>
-                <textarea id="amlResult" class="form-control" rows="30">{{ aml }}</textarea>
+                <textarea id="amlResult" class="form-control" rows="30" >{{ aml }}</textarea>
             </div>
         </div>
     </div>
@@ -44,6 +40,7 @@
 
 <script>
   import $ from 'jquery';
+  const Prism = require('prismjs');
 
   export default {
     name: "Specification",
@@ -59,6 +56,15 @@
       twin: {
         required: true,
       },
+    }, 
+    mounted() {
+        let script = document.createElement('script')
+        //let css = document.createElement('css')
+        //script.setAttribute('src', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js')
+        script.setAttribute('src', 'highlight.pack.js')
+        //css.setAttribute('stylesheet', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/default.min.css')
+        document.head.appendChild(script)
+        //document.head.appendChild(css)
     },
     computed: {
       account() {
@@ -93,6 +99,7 @@
             vm.$swarm.downloadDoc(hash)
               .then(doc => {
                 vm.aml = doc.toString();
+                // highlighting
               })
           });
       },
@@ -113,7 +120,14 @@
     beforeMount() {
       this.loadVersions();
     }
+    /*,
+    mounted() {
+        const xml = document.getElementById("amlResult").value;
+        const html= Prism.highlight(xml, Prism.languages.xml, 'xml');
+        document.getElementById("amlResult").value = html;
+    }*/
   }
+
 </script>
 
 <style scoped>

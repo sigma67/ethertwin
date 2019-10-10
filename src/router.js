@@ -7,6 +7,7 @@ import Sensors from './views/Sensors.vue'
 import Sensor from './views/Sensor.vue'
 import Documents from './views/Documents.vue'
 import Roles from './views/Roles.vue'
+import AddSensor from "./views/AddSensor";
 
 Vue.use(Router)
 
@@ -34,6 +35,12 @@ export default new Router({
       path: '/twin/:twin/specification',
       name: 'twin-spec',
       component: Specification,
+      props: true
+    },
+    {
+      path: '/twin/:twin/sensors/add',
+      name: 'sensor-add',
+      component: AddSensor,
       props: true
     },
     {

@@ -13,15 +13,10 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td scope="row">52811</td>
-          <td>Candy Factory Twin</td>
-          <td>contract address </td>
-        </tr>
-        <tr>
-          <td scope="row">272832</td>
-          <td>Water Treatment Plant Twin</td>
-          <td>contract address</td>
+        <tr v-for="twin in twins" v-if="twins.length > 0">
+          <td scope="row">{{ twin.deviceId }}</td>
+          <td>{{ twin.deviceName }}</td>
+          <td>{{ twin.address }} </td>
         </tr>
       </tbody>
     </table>
@@ -29,13 +24,14 @@
 </template>
 
 <script>
-    export default {
-      //data: alle twins (ID, name) mit zugehörigen contract
-      // {{ twin.ID}}
-      // {{ twin.deviceName }}
-      // {{ twin.contract }}
-      //{{ account }}
+  export default {
+    name: "Contracts",
+    computed: {
+      twins() {
+        return this.$store.state.twins
+      }
     }
+  }
 </script>
 
 <style scoped>

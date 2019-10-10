@@ -14,6 +14,10 @@
                     <br/>
                     <input class="form-control" type="text" id="twinName" name="twinName"/>
                     <br/>
+                    <label class="text-center" for="twinName">Public Key of Device Agent</label>
+                    <br/>
+                    <input class="form-control" type="text" id="publicKeyDeviceAgent" name="publicKeyDeviceAgent"/>
+                    <br/>
                     <label class="text-center" for="twinAML">AML</label>
                     <br/>
                     <select v-model="selected" class="form-control">
@@ -23,12 +27,12 @@
                         </option>
                     </select>
                     <br/>
-                    <input v-if="selected == 'File' " type="file" class="form-control-file" > <!-- @change="processFile" -->
+                    <input v-if="selected == 'File' " type="file" class="form-control-file">
                     <br/>
-                    <textarea v-if="selected == 'Text'" class="form-control" type="text" name="AML" id="twinAML" rows="20"/> <!-- @change="processFile" -->
+                    <textarea v-if="selected == 'Text'" class="form-control" type="text" name="AML" id="twinAML" rows="20"/>
                     <br/>
                 </div>
-                <button class="btn btn-primary" type="submit">Add Twin</button>
+                <button class="btn btn-secondary" type="submit">Add Twin</button>
             </form>
         </div>
         </div>

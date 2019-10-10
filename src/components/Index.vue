@@ -7,7 +7,6 @@
             </div>
             <div class="col text-right"><br/>
                 <router-link :to="{ name: 'twin-create' }">
-                    <!--<button type="submit" class="btn btn-lg btn-dark w-50">Create Twin</button>-->
                     <button type="submit" class="acticon">
                         <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add twin"/>
                     </button>
@@ -39,9 +38,21 @@
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
                         <td>
-                            <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
-                                <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
+                            <button class="acticon">
+                                <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
+                                    <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
+                                </router-link>
+                            </button>
+                            <button class="acticon">
+                                <router-link :to="{ name: 'documents', params: { twin: twin.deviceId  } }">
+                                <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
+                            </button>
+                            <button class="acticon">
+                                <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }">
+                                    <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
+                                </router-link>
+                            </button>
                             <button class="acticon" v-on:click="shareTwin(twin.address)">
                                 <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom" title="share twin"/>
                             </button>
@@ -200,7 +211,7 @@
         background-color: transparent;
     }
     #createIcon{
-        width: 50px;
-        height: 50px;
+        width: 30px;
+        height: 30px;
     }
 </style>
