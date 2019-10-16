@@ -40,7 +40,6 @@
 
 <script>
   import $ from 'jquery';
-  const Prism = require('prismjs');
 
   export default {
     name: "Specification",

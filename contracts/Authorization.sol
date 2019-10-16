@@ -28,8 +28,8 @@ contract Authorization {
     }
     // is called by the ContractRegistry.sol --> initial step to register a device
     function initializeDevice(address _operator, address _contract) public {
-        require(_operator == deviceAgentAddress, "You are not authorized to register devices.");
-        roleMapping[_contract][uint(RBAC.DEVICEAGENT)].add(_operator);
+        //require(_operator == deviceAgentAddress, "You are not authorized to register devices.");
+        roleMapping[_contract][uint(RBAC.OWNER)].add(_operator);
     }
 
     //checks if an user has the given role for a specific contract
@@ -39,8 +39,8 @@ contract Authorization {
 
     // adds a role for an user for a specific specification contract
     function addRole(address _operator, uint _role, address _contract) public {
-        if (_role == uint(RBAC.DEVICEAGENT)) {
-            require(_operator == deviceAgentAddress, "You are not authorized to change the device agent.");
+        if (_role == uint(RBAC.OWNER)) {
+            //require(_operator == deviceAgentAddress, "You are not authorized to change the device agent.");
             emit RoleAdded(_operator, _role);
         }
         else {
@@ -49,7 +49,7 @@ contract Authorization {
         }
     }
 
-    //removes an user of a role for a specific specifucation contract
+    //removes an user of a role for a specific specification contract
     function removeRole(address _operator, uint _role, address _contract) public {
         require(roleMapping[_contract][_role].has(_operator), "You do not have this role");
         roleMapping[_contract][_role].remove(_operator);

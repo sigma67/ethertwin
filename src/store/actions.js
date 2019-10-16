@@ -129,11 +129,10 @@ export default{
             contracts.Authorization.deployed()
               .then(function (instance2) {
                 addresses.AuthorizationAddress = instance2.address;
-
                 commit('contracts', contracts);
                 commit('addresses',
                   {
-                    result: addresses,
+                    addresses: addresses,
                     callback: (state) => {
                       resolve({state})
                     }
@@ -171,6 +170,9 @@ export default{
                   commit('twins', twins);
                   resolve();
                 });
+              }
+              else{
+                resolve();
               }
             })
             .catch(function (error) {
