@@ -1,4 +1,5 @@
 pragma experimental ABIEncoderV2;
+pragma solidity ^0.5.12;
 
 import "./Authorization.sol";
 
@@ -8,70 +9,172 @@ contract Specification {
 
     string public deviceName;
     string public deviceID;
-    string[] public callProgramQueue;
-    uint[] public documentArray;
-    uint[] amlHistory;
-    ExternalSource[] externalSources;
+    address public deviceAgent;
 
     constructor (address _authAddress) public {
         auth = Authorization(_authAddress);
     }
-    struct Document {
+
+    //generic version blueprint for file stored on DHT
+    struct Version {
         uint timestamp;
-        string description;
-        address documentOwner;
-        string[] documentVersions;
+        address author;
+        bytes32 hash;
     }
 
-    struct AML {
-        address sender;
-        string content;
+    struct Document {
+        string name;
+        string description;
+        Version[] versions;
+    }
+
+    struct Sensor {
+        string name;
+        bytes32 hash;
     }
 
     struct ExternalSource {
         string URI;
-        address sourceOwner;
+        address owner;
     }
 
-    mapping(uint => Document) documents;
-    mapping(string => string[]) documentVersions;
-    //map aml addresses of each version or update
-    mapping(uint => AML) amlVersioning;
-    mapping(string => string) sensorFeeds;
+    struct ProgramCall {
+        uint timestamp;
+        address author;
+        string call;
+    }
 
-    function updateSpecs(string memory _deviceID, string memory _deviceName, string memory _deviceAML, address _operator) public
+    Version[] public AML;
+    ExternalSource[] public sources;
+
+    //map hash of component to its documents
+    mapping(bytes32 => Document[]) public documents;
+    //map hash of component to its sensors
+    mapping(bytes32 => Sensor[]) public sensors;
+    //program calls for specific component
+    mapping(bytes32 => ProgramCall[]) public programCallQueue;
+    //array index of the most recently run program
+    mapping(bytes32 => uint) public programCounter;
+
+    function updateTwin(string memory _deviceID, string memory _deviceName, address _deviceAgent) public
     {
         deviceID = _deviceID;
         deviceName = _deviceName;
-        uint timestamp = now;
-        amlVersioning[timestamp].sender = _operator;
-        amlVersioning[timestamp].content = _deviceAML;
-
-        amlHistory.push(timestamp);
-        // insertAML(_amlParts);
+        deviceAgent = _deviceAgent;
     }
-    //returns all docs of the specification contract
-    // TODO -- beware of doc version!
-    function getDocumentArray() public view returns (uint[] memory){
+
+    //******* AML *******//
+
+    function addNewAMLVersion(bytes32 _newAMLVersion) public {
         // AML can be inserted by each role except unauthorized accounts
-        require(!(auth.getRole(msg.sender, address(this)) == 404), "Your account has no privileges");
-        return documentArray;
+        // must use tx.origin since it is also called from ContractRegistry
+        require(!(auth.getRole(tx.origin, address(this)) == 404), "Your account has no privileges");
+        AML.push(Version(now, tx.origin, _newAMLVersion));
     }
 
-    function createNewAMLVersion(string memory _newAMLVersion) public {
-        uint timestamp = now;
-        amlVersioning[timestamp].sender = msg.sender;
-        amlVersioning[timestamp].content = _newAMLVersion;
-
-        amlHistory.push(timestamp);
+    function getAML(uint id) public view returns (Version memory){
+        return AML[id];
     }
 
-    function getAML(uint timestamp) public view returns (address, string memory){
-        return (amlVersioning[timestamp].sender, amlVersioning[timestamp].content);
+    function getAMLHistory() public view returns (Version[] memory){
+        return AML;
     }
 
-    function getAllAMLInfos() public view returns (uint[] memory)
-    {
-        return amlHistory;
+    //******* DOCUMENTS *******//
+
+    //register a new document (always appends to the end)
+    function addDocument(string memory componentId, string memory name, string memory description, bytes32 docHash) public {
+        bytes32 id = keccak256(bytes(componentId));
+        //todo access control based on component
+
+        documents[id].length++;
+        Document storage doc = documents[id][documents[id].length - 1];
+        doc.name = name;
+        doc.description = description;
+        doc.versions.push(Version(now, msg.sender, docHash));
+
+        documents[id].push(doc);
     }
+
+    //update Document storage metadata
+    function updateDocument(string memory componentId, uint documentId, string memory name, string memory description) public {
+        bytes32 id = keccak256(bytes(componentId));
+        documents[id][documentId].name = name;
+        documents[id][documentId].description = description;
+    }
+
+    //add new document version
+    function addDocumentVersion(string memory componentId, uint documentId, bytes32 docHash) public {
+        bytes32 id = keccak256(bytes(componentId));
+        Version memory updated = Version(now, msg.sender, docHash);
+        documents[id][documentId].versions.push(updated);
+    }
+
+    function getDocument(string memory componentId, uint index) public view returns (Document memory){
+        bytes32 id = keccak256(bytes(componentId));
+        return documents[id][index];
+    }
+
+    //******* SENSORS *******//
+
+    function addSensor(string memory componentId, string memory name, bytes32 hash) public {
+        bytes32 id = keccak256(bytes(componentId));
+        //todo permission check
+        sensors[id].push(Sensor(name, hash));
+    }
+
+    function getSensor(string memory componentId, uint index) public view returns (Sensor memory){
+        bytes32 id = keccak256(bytes(componentId));
+        return sensors[id][index];
+    }
+
+    function removeSensor(string memory componentId) public {
+        bytes32 id = keccak256(bytes(componentId));
+        //todo permission check
+        delete(sensors[id]);
+    }
+
+    //******* EXTERNAL SOURCES *******//
+
+    function addExternalSource(string memory URI) public {
+        //todo permission check
+        sources.push(ExternalSource(URI, msg.sender));
+    }
+
+    function getExternalSource(uint index) public view returns (ExternalSource memory){
+        return sources[index];
+    }
+
+    function getExternalSourceHistory() public view returns (ExternalSource[] memory){
+        return sources;
+    }
+
+    function removeExternalSource(uint index) public {
+        //todo permission check
+        delete(sources[index]);
+    }
+
+    //******* PROGRAM CALLS *******//
+    function addProgramCall(string memory componentId, string memory call) public {
+        bytes32 id = keccak256(bytes(componentId));
+        //todo permission check
+        programCallQueue[id].push(ProgramCall(now, msg.sender, call));
+    }
+
+    function getProgramCallQueue(string memory componentId) public view returns (ProgramCall[] memory){
+        bytes32 id = keccak256(bytes(componentId));
+        return programCallQueue[id];
+    }
+
+    function getProgramCounter(string memory componentId) public view returns (uint){
+        bytes32 id = keccak256(bytes(componentId));
+        return programCounter[id];
+    }
+
+    function updateProgramCounter(string memory componentId, uint counter) public {
+        bytes32 id = keccak256(bytes(componentId));
+        //todo permission check
+        programCounter[id] = counter;
+    }
+
 }
