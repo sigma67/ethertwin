@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@erebos/secp256k1": "^0.10.0",
     "@erebos/swarm-browser": "^0.9.0",
     "@erebos/timeline": "^0.9.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.25",

@@ -1,8 +1,14 @@
 import {SwarmClient} from '@erebos/swarm-browser';
 import '@erebos/timeline';
+import { createKeyPair, sign } from '@erebos/secp256k1'
 
+//todo: use dynamic private key from app wallet
+let keyPair = createKeyPair("854d3281cecfa28b376148034eadebf4a9c46860b41bd6fbbadeb031ddd789ff");
 const client = new SwarmClient({
-  bzz: {url: 'http://132.199.123.236:5000'}
+  bzz: {
+    signBytes: bytes => Promise.resolve(sign(bytes, keyPair)),
+    url: 'http://132.199.123.236:5000'
+  }
 });
 
 export default {
@@ -12,35 +18,41 @@ export default {
         return new Promise((resolve, reject) => {
           try {
             client.bzz
-              .upload(content, {contentType: 'text/plain'})
-              .then(hash => {
-                resolve(hash);
-              });
+                .upload(content, {contentType: 'text/plain'})
+                .then(hash => {
+                  resolve(hash);
+                });
           } catch (err) {
             reject(err);
           }
         });
       },
 
-      async downloadDoc(hash){
+      async downloadDoc(hash) {
         return new Promise((resolve, reject) => {
           try {
             client.bzz
-              .download(hash)
-              .then(response => {
-                resolve(response.text());
-              });
+                .download(hash)
+                .then(response => {
+                  resolve(response.text());
+                });
           } catch (err) {
             reject(err);
           }
         });
       },
 
-      async createFeed(device, sensor) {
+      /**
+       * Create a new feed
+       * @param device valid Ethereum address
+       * @param topic 32 byte hash (i.e. web3.utils.sha3)
+       * @returns {Promise<HexValue & string>}
+       */
+      async createFeed(device, topic) {
         try {
           let feedHash = await client.bzz.createFeedManifest({
             user: device,
-            name: sensor,
+            topic: topic,
           });
 
           return feedHash;
@@ -49,47 +61,68 @@ export default {
         }
       },
 
+      /**
+       * Adds a new entry to the feed
+       * @param feedHash Feed manifest hash
+       * @param contents Content string for JSON
+       * @returns {Promise<void>}
+       */
       async updateFeed(feedHash, contents) {
         try {
-          await client.bzz.setFeedContent(feedHash, contents, {encrypt: true});
+          let update = {
+            time: Math.floor(new Date() / 1000),
+            content: contents
+          };
+          await client.bzz.setFeedContent(feedHash, JSON.stringify(update), {contentType: "application/json"})
         } catch (err) {
           alert(err);
         }
       },
 
-      // try pollFeedContent for periodic updates?
-      /**
+      /** Retrieve past feed updates
        *
-       * @param feedHash
-       * @param pastInterval Time in s until which feed updates should be returned
+       * @param feedHash Feed manifest hash
+       * @param pastInterval Time in s to go back in time
        * @returns {Promise<*>}
        */
-      // Erebos Timeline? https://github.com/MainframeHQ/aegle/blob/f84f7cf16f58d5ad3e2d11e4728d297d17414c8a/packages/agent/src/messaging.ts
       async getFeedUpdates(feedHash, pastInterval) {
+        let updates = Array();
         try {
           //only retrieves latest content
-          let updates = Array();
-          let content = await client.bzz.getFeedContent(feedHash);
+          let content = await this.getFeedItemJson(feedHash);
           updates.push(content);
 
-          //get past updates until time - pastInterval
-          let meta = await client.bzz.getFeedMetadata(feedHash);
-          let currentTime = Date.now();
-          let current = meta.epoch.time - 1;
-          while(current > currentTime - pastInterval){
-          	let content = await client.bzz.getFeedContent({
-          		user: meta.feed.user,
-          		topic: meta.feed.topic,
-          		time: current
-          	});
-          	//content.body.
-          }
-          //retrieve more updates until time is reached
+          let currentTime = Math.floor(Date.now() / 1000);
+          let lastTime = content.time;
 
-          return updates;
+          //get past updates until time - pastInterval
+          while (lastTime > currentTime - pastInterval) {
+            let content = await this.getFeedItemJson(feedHash, lastTime);
+            updates.push(content);
+            lastTime = content.time;
+          }
         } catch (err) {
-          alert(err);
+          console.log(err);
         }
+
+        return updates;
+      },
+
+      /**
+       *
+       * @param user
+       * @param topic
+       * @param time
+       * @returns {Promise<any>}
+       */
+      async getFeedItemJson(feedHash, time = (new Date()) / 1000) {
+        let meta = await client.bzz.getFeedMetadata(feedHash);
+        let content = await client.bzz.getFeedContent({
+          user: meta.feed.user,
+          topic: meta.feed.topic,
+          time: time
+        });
+        return await content.json();
       }
     }
   }
