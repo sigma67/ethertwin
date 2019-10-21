@@ -33,6 +33,8 @@ contract("ContractRegistry", accounts => {
     await s.addDocument(component, "manual.pdf", "This is the asset manual.", hashBytes);
     let docs = await s.getDocument(component, 0);
     assert.equal(docs.versions[0].hash, hash, "Doc not created");
+    let docCount = await s.getDocumentCount(component);
+    assert.equal(docCount, 1, "Not enough documents")
   });
 
   it("should add a new document version", async () => {

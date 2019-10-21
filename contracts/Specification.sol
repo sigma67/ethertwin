@@ -94,6 +94,7 @@ contract Specification {
         doc.versions.push(Version(now, msg.sender, docHash));
 
         documents[id].push(doc);
+        documents[id].length--;
     }
 
     //update Document storage metadata
@@ -113,6 +114,11 @@ contract Specification {
     function getDocument(string memory componentId, uint index) public view returns (Document memory){
         bytes32 id = keccak256(bytes(componentId));
         return documents[id][index];
+    }
+
+    function getDocumentCount(string memory componentId) public view returns (uint){
+        bytes32 id = keccak256(bytes(componentId));
+        return documents[id].length;
     }
 
     //******* SENSORS *******//
