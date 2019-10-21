@@ -1,45 +1,55 @@
 <template>
     <div class="container mt-5">
-        <div class="row justify-content-sm-center">
-            <div class="col">
-                <h2>Specification for Twin: <small class="text-muted">{{ twinObject.deviceName }}</small></h2>
-                <table class="table">
-                    <thead>
-                    <th width="50%" class="text-left" scope="col">
-                        <div id="textAMLVersion" class="container-fluid">
-                            Latest Version: <small class="text-muted">{{ versions.length }}</small><br>
-                            Author: <small class="text-muted">{{ author }}</small>
+        <div class="row">
+            <h2>Specification for Twin: <small class="text-muted">{{ twinObject.deviceName }}</small></h2>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col text-left" scope="col">
+                <div id="textAMLVersion" class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-3">
+                            Latest Version<br/>
+                            Author
                         </div>
-                    </th>
-                    <th width="25%" class="text-center" scope="col">
-                        <span class="dropdown">
-                            <a href="#" class="btn btn-secondary" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                Version <span class="caret">{{ version }}</span>
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li v-for="(version, i) in versions">
-                                    <a href="#" v-on:click="loadAML(version, versions.length - i)" class="dropdown-item"><strong>V{{(versions.length - i) + ": " }}</strong> {{new Date(version*1000).toLocaleString("en-US") }}</a>
-                                </li>
-                            </ul>
-                        </span>
-                    </th>
-                    <th width="25%" class="text-center" scope="col">
-                        <form class="text-center" @submit.prevent="saveAML">
-                            <button id="submitAML" class="btn btn-secondary" type="submit">
-                                <font-awesome-icon icon="save" data-toggle="tooltip" data-placement="bottom" title="save changes"/>
-                            </button>
-                        </form>
-                    </th>
-                    </thead>
-                </table>
-                <textarea id="amlResult" class="form-control" rows="30" >{{ aml }}</textarea>
+                        <div class="col">
+                            <small class="text-muted">{{ versions.length }}</small><br/>
+                            <code class="text-muted">{{ author }}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 text-left" scope="col">
+                <div class="dropdown">
+                    <a href="#" class="btn btn-secondary btn-block dropdown-toggle" data-toggle="dropdown"
+                       role="button" aria-haspopup="true" aria-expanded="false" id="dropdownMenuLink">
+                        Version {{ version }}
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <a v-for="(version, i) in versions" href="#"
+                           v-on:click="loadAML(version, versions.length - i)" class="dropdown-item">
+                            <strong>V{{(versions.length - i) + ": " }}</strong>
+                            {{ $utils.date(version[0]) }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 text-center" scope="col">
+                <form class="text-center" @submit.prevent="saveAML">
+                    <button id="submitAML" class="btn btn-secondary btn-block" type="submit">
+                        <font-awesome-icon icon="save" data-toggle="tooltip" data-placement="bottom"
+                                           title="save changes"/>
+                        Save
+                    </button>
+                </form>
             </div>
         </div>
+        <hr />
+        <textarea id="amlResult" class="form-control" rows="30" v-model="aml"></textarea>
     </div>
 </template>
 
 <script>
-  import $ from 'jquery';
   //const Prism = require('prismjs');
 
   export default {
@@ -56,69 +66,66 @@
       twin: {
         required: true,
       },
-    }, 
+    },
     mounted() {
-        let script = document.createElement('script')
-        //let css = document.createElement('css')
-        //script.setAttribute('src', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js')
-        script.setAttribute('src', 'highlight.pack.js')
-        //css.setAttribute('stylesheet', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/default.min.css')
-        document.head.appendChild(script)
-        //document.head.appendChild(css)
+      let script = document.createElement('script')
+      //let css = document.createElement('css')
+      //script.setAttribute('src', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js')
+      script.setAttribute('src', 'highlight.pack.js')
+      //css.setAttribute('stylesheet', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/default.min.css')
+      document.head.appendChild(script)
+      //document.head.appendChild(css)
     },
     computed: {
       account() {
         return this.$store.state.user.address
       },
-      twinObject(){
+      twinObject() {
         return this.$store.state.twins
           .filter(f => f.deviceId === this.twin)[0];
       },
-      twinAddress(){
+      twinAddress() {
         return this.twinObject.address;
       }
     },
     methods: {
       async loadVersions() {
         let vm = this;
-        let instance1 = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
-        await instance1.getAllAMLInfos.call({from: vm.account}, function (err, latest) {
-            vm.versions = latest.reverse();
-            vm.loadAML(vm.versions[0], vm.versions.length);
+        await this.specification.getAMLHistory.call({from: vm.account}, function (err, latest) {
+          vm.versions = latest.reverse();
+          vm.loadAML(vm.versions[0], vm.versions.length);
         });
       },
 
-      async loadAML(timestamp, version){
-        let self = this.$store.state;
+      async loadAML(version, versionNumber) {
         let vm = this;
-        this.version = version;
-        let instance1 = await self.contracts.SpecificationContract.at(this.twinAddress);
-        instance1.getAML.call(timestamp, {from: vm.account}, function (err, result1) {
-            vm.author = result1[0];
-            let hash = result1[1];
-            vm.$swarm.downloadDoc(hash)
-              .then(doc => {
-                vm.aml = doc.toString();
-                // highlighting
-              })
-          });
+        this.version = versionNumber;
+        this.author = version[1];
+        let hash = version[2].substring(2, version[2].length);
+        this.$swarm.downloadDoc(hash)
+          .then(doc => {
+            vm.aml = doc.toString();
+            // highlighting
+          })
       },
 
-      saveAML(){
-        let self = this.$store.state;
-        let newAML = $("#amlResult").val();
+      saveAML() {
         let vm = this;
-
-        this.$swarm.uploadDoc(newAML).then(hash => {
-          self.contracts.SpecificationContract.at(vm.twinAddress).then(function (instance) {
-            instance.createNewAMLVersion.sendTransaction(hash, {from: vm.account});
+        console.log(this.aml)
+        this.$swarm.uploadDoc(this.aml, 'text/plain').then(hash => {
+          vm.specification.addNewAMLVersion.sendTransaction(
+            web3.utils.hexToBytes("0x" + hash),
+            {from: vm.account}
+          ).then(() => {
+            vm.loadVersions();
           });
         });
       }
     },
 
-    beforeMount() {
-      this.loadVersions();
+    async beforeMount() {
+      this.specification = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
+      await this.loadVersions();
     }
     /*,
     mounted() {

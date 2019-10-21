@@ -24,6 +24,18 @@ export default {
           default:
             return null;
         }
+      },
+
+      date(timestamp){
+        return new Date(timestamp*1000).toLocaleString("en-US");
+      },
+
+      swarmHashToBytes(hash){
+        return web3.utils.hexToBytes("0x" + hash);
+      },
+
+      hexToSwarmHash(hex){
+        return hex.substr(2, hex.length)
       }
     }
   }

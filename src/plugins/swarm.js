@@ -14,11 +14,11 @@ const client = new SwarmClient({
 export default {
   install(Vue) {
     Vue.prototype.$swarm = {
-      async uploadDoc(content) {
+      async uploadDoc(content, contentType) {
         return new Promise((resolve, reject) => {
           try {
             client.bzz
-                .upload(content, {contentType: 'text/plain'})
+                .upload(content, {contentType: contentType})
                 .then(hash => {
                   resolve(hash);
                 });
@@ -28,13 +28,18 @@ export default {
         });
       },
 
-      async downloadDoc(hash) {
+      async downloadDoc(hash, type = "text") {
         return new Promise((resolve, reject) => {
           try {
             client.bzz
                 .download(hash)
                 .then(response => {
-                  resolve(response.text());
+                  switch(type){
+                    case "text":
+                      resolve(response.text());
+                    case "file":
+                      resolve(response)
+                  }
                 });
           } catch (err) {
             reject(err);
