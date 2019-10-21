@@ -20,6 +20,9 @@
               </div>
             </li>
             <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
+              <router-link :to="{ name: 'twin-spec'}" class="nav-link">Specification</router-link>
+            </li>
+            <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
               <router-link :to="{ name: 'documents'}" class="nav-link">Documents</router-link>
             </li>
             <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
@@ -56,9 +59,10 @@
       var img = jazzicon(50, Math.round(address))
       document.getElementById("icon").appendChild(img)
     },
-    beforeMount() {
+    beforeCreate() {
       this.$store.dispatch('initContracts').then(() => {
         this.$store.dispatch('loadTwins').then(() => {
+
           console.log(this.twins);
         });
       });

@@ -67,7 +67,7 @@ async function getSpecification(address){
           twin.roleNo = roleNo;
           twin.role = role;
           twin.deviceName = "test";
-          $.getJSON("contracts/Specification.json", function (specificationContract) {
+          $.getJSON("/contracts/Specification.json", function (specificationContract) {
             // Instantiate a new truffle contract from the artifact
             vm.contracts.SpecificationContract = TruffleContract(specificationContract);
             // Connect provider to interact with contract
@@ -108,13 +108,13 @@ export default{
     let contracts = {};
     let addresses = {};
     return new Promise((resolve, reject) => {
-      $.getJSON("contracts/Authorization.json", function (authorization) {
+      $.getJSON("/contracts/Authorization.json", function (authorization) {
         // Instantiate a new truffle contract from the artifact
         contracts.Authorization = TruffleContract(authorization);
         // Connect provider to interact with contract
         contracts.Authorization.setProvider(state.web3Provider);
       });
-      $.getJSON("contracts/ContractRegistry.json", function (contractRegistry) {
+      $.getJSON("/contracts/ContractRegistry.json", function (contractRegistry) {
         // Instantiate a new truffle contract from the artifact
         contracts.ContractRegistry = TruffleContract(contractRegistry);
         // Connect provider to interact with contract

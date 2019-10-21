@@ -3,12 +3,12 @@
         <div class="row justify-content-sm-center">
             <div class="col">
                 <h2>Digital Twin Overview</h2>
-                <p>{{ account }}</p>
             </div>
-            <div class="col text-right"><br/>
+            <div class="col-md-2 align-top"><br/>
                 <router-link :to="{ name: 'twin-create' }">
-                    <button type="submit" class="acticon">
-                        <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add twin"/>
+                    <button href="#" class="btn btn-secondary btn-block mt-0 align-top">
+                        <font-awesome-icon icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="upload file"/>
+                        Add Twin
                     </button>
                 </router-link>
             </div>
