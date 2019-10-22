@@ -101,7 +101,7 @@
         let vm = this;
         this.version = versionNumber;
         this.author = version[1];
-        let hash = version[2].substring(2, version[2].length);
+        let hash = this.$utils.hexToSwarmHash(version[2]);
         this.$swarm.downloadDoc(hash)
           .then(doc => {
             vm.aml = doc.toString();

@@ -8,7 +8,7 @@
                 <div class="row">
                     <div class="form-group col-md-3">
                         <select id="component" class="form-control" v-model="selectedComponent">
-                            <option v-for="component in components" v-bind:value="component">{{ component.name }}</option>
+                            <option v-for="component in components" v-bind:value="component.id">{{ component.name }}</option>
                         </select>
                     </div>
                     <div class="input-group mb-3 col">
@@ -75,7 +75,7 @@
           {name: "HMI", id: "068ec45a-1002-4a75-8e27-21d8e0da6e3d"},
           {name: "PLC", id: "27e368a1-3845-47ee-97ba-48de151e90bc"}
         ],
-        selectedComponent: "",
+        selectedComponent: "068ec45a-1002-4a75-8e27-21d8e0da6e3d",
         documents: [],
         file: "Choose file",
         fileType: "",
@@ -123,7 +123,7 @@
           this.fileObject.type
         );
         await this.specification.addDocument(
-          this.selectedComponent.id,
+          this.selectedComponent,
           this.fileObject.name,
           this.description,
           this.$utils.swarmHashToBytes(hash),

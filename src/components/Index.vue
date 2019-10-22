@@ -4,11 +4,10 @@
             <div class="col">
                 <h2>Digital Twin Overview</h2>
             </div>
-            <div class="col-md-2 align-top"><br/>
+            <div class="col-md-1 mr-0"><br/>
                 <router-link :to="{ name: 'twin-create' }">
-                    <button href="#" class="btn btn-secondary btn-block mt-0 align-top">
-                        <font-awesome-icon icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="upload file"/>
-                        Add Twin
+                    <button type="submit" class="acticon">
+                        <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add twin"/>
                     </button>
                 </router-link>
             </div>
@@ -43,12 +42,12 @@
                                     <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
                                 </router-link>
                             </button>
-                            <button class="acticon">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'documents', params: { twin: twin.deviceId  } }">
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
                             </button>
-                            <button class="acticon">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                                 </router-link>
@@ -92,6 +91,17 @@
       }
     },
     methods: {
+      parseAML(deviceId){
+        //specification.AML latest version
+
+        //mit Hash aus Swarm holen
+
+        //parse xml
+
+
+        let components = [{id: "test"}, {id: "test2"}];
+        this.$store.commit('addTwinComponents', {twin: 0, components: components})
+      },
       async removeRole(twinAddress, role) {
         let vm = this;
         this.$swal.fire({

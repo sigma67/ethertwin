@@ -17,6 +17,9 @@ export default {
     addTwin(state, twin){
         state.twins.push(twin);
     },
+    addTwinComponents(state, data){
+        state.twins[data.twin].components = data.components;
+    },
     twins(state, twins){
         state.twins = twins;
     },

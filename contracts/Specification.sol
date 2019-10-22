@@ -76,6 +76,10 @@ contract Specification {
         return AML[id];
     }
 
+    function getAMLCount() public view returns (uint){
+        return AML.length;
+    }
+
     function getAMLHistory() public view returns (Version[] memory){
         return AML;
     }
@@ -132,6 +136,11 @@ contract Specification {
     function getSensor(string memory componentId, uint index) public view returns (Sensor memory){
         bytes32 id = keccak256(bytes(componentId));
         return sensors[id][index];
+    }
+
+    function getSensorCount(string memory componentId) public view returns (uint){
+        bytes32 id = keccak256(bytes(componentId));
+        return sensors[id].length;
     }
 
     function removeSensor(string memory componentId) public {

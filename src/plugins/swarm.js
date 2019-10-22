@@ -1,5 +1,4 @@
 import {SwarmClient} from '@erebos/swarm-browser';
-import '@erebos/timeline';
 import { createKeyPair, sign } from '@erebos/secp256k1'
 
 //todo: use dynamic private key from app wallet

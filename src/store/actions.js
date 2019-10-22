@@ -75,6 +75,7 @@ async function getSpecification(address){
           })
             .then(function () {
               vm.contracts.SpecificationContract.at(address).then(function (instance1) {
+                twin.specification = instance1;
                 twin.address = instance1.address;
                 return Promise.all([
                   instance1.deviceID.call(function (err, res) {

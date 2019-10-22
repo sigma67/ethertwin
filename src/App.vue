@@ -62,8 +62,6 @@
     beforeCreate() {
       this.$store.dispatch('initContracts').then(() => {
         this.$store.dispatch('loadTwins').then(() => {
-
-          console.log(this.twins);
         });
       });
     }
