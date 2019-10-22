@@ -9,7 +9,7 @@ import Documents from './views/Documents.vue'
 import Roles from './views/Roles.vue'
 import AddSensor from "./views/AddSensor";
 
-Vue.use(Router)
+Vue.use(Router);
 
 export default new Router({
   mode: 'history',
@@ -50,7 +50,7 @@ export default new Router({
       props: true
     },
     {
-      path: '/twin/:twin/sensors/:sensor',
+      path: '/twin/:twin/sensors/:component/:sensor',
       name: 'sensor',
       component: Sensor,
       props: true

@@ -56,6 +56,10 @@ contract Specification {
     //array index of the most recently run program
     mapping(bytes32 => uint) public programCounter;
 
+    function getTwin() public view returns (string memory, string memory, address){
+        return (deviceName, deviceID, deviceAgent);
+    }
+
     function updateTwin(string memory _deviceID, string memory _deviceName, address _deviceAgent) public
     {
         deviceID = _deviceID;

@@ -2,7 +2,7 @@ import {SwarmClient} from '@erebos/swarm-browser';
 import { createKeyPair, sign } from '@erebos/secp256k1'
 
 //todo: use dynamic private key from app wallet
-let keyPair = createKeyPair("854d3281cecfa28b376148034eadebf4a9c46860b41bd6fbbadeb031ddd789ff");
+let keyPair = createKeyPair("79f771f8d5840b11e8bdb9704b40d7ae2cd6ae77af7e56701d1910d9240776a3");
 const client = new SwarmClient({
   bzz: {
     signBytes: bytes => Promise.resolve(sign(bytes, keyPair)),
@@ -36,6 +36,7 @@ export default {
                   switch(type){
                     case "text":
                       resolve(response.text());
+                      break;
                     case "file":
                       resolve(response)
                   }
@@ -101,22 +102,25 @@ export default {
 
           //get past updates until time - pastInterval
           while (lastTime > currentTime - pastInterval) {
-            let content = await this.getFeedItemJson(feedHash, lastTime);
-            updates.push(content);
-            lastTime = content.time;
+            let content = await this.getFeedItemJson(feedHash, lastTime - 1);
+            if(lastTime === content.time)
+              break;
+            else {
+              updates.push(content);
+              lastTime = content.time;
+            }
           }
         } catch (err) {
-          console.log(err);
+          console.log(err.toString());
         }
 
         return updates;
       },
 
       /**
-       *
-       * @param user
-       * @param topic
-       * @param time
+       * Retrieves a JSON item based on a feed hash and timestamp
+       * @param feedHash Feed manifest hash
+       * @param time Feed time
        * @returns {Promise<any>}
        */
       async getFeedItemJson(feedHash, time = (new Date()) / 1000) {

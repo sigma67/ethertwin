@@ -27,7 +27,8 @@ export default {
       },
 
       date(timestamp){
-        return new Date(timestamp*1000).toLocaleString("en-US");
+        let locale = window.navigator.language;
+        return new Date(timestamp*1000).toLocaleString(locale);
       },
 
       swarmHashToBytes(hash){

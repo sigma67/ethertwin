@@ -77,14 +77,11 @@ async function getSpecification(address){
               vm.contracts.SpecificationContract.at(address).then(function (instance1) {
                 twin.specification = instance1;
                 twin.address = instance1.address;
-                return Promise.all([
-                  instance1.deviceID.call(function (err, res) {
-                    twin.deviceId = res;
-                  }),
-                  instance1.deviceName.call(function (err, res) {
-                    twin.deviceName = res;
-                  })
-                ]);
+                return instance1.getTwin(function(err,res){
+                  twin.deviceId = res[0];
+                  twin.deviceName = res[1];
+                  twin.deviceAgent = res[2];
+                });
               }).then(function () {
                 resolve(twin);
               });
