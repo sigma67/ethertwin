@@ -52,7 +52,7 @@
                                     <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                                 </router-link>
                             </button>
-                            <button class="acticon" v-on:click="shareTwin(twin.address)">
+                            <button class="acticon" v-on:click="shareTwin(twin.deviceId)">
                                 <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom" title="share twin"/>
                             </button>
                             <button class="acticon"  v-on:click="removeRole(twin.address, twin.roleNo)">
@@ -91,17 +91,44 @@
       }
     },
     methods: {
-      parseAML(deviceId){
-        //specification.AML latest version
+       async parseAML(deviceId){
+         if(deviceId != null){
+           let twin = this.$store.state.twins.filter(f => f.deviceId === deviceId)[0];
+           //let specification = this.$store.state.contracts.SpecificationContract.at(address);
+           let length = await twin.specification.getAMLCount();
+           let index = length.toNumber()-1;
+           //console.log(length.toNumber());
+           
+           //get latest version of specification-AML
+           let amlInfo = await twin.specification.getAML(index);
+    
+           //get AML from Swarm using aml-hash: amlInfo.hash
+           let aml = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(amlInfo.hash));
+             
+           //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
+           // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
+           let parser = new DOMParser();
+           let amlDoc = parser.parseFromString(aml, "text/xml");
+           let instanceHierarchy =amlDoc.documentElement.getElementsByTagName("InstanceHierarchy");
 
-        //mit Hash aus Swarm holen
-
-        //parse xml
-
-
-        let components = [{id: "test"}, {id: "test2"}];
-        this.$store.commit('addTwinComponents', {twin: 0, components: components})
-      },
+           //all child nodes are high-level components
+           let childNodes = instanceHierarchy[0].children;
+             
+           let components = [];
+           for (let i = 0; i < childNodes.length; i++) {
+               //all children of type "InternalElement" are high-level components 
+               if(childNodes[i].nodeName === "InternalElement"){
+                   //console.log(childNodes[i].getAttribute("ID"));
+                   let id = childNodes[i].getAttribute("ID");
+                   let name = childNodes[i].getAttribute("Name");
+                   let hash = web3.utils.sha3(id);
+                   // add parsed components to the components array
+                   components.push({id: id, name: name, hash: hash});
+               }
+            }              
+            this.$store.commit('addTwinComponents', {twin: 0, components: components})
+         }
+       },
       async removeRole(twinAddress, role) {
         let vm = this;
         this.$swal.fire({
