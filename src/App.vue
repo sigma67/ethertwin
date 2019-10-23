@@ -20,19 +20,19 @@
               </div>
             </li>
             <template v-if="selectedTwin !== 0">
-            <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
-              <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">Specification</router-link>
-            </li>
-            <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
-              <router-link :to="{ name: 'documents', params: { twin: selectedTwin  }}" class="nav-link">Documents</router-link>
-            </li>
-            <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
-              <router-link :to="{ name: 'sensors', params: { twin: selectedTwin  }}" class="nav-link">Sensors</router-link>
-            </li>
-            <li class="nav-item">
-              <router-link :to="{ name: 'contracts', params: { twin: selectedTwin  }}" class="nav-link">Contracts</router-link>
-            </li>
-              </template>
+              <li class="nav-item"> <!-- v-if twin selected, show link to twin overview-->
+                <router-link :to="{ name: 'twinOverview', params: { twin: selectedTwin  }}" class="nav-link">Twin Overview</router-link>
+              </li>
+              <li class="nav-item"> 
+                <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">Specification</router-link>
+              </li>
+              <li class="nav-item"> 
+                <router-link :to="{ name: 'documents', params: { twin: selectedTwin  }}" class="nav-link">Documents</router-link>
+              </li>
+              <li class="nav-item"> 
+                <router-link :to="{ name: 'sensors', params: { twin: selectedTwin  }}" class="nav-link">Sensors</router-link>
+              </li>
+            </template>
           </ul>
         </div>
         <div class="nav-item">

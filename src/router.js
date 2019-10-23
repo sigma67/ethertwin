@@ -8,6 +8,7 @@ import Sensor from './views/Sensor.vue'
 import Documents from './views/Documents.vue'
 import Roles from './views/Roles.vue'
 import AddSensor from "./views/AddSensor";
+import TwinOverview from "./views/TwinOverview";
 
 Vue.use(Router);
 
@@ -21,9 +22,10 @@ export default new Router({
       component: Home
     },
     {
-      path: '/contracts',
-      name: 'contracts',
-      component: () => import(/* webpackChunkName: "about" */ './views/Contracts.vue')
+      path: '/twin/:twin/overview',
+      name: 'twinOverview',
+      component: TwinOverview,
+      props: true
     },
     {
       path: '/twin/create',

@@ -43,6 +43,11 @@
                                 </router-link>
                             </button>
                             <button class="acticon" v-on:click.capture="parseAML(twin.deviceId)">
+                                <router-link :to="{ name: 'twinOverview', params: { twin: twin.deviceId  } }">
+                                    <font-awesome-icon icon="sitemap" data-toggle="tooltip" data-placement="bottom" title="see components"/>
+                                </router-link>
+                            </button>
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'documents', params: { twin: twin.deviceId  } }">
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
@@ -52,7 +57,7 @@
                                     <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                                 </router-link>
                             </button>
-                            <button class="acticon" v-on:click="shareTwin(twin.deviceId)">
+                            <button class="acticon" v-on:click="shareTwin(twin.address)">
                                 <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom" title="share twin"/>
                             </button>
                             <button class="acticon"  v-on:click="removeRole(twin.address, twin.roleNo)">
