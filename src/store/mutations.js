@@ -20,6 +20,9 @@ export default {
     addTwinComponents(state, data){
         state.twins[data.twin].components = data.components;
     },
+    selectTwin(state, id){
+        state.selectedTwin = id;
+    },
     twins(state, twins){
         state.twins = twins;
     },

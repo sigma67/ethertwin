@@ -71,11 +71,7 @@
     name: "Documents.vue",
     data() {
       return {
-        components: [
-          {name: "HMI", id: "068ec45a-1002-4a75-8e27-21d8e0da6e3d"},
-          {name: "PLC", id: "27e368a1-3845-47ee-97ba-48de151e90bc"}
-        ],
-        selectedComponent: "068ec45a-1002-4a75-8e27-21d8e0da6e3d",
+        selectedComponent: "",
         documents: [],
         file: "Choose file",
         fileType: "",
@@ -86,6 +82,12 @@
     computed: {
       account() {
         return this.$store.state.user.address
+      },
+      components(){
+        return this.twinObject.components;
+      },
+      specification() {
+        return this.twinObject.specification;
       },
       twinAddress() {
         return this.twinObject.address;
@@ -133,8 +135,6 @@
       },
 
       async downloadDocument(hash, filename) {
-        console.log(hash)
-        console.log(filename)
         let response = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(hash), 'file');
         let contentType = response.headers.get("content-type");
         let blob = new Blob([await response.arrayBuffer()], { type: contentType })
@@ -188,9 +188,9 @@
       }
     },
 
-    async beforeMount() {
-      this.specification = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
-      await this.loadDocuments();
+    beforeMount() {
+      this.loadDocuments();
+      this.selectedComponent = this.components[0].id;
     }
 
   }

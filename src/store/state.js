@@ -9,5 +9,6 @@ export default {
     address: "",
     isDeviceAgent: false
   },
+  selectedTwin: 0,
   twins: []
 }

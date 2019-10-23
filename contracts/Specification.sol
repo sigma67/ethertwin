@@ -57,7 +57,7 @@ contract Specification {
     mapping(bytes32 => uint) public programCounter;
 
     function getTwin() public view returns (string memory, string memory, address){
-        return (deviceName, deviceID, deviceAgent);
+        return (deviceID, deviceName, deviceAgent);
     }
 
     function updateTwin(string memory _deviceID, string memory _deviceName, address _deviceAgent) public

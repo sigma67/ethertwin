@@ -37,17 +37,17 @@
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
                         <td>
-                            <button class="acticon">
+                            <button class="acticon" v-on:click.capture="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
                                 </router-link>
                             </button>
-                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click.capture="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'documents', params: { twin: twin.deviceId  } }">
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
                             </button>
-                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click.capture="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                                 </router-link>
@@ -72,7 +72,6 @@
 
 <script>
   import $ from 'jquery';
-  import TruffleContract from '@truffle/contract'
 
   export default {
     name: 'Index',
@@ -93,7 +92,9 @@
     methods: {
        async parseAML(deviceId){
          if(deviceId != null){
+           this.$store.commit('selectTwin', deviceId);
            let twin = this.$store.state.twins.filter(f => f.deviceId === deviceId)[0];
+           if(twin.hasOwnProperty('components')) return;
            //let specification = this.$store.state.contracts.SpecificationContract.at(address);
            let length = await twin.specification.getAMLCount();
            let index = length.toNumber()-1;
@@ -126,7 +127,7 @@
                    components.push({id: id, name: name, hash: hash});
                }
             }              
-            this.$store.commit('addTwinComponents', {twin: 0, components: components})
+            this.$store.commit('addTwinComponents', {twin: 0, components: components});
          }
        },
       async removeRole(twinAddress, role) {

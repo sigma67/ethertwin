@@ -16,21 +16,23 @@
             <li class="nav-item dropdown">
                 <router-link to="/" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</router-link>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown" >
-                <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
+                <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
               </div>
             </li>
+            <template v-if="selectedTwin !== 0">
             <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
-              <router-link :to="{ name: 'twin-spec'}" class="nav-link">Specification</router-link>
+              <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">Specification</router-link>
             </li>
             <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
-              <router-link :to="{ name: 'documents'}" class="nav-link">Documents</router-link>
+              <router-link :to="{ name: 'documents', params: { twin: selectedTwin  }}" class="nav-link">Documents</router-link>
             </li>
             <li class="nav-item"> <!-- v-if twin selected, show link to documents-->
-              <router-link :to="{ name: 'sensors' }" class="nav-link">Sensors</router-link>
+              <router-link :to="{ name: 'sensors', params: { twin: selectedTwin  }}" class="nav-link">Sensors</router-link>
             </li>
             <li class="nav-item">
-              <router-link :to="{ name: 'contracts' }" class="nav-link">Contracts</router-link>
+              <router-link :to="{ name: 'contracts', params: { twin: selectedTwin  }}" class="nav-link">Contracts</router-link>
             </li>
+              </template>
           </ul>
         </div>
         <div class="nav-item">
@@ -44,10 +46,22 @@
 </template>
 <script>
   const jazzicon = require('jazzicon')
+  import registryAbi from '../public/contracts/ContractRegistry.json'
+  import authorizationAbi from '../public/contracts/Authorization.json'
+  import specificationAbi from '../public/contracts/Specification.json'
+
   export default {
+    data(){
+      return {
+        twin: null
+      }
+    },
     computed: {
       account() {
         return this.$store.state.user.address
+      },
+      selectedTwin(){
+        return this.$store.state.selectedTwin
       },
       twins() {
         return this.$store.state.twins
@@ -60,9 +74,13 @@
       document.getElementById("icon").appendChild(img)
     },
     beforeCreate() {
-      this.$store.dispatch('initContracts').then(() => {
-        this.$store.dispatch('loadTwins').then(() => {
-        });
+      let ABIs = {
+        registry: registryAbi,
+        authorization: authorizationAbi,
+        specification: specificationAbi
+      };
+      this.$store.dispatch('initContracts', ABIs).then(() => {
+        this.$store.dispatch('loadTwins', ABIs);
       });
     }
   }

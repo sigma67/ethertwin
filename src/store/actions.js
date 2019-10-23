@@ -51,12 +51,12 @@ async function loadAccount(){
   })
 }
 
-async function getSpecification(address){
+async function getSpecification(address, state, specification){
   //check role of user
   return new Promise((resolve, reject) => {
-    let vm = this;
-    let utils = this.utils;
-    this.contracts.Authorization.deployed()
+    let vm = state;
+    let utils = state.utils;
+    state.contracts.Authorization.deployed()
       .then(function (instance) {
         return instance.getRole.call(vm.user.address, address);
       })
@@ -66,26 +66,20 @@ async function getSpecification(address){
           let twin = {};
           twin.roleNo = roleNo;
           twin.role = role;
-          twin.deviceName = "test";
-          $.getJSON("/contracts/Specification.json", function (specificationContract) {
-            // Instantiate a new truffle contract from the artifact
-            vm.contracts.SpecificationContract = TruffleContract(specificationContract);
-            // Connect provider to interact with contract
-            vm.contracts.SpecificationContract.setProvider(vm.web3Provider);
-          })
-            .then(function () {
-              vm.contracts.SpecificationContract.at(address).then(function (instance1) {
-                twin.specification = instance1;
-                twin.address = instance1.address;
-                return instance1.getTwin(function(err,res){
-                  twin.deviceId = res[0];
-                  twin.deviceName = res[1];
-                  twin.deviceAgent = res[2];
-                });
-              }).then(function () {
-                resolve(twin);
-              });
+
+          vm.contracts.SpecificationContract = TruffleContract(specification);
+          vm.contracts.SpecificationContract.setProvider(vm.web3Provider);
+          vm.contracts.SpecificationContract.at(address).then(function (instance1) {
+            twin.specification = instance1;
+            twin.address = instance1.address;
+            return instance1.getTwin(function(err,res){
+              twin.deviceId = res[0];
+              twin.deviceName = res[1];
+              twin.deviceAgent = res[2];
             });
+          }).then(function () {
+            resolve(twin);
+          });
         }
         else{
           resolve(null);
@@ -102,50 +96,41 @@ export default{
     commit('account', account);
   },
 
-  async initContracts({ commit, state }){
+  async initContracts({ commit, state }, ABIs){
     let contracts = {};
     let addresses = {};
     return new Promise((resolve, reject) => {
-      $.getJSON("/contracts/Authorization.json", function (authorization) {
-        // Instantiate a new truffle contract from the artifact
-        contracts.Authorization = TruffleContract(authorization);
-        // Connect provider to interact with contract
-        contracts.Authorization.setProvider(state.web3Provider);
-      });
-      $.getJSON("/contracts/ContractRegistry.json", function (contractRegistry) {
-        // Instantiate a new truffle contract from the artifact
-        contracts.ContractRegistry = TruffleContract(contractRegistry);
-        // Connect provider to interact with contract
-        contracts.ContractRegistry.setProvider(state.web3Provider);
-      }).then(function () {
+      contracts.Authorization = TruffleContract(ABIs.authorization);
+      contracts.Authorization.setProvider(state.web3Provider);
 
-        contracts.ContractRegistry.deployed()
-          .then(function (instance1) {
-            addresses.ContractRegistryAddress = instance1.address;
-          })
-          .then(function () {
-            contracts.Authorization.deployed()
-              .then(function (instance2) {
-                addresses.AuthorizationAddress = instance2.address;
-                commit('contracts', contracts);
-                commit('addresses',
-                  {
-                    addresses: addresses,
-                    callback: (state) => {
-                      resolve({state})
-                    }
-                  });
-              });
-          }).catch(function (err) {
-            reject(err)
-          });
+      contracts.ContractRegistry = TruffleContract(ABIs.registry);
+      contracts.ContractRegistry.setProvider(state.web3Provider);
+
+      contracts.ContractRegistry.deployed()
+        .then(function (instance1) {
+          addresses.ContractRegistryAddress = instance1.address;
+        })
+        .then(function () {
+          contracts.Authorization.deployed()
+            .then(function (instance2) {
+              addresses.AuthorizationAddress = instance2.address;
+              commit('contracts', contracts);
+              commit('addresses',
+                {
+                  addresses: addresses,
+                  callback: (state) => {
+                    resolve({state})
+                  }
+                });
+            });
+        }).catch(function (err) {
+          reject(err)
+        });
       });
-    });
   },
 
-  async loadTwins({ commit, state }) {
+  async loadTwins({ commit, state }, ABIs) {
     let vm = this;
-    let twins = [];
     return new Promise((resolve, reject) => {
       state.contracts.Authorization.deployed()
         .then(function (instanceA) {
@@ -163,7 +148,7 @@ export default{
               //iteration through all elements
               if (contracts.length > 0) {
                 state.utils = vm._vm.$utils;
-                Promise.all(contracts.map(getSpecification, state)).then(function(twins) {
+                Promise.all(contracts.map(c => getSpecification(c, state, ABIs.specification))).then(function(twins) {
                   twins = twins.filter(result => (result !== null));
                   commit('twins', twins);
                   resolve();
