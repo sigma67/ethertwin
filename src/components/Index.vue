@@ -37,12 +37,12 @@
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
                         <td>
-                            <button class="acticon" v-on:click.capture="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
                                 </router-link>
                             </button>
-                            <button class="acticon" v-on:click.capture="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'twinOverview', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="sitemap" data-toggle="tooltip" data-placement="bottom" title="see components"/>
                                 </router-link>
@@ -52,7 +52,7 @@
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
                             </button>
-                            <button class="acticon" v-on:click.capture="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
                                 <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                                 </router-link>
