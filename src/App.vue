@@ -42,6 +42,8 @@
       </div>
     </nav>
     <router-view/>
+
+
   </div>
 </template>
 <script>
@@ -49,11 +51,11 @@
   import registryAbi from '../public/contracts/ContractRegistry.json'
   import authorizationAbi from '../public/contracts/Authorization.json'
   import specificationAbi from '../public/contracts/Specification.json'
-
+  
   export default {
     data(){
       return {
-        twin: null
+        twin: null,
       }
     },
     computed: {

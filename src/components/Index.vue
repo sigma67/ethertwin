@@ -77,9 +77,18 @@
 
 <script>
   import $ from 'jquery';
+  import Spinner from './Spinner.vue'
 
   export default {
-    name: 'Index',
+    name: 'Index', 
+    components: {
+       Spinner
+    },
+    data() {
+      return {
+          isSpinnerVisible: false
+      }
+    },
     props: {
       msg: String
     },
