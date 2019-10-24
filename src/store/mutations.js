@@ -31,7 +31,7 @@ export default {
           return v.address !== twinAddress;
         });
     },
-    setIsDeviceAgent(state, value){
-      state.user.isDeviceAgent = value;
+    setSpecificationAbi(state, ABI){
+        state.specificationAbi = ABI;
     }
 }

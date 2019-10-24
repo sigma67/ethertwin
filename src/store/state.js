@@ -5,6 +5,7 @@ export default {
     ContractRegistryAddress: "",
     AuthorizationAddress: ""
   },
+  specificationAbi: {},
   user: {
     address: "",
     isDeviceAgent: false

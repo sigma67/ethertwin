@@ -3,7 +3,7 @@
     <h2>Components of Twin: <small class="text-muted">{{ twinObject.deviceName }}</small></h2><br/>
 
     <br/>
-     <div v-for="(component,i) in twinObject.components" v-if="twinObject.components.length > 0" class="card">
+     <div v-for="(component,i) in twinObject.components" class="card">
 
        <div class="card-header" id="headingOne">
          <h5 class="mb-0">
@@ -37,10 +37,7 @@
             twinObject() {
                 return this.$store.state.twins
                     .filter(f => f.deviceId === this.twin)[0];
-            }, 
-            twinComponents(){
-                return this.twinObject.components;
-            }
+            },
         },
         props: {
             twin: {
@@ -48,15 +45,15 @@
             },
         },
         methods: {
-            
-            async beforeMount() {
-                if (! this.twinObject.components) {
-                  this.$store.subscribe((mutation, state) => {
-                      if (mutation.type === "addTwinComponents") {
-                      }
-                  })
-                }
+
+        },
+        beforeMount() {
+          this.$store.subscribe((mutation, state) => {
+            if (mutation.type === "addTwinComponents") {
+              console.log(this.twinObject.components)
+              this.$forceUpdate();
             }
+          })
         }
     }
 </script>

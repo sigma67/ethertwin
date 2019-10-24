@@ -51,7 +51,7 @@ async function loadAccount(){
   })
 }
 
-async function getSpecification(address, state, specification){
+async function getSpecification(address, state){
   //check role of user
   return new Promise((resolve, reject) => {
     let vm = state;
@@ -67,7 +67,7 @@ async function getSpecification(address, state, specification){
           twin.roleNo = roleNo;
           twin.role = role;
 
-          vm.contracts.SpecificationContract = TruffleContract(specification);
+          vm.contracts.SpecificationContract = TruffleContract(state.specificationAbi);
           vm.contracts.SpecificationContract.setProvider(vm.web3Provider);
           vm.contracts.SpecificationContract.at(address).then(function (instance1) {
             twin.specification = instance1;
@@ -129,39 +129,30 @@ export default{
       });
   },
 
-  async loadTwins({ commit, state }, ABIs) {
+  async loadTwins({ commit, state }) {
     let vm = this;
     return new Promise((resolve, reject) => {
-      state.contracts.Authorization.deployed()
-        .then(function (instanceA) {
-          return instanceA.deviceAgentAddress.call();
+      state.contracts.ContractRegistry.deployed()
+        .then(function (instance1) {
+          return instance1.getContracts();
         })
-        .then(function (deviceAgent) {
-          let isDeviceAgent = state.user.address.toLowerCase() === deviceAgent.toLowerCase();
-          commit('setIsDeviceAgent', isDeviceAgent);
-          //after checking, all contracts are retrieved
-          state.contracts.ContractRegistry.deployed()
-            .then(function (instance1) {
-              return instance1.getContracts.call();
-            })
-            .then(function (contracts) {
-              //iteration through all elements
-              if (contracts.length > 0) {
-                state.utils = vm._vm.$utils;
-                Promise.all(contracts.map(c => getSpecification(c, state, ABIs.specification))).then(function(twins) {
-                  twins = twins.filter(result => (result !== null));
-                  commit('twins', twins);
-                  resolve();
-                });
-              }
-              else{
-                resolve();
-              }
-            })
-            .catch(function (error) {
-              reject(error);
-            })
-        });
-    });
+        .then(function (contracts) {
+          //iteration through all elements
+          if (contracts.length > 0) {
+            state.utils = vm._vm.$utils;
+            Promise.all(contracts.map(c => getSpecification(c, state))).then(function(twins) {
+              twins = twins.filter(result => (result !== null));
+              commit('twins', twins);
+              resolve();
+            });
+          }
+          else{
+            resolve();
+          }
+        })
+        .catch(function (error) {
+          reject(error);
+        })
+      });
   },
 }
