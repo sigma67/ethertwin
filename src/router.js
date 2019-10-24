@@ -8,7 +8,7 @@ import Sensor from './views/Sensor.vue'
 import Documents from './views/Documents.vue'
 import Roles from './views/Roles.vue'
 import AddSensor from "./views/AddSensor";
-import TwinOverview from "./views/TwinOverview";
+import Components from "./views/Components";
 
 Vue.use(Router);
 
@@ -22,9 +22,9 @@ export default new Router({
       component: Home
     },
     {
-      path: '/twin/:twin/overview',
-      name: 'twinOverview',
-      component: TwinOverview,
+      path: '/twin/:twin/components',
+      name: 'components',
+      component: Components,
       props: true
     },
     {

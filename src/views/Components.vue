@@ -3,17 +3,17 @@
     <h2>Components of Twin: <small class="text-muted">{{ twinObject.deviceName }}</small></h2><br/>
 
     <br/>
-     <div v-for="component in twinComponents" v-if="twinComponents.length > 0" class="card">
+     <div v-for="(component,i) in twinObject.components" v-if="twinObject.components.length > 0" class="card">
 
        <div class="card-header" id="headingOne">
          <h5 class="mb-0">
-           <button class="btn btn-link" type="button" data-toggle="collapse" :data-target="'#'+component.name" aria-expanded="false" :aria-controls="component.name">
+           <button class="btn btn-link" type="button" data-toggle="collapse" :data-target="'#component'+i" aria-expanded="false" :aria-controls="'component'+i">
              <font-awesome-icon icon="sitemap" data-toggle="tooltip" data-placement="bottom" :title="'component: '+component.id"/>
              {{ component.name }}
          </button>
          </h5>
        </div>
-       <div class="collapse" :id="component.name">
+       <div class="collapse" :id="'component'+i">
          <div class="card card-body">
            ID : {{ component.id }}
          </div>
@@ -27,7 +27,7 @@
 
 <script>
     export default {
-        name: "TwinOverview.vue",
+        name: "Components.vue",
         data() {
             return {
                 msg: "", 
@@ -47,7 +47,17 @@
                 required: true,
             },
         },
-        methods: {}
+        methods: {
+            
+            async beforeMount() {
+                if (! this.twinObject.components) {
+                  this.$store.subscribe((mutation, state) => {
+                      if (mutation.type === "addTwinComponents") {
+                      }
+                  })
+                }
+            }
+        }
     }
 </script>
 

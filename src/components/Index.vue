@@ -32,27 +32,27 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="twin in twins" v-if="twins.length > 0">
+                    <tr v-for="(twin, i) in twins" v-if="twins.length > 0">
                         <td>{{ twin.deviceName }}</td>
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
                         <td>
-                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
                                 </router-link>
                             </button>
-                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
-                                <router-link :to="{ name: 'twinOverview', params: { twin: twin.deviceId  } }">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
+                                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="sitemap" data-toggle="tooltip" data-placement="bottom" title="see components"/>
                                 </router-link>
                             </button>
-                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'documents', params: { twin: twin.deviceId  } }">
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
                             </button>
-                            <button class="acticon" v-on:click="parseAML(twin.deviceId)">
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }">
                                     <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                                 </router-link>
@@ -95,7 +95,7 @@
       }
     },
     methods: {
-       async parseAML(deviceId){
+       async parseAML(deviceId, twinIndex){
          if(deviceId != null){
            this.$store.commit('selectTwin', deviceId);
            let twin = this.$store.state.twins.filter(f => f.deviceId === deviceId)[0];
@@ -132,7 +132,7 @@
                    components.push({id: id, name: name, hash: hash});
                }
             }              
-            this.$store.commit('addTwinComponents', {twin: 0, components: components});
+            this.$store.commit('addTwinComponents', {twin: twinIndex, components: components});
          }
        },
       async removeRole(twinAddress, role) {

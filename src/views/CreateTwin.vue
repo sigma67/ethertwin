@@ -67,7 +67,7 @@
 
       addTwin() {
         let vm = this;
-        //todo thes Unterscheidung File/Text
+        //todo thes Unterscheidung File/Text event.target.file
         if (this.twinID === "" || this.twinName === "" || this.twinAML === "" || !web3.utils.isAddress(this.deviceAgent)) {
           alert("Empty values are not accepted!");
         } else {

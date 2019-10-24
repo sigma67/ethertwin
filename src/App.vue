@@ -21,7 +21,7 @@
             </li>
             <template v-if="selectedTwin !== 0">
               <li class="nav-item"> <!-- v-if twin selected, show link to twin overview-->
-                <router-link :to="{ name: 'twinOverview', params: { twin: selectedTwin  }}" class="nav-link">Twin Overview</router-link>
+                <router-link :to="{ name: 'components', params: { twin: selectedTwin  }}" class="nav-link">Components</router-link>
               </li>
               <li class="nav-item"> 
                 <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">Specification</router-link>
@@ -67,12 +67,6 @@
         return this.$store.state.twins
       }
     },
-    //create user-icon based on their address when component is mounted (DOM-reachable)
-    mounted(){
-      var address = parseInt(this.$store.state.user.address,16) //hex-user-address to int
-      var img = jazzicon(50, Math.round(address))
-      document.getElementById("icon").appendChild(img)
-    },
     beforeCreate() {
       let ABIs = {
         registry: registryAbi,
@@ -80,7 +74,11 @@
         specification: specificationAbi
       };
       this.$store.dispatch('initContracts', ABIs).then(() => {
-        this.$store.dispatch('loadTwins', ABIs);
+          this.$store.dispatch('loadTwins', ABIs);
+          //create user-icon based on their address when component is mounted (DOM-reachable)
+          let address = parseInt(this.account,16); //hex-user-address to int 
+          let img = jazzicon(50, Math.log(address));
+          document.getElementById("icon").appendChild(img);
       });
     }
   }
