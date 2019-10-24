@@ -8,7 +8,7 @@
                 <div class="row">
                     <div class="form-group col-md-3">
                         <select id="component" class="form-control" v-model="selectedComponent">
-                            <option v-for="component in components" v-bind:value="component.id">{{ component.name }}</option>
+                            <option v-for="component in twinObject.components" v-bind:value="component.id">{{ component.name }}</option>
                         </select>
                     </div>
                     <div class="form-group col">
@@ -34,16 +34,16 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="sensor in sensors">
-                    <td>{{ components[0].name }}</td>
+                <tr v-for="(sensor, i) in sortedSensors">
+                    <td>{{ sensor.componentName }}</td>
                     <td>{{ sensor.name }}</td>
                     <td>
                         <button class="acticon">
-                            <router-link :to="{ name: 'sensor', params: { component: sensor.component, sensor: sensor.number } }">
+                            <router-link :to="{ name: 'sensor', params: { component: sensor.componentHash, sensor: sensor.number } }">
                                 <font-awesome-icon icon="search" data-placement="bottom" title="view sensor data"/>
                             </router-link>
                         </button>
-                        <button class="acticon"> <!-- v-on:click="deleteSensor(sensorId)" -->
+                        <button class="acticon" v-on:click="removeSensor(sensor.componentId, sensor.number)">
                             <font-awesome-icon icon="trash" data-placement="bottom" title="remove sensor"/>
                         </button>
                     </td>
@@ -67,11 +67,20 @@
       account() {
         return this.$store.state.user.address
       },
-      components(){
-        return this.twinObject.components;
-      },
       specification() {
         return this.twinObject.specification;
+      },
+      sortedSensors(){
+        return this.sensors.sort(function(a,b){
+          let val = 0;
+          if(a.componentName < b.componentName){
+            val = 1;
+            if(a.number < b.number){
+              val = 2;
+            }
+          }
+          return val;
+        })
       },
       twinAddress() {
         return this.twinObject.address;
@@ -102,21 +111,36 @@
         await this.loadSensors();
       },
 
-      async deleteSensor(component){
-
+      async removeSensor(component, index){
+        console.log(component + index)
+        await this.specification.removeSensor(
+          component,
+          index,
+          { from: this.account }
+        );
+        this.$swal.fire({
+          type: "success",
+          title: "You have successfully removed this sensor!",
+          showConfirmButton: false,
+          timer: 2000
+        });
+        await this.loadSensors();
       },
 
       loadSensors(){
         this.sensors = [];
-        return Promise.all(this.components.map(this.loadSensor));
+        return Promise.all(this.twinObject.components.map(this.loadSensor));
       },
 
       async loadSensor(component) {
         let componentHash = web3.utils.sha3(component.id);
         let count = await this.specification.getSensorCount(component.id);
         for(let i = 0; i < count.toNumber(); i++){
+          console.log(component.id + ", " + i)
           let sensor = await this.specification.sensors(componentHash,i);
-          sensor.component = componentHash;
+          sensor.componentId = component.id;
+          sensor.componentName = component.name;
+          sensor.componentHash = component.hash;
           sensor.number = i;
           this.sensors.push(sensor);
         }
@@ -125,8 +149,18 @@
     },
 
     async beforeMount() {
-      await this.loadSensors();
-      this.selectedComponent = this.components[0].id;
+      if (this.twinObject.components) {
+        this.loadSensors();
+        this.selectedComponent = this.twinObject.components[0].id;
+      }
+      else {
+        this.$store.subscribe((mutation, state) => {
+          if (mutation.type === "addTwinComponents") {
+            this.loadSensors();
+            this.selectedComponent = mutation.payload.components[0].id;
+          }
+        })
+      }
     }
   }
 </script>

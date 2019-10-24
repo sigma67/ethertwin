@@ -49,6 +49,16 @@ contract("ContractRegistry", accounts => {
     assert.equal(sensors.hash, hash, "Sensor not created");
   });
 
+  it("should remove a sensor", async () => {
+    //add two more sensors
+    await s.addSensor(component, "My Sensor 2", hashBytes);
+    await s.addSensor(component, "My Sensor 3", hashBytes);
+    //remove middle one
+    await s.removeSensor(component, 1);
+    let sensor = await s.getSensor(component, 1);
+    assert.equal(sensor.name, "My Sensor 3", "Sensor not removed");
+  });
+
   it("should create a new external source", async () => {
     let myUri = "http://my-url.com:8080";
     await s.addExternalSource(myUri);

@@ -147,10 +147,13 @@ contract Specification {
         return sensors[id].length;
     }
 
-    function removeSensor(string memory componentId) public {
+    function removeSensor(string memory componentId, uint index) public {
         bytes32 id = keccak256(bytes(componentId));
         //todo permission check
-        delete(sensors[id]);
+        require(index < sensors[id].length);
+        sensors[id][index] = sensors[id][sensors[id].length-1];
+        delete sensors[id][sensors[id].length-1];
+        sensors[id].length--;
     }
 
     //******* EXTERNAL SOURCES *******//
@@ -170,7 +173,10 @@ contract Specification {
 
     function removeExternalSource(uint index) public {
         //todo permission check
-        delete(sources[index]);
+        require(index < sources.length);
+        sources[index] = sources[sources.length-1];
+        delete sources[sources.length-1];
+        sources.length--;
     }
 
     //******* PROGRAM CALLS *******//

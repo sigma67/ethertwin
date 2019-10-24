@@ -21,7 +21,7 @@
             </li>
             <template v-if="selectedTwin !== 0">
               <li class="nav-item"> <!-- v-if twin selected, show link to twin overview-->
-                <router-link :to="{ name: 'components', params: { twin: selectedTwin  }}" class="nav-link">Components</router-link>
+                <router-link :to="{ name: 'components', params: { twin: selectedTwin  }}" class="nav-link">Twin Overview</router-link>
               </li>
               <li class="nav-item"> 
                 <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">Specification</router-link>
@@ -67,19 +67,25 @@
         return this.$store.state.twins
       }
     },
-    beforeCreate() {
+
+    async beforeCreate() {
       let ABIs = {
         registry: registryAbi,
         authorization: authorizationAbi,
         specification: specificationAbi
       };
-      this.$store.dispatch('initContracts', ABIs).then(() => {
-          this.$store.dispatch('loadTwins', ABIs);
-          //create user-icon based on their address when component is mounted (DOM-reachable)
-          let address = parseInt(this.account,16); //hex-user-address to int 
-          let img = jazzicon(50, Math.log(address));
-          document.getElementById("icon").appendChild(img);
-      });
+
+      if(!this.$store.state.contracts.hasOwnProperty("Authorization")) {
+        this.$store.commit('setSpecificationAbi', ABIs.specification);
+        await this.$store.dispatch('initContracts', ABIs);
+      }
+
+      await this.$store.dispatch('loadTwins');
+
+      //create user-icon based on their address when component is mounted (DOM-reachable)
+      let address = parseInt(this.account,16); //hex-user-address to int
+      let img = jazzicon(50, Math.log(address));
+      document.getElementById("icon").appendChild(img);
     }
   }
 </script>
