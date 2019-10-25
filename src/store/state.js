@@ -11,5 +11,6 @@ export default {
     isDeviceAgent: false
   },
   selectedTwin: 0,
+  spinner: true,
   twins: []
 }

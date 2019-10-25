@@ -16,7 +16,7 @@
             <li class="nav-item dropdown">
                 <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown" >
-                <router-link :to="{ name: 'components', params: { twin: selectedTwin  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
+                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
               </div>
             </li>
             <template v-if="selectedTwin !== 0">
@@ -35,9 +35,9 @@
               <li class="nav-item">
                 <router-link :to="{ name: 'sources', params: { twin: selectedTwin  }}" class="nav-link">Data sources</router-link>
               </li>
-              <li class="nav-item">
+              <!--<li class="nav-item">
                 <router-link :to="{ name: 'programs', params: { twin: selectedTwin  }}" class="nav-link">Programs</router-link>
-              </li>
+              </li>-->
             </template>
           </ul>
         </div>
@@ -48,17 +48,21 @@
       </div>
     </nav>
     <router-view/>
-
+    <spinner :visible="spinner"/>
 
   </div>
 </template>
 <script>
+  import Spinner from './components/Spinner.vue'
   const jazzicon = require('jazzicon')
   import registryAbi from '../public/contracts/ContractRegistry.json'
   import authorizationAbi from '../public/contracts/Authorization.json'
   import specificationAbi from '../public/contracts/Specification.json'
   
   export default {
+    components: {
+      Spinner
+    },
     data(){
       return {
         twin: null,
@@ -67,6 +71,9 @@
     computed: {
       account() {
         return this.$store.state.user.address
+      },
+      spinner(){
+        return this.$store.state.spinner
       },
       selectedTwin(){
         return this.$store.state.selectedTwin
@@ -77,6 +84,8 @@
     },
 
     async beforeCreate() {
+      this.$store.commit('spinner', true);
+
       let ABIs = {
         registry: registryAbi,
         authorization: authorizationAbi,
@@ -89,11 +98,12 @@
       }
 
       await this.$store.dispatch('loadTwins');
-
       //create user-icon based on their address when component is mounted (DOM-reachable)
       let address = parseInt(this.account,16); //hex-user-address to int
       let img = jazzicon(50, Math.log(address));
       document.getElementById("icon").appendChild(img);
+
+      this.$store.commit('spinner', false);
     }
   }
 </script>

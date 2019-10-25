@@ -37,20 +37,13 @@
         </form>
       </div>
     </div>
-    <spinner :visible="isSpinnerVisible"/>
 
   </div>
 </template>
 
 <script>
-    import $ from 'jquery';
-    import Spinner from '../components/Spinner.vue'
-
     export default {
         name: "CreateTwin",
-        components: {
-            Spinner
-        },
         data() {
             return {
                 selected: 'Text',
@@ -62,7 +55,6 @@
                 twinName: "",
                 twinAML: "",
                 deviceAgent: "",
-                isSpinnerVisible: false
             }
         },
         computed: {
@@ -74,11 +66,12 @@
 
             addTwin() {
                 let vm = this;
-                //todo thes Unterscheidung File/Text event.target.file
+
                 if (this.twinID === "" || this.twinName === "" || this.twinAML === "" && this.selected === "Text" || !web3.utils.isAddress(this.deviceAgent)) {
                     alert("Empty values are not accepted!");
                 } else {
-                    this.isSpinnerVisible = true;
+
+                    this.$store.commit('spinner', true);
                     //upload file to swarm and get swarm hash
                     this.$swarm.uploadDoc(this.twinAML, 'text/plain').then(hash => {
                         vm.$store.state.contracts.ContractRegistry.deployed()
@@ -94,24 +87,24 @@
                                 );
                             })
                             .then(function (result) {
+                                this.$store.commit('spinner', false);
                                 vm.$store.dispatch('loadTwins');
                                 vm.$router.push('/');
                             })
                             .catch(function (err) {
+                                this.$store.commit('spinner', false);
                                 alert(err);
                             });
                     });
                 }
             },
             async processFile(event) {
-                this.isSpinnerVisible = true;
                 try {
                     if (this.selected == 'File') {
                         this.twinAML = Buffer.from(await event.target.files[0].arrayBuffer());
                     }
-                    this.isSpinnerVisible = false;
                 } catch (error) {
-                    this.isSpinnerVisible = false;
+                  console.log(error);
                 }
 
             }

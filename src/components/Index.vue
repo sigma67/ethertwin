@@ -57,6 +57,11 @@
                                     <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                                 </router-link>
                             </button>
+                            <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
+                                <router-link :to="{ name: 'sources', params: { twin: twin.deviceId  } }">
+                                    <font-awesome-icon icon="database" data-placement="bottom" title="view external sources"/>
+                                </router-link>
+                            </button>
                             <button class="acticon" v-on:click="shareTwin(twin.address)">
                                 <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom" title="share twin"/>
                             </button>
@@ -77,21 +82,9 @@
 
 <script>
   import $ from 'jquery';
-  import Spinner from './Spinner.vue'
 
   export default {
-    name: 'Index', 
-    components: {
-       Spinner
-    },
-    data() {
-      return {
-          isSpinnerVisible: false
-      }
-    },
-    props: {
-      msg: String
-    },
+    name: 'Index',
     computed: {
       account () {
         return this.$store.state.user.address

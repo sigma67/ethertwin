@@ -144,20 +144,25 @@
           sensor.number = i;
           this.sensors.push(sensor);
         }
+      },
+
+      async load(componentId){
+        this.$store.commit('spinner', true);
+        this.loadSensors();
+        this.selectedComponent = componentId;
+        this.$store.commit('spinner', false);
       }
 
     },
 
     async beforeMount() {
       if (this.twinObject.components) {
-        this.loadSensors();
-        this.selectedComponent = this.twinObject.components[0].id;
+        await this.load(this.twinObject.components[0].id);
       }
       else {
         this.$store.subscribe((mutation, state) => {
           if (mutation.type === "addTwinComponents") {
-            this.loadSensors();
-            this.selectedComponent = mutation.payload.components[0].id;
+            this.load(mutation.payload.components[0].id);
           }
         })
       }

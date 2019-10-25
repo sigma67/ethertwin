@@ -108,7 +108,9 @@
     },
 
     async beforeMount() {
+      this.$store.commit('spinner', true);
       await this.loadSources();
+      this.$store.commit('spinner', false);
     }
   }
 </script>

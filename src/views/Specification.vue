@@ -124,8 +124,10 @@
     },
 
     async beforeMount() {
+      this.$store.commit('spinner', true);
       this.specification = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
       await this.loadVersions();
+      this.$store.commit('spinner', false);
     }
     /*,
     mounted() {

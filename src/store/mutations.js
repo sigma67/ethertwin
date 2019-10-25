@@ -33,5 +33,8 @@ export default {
     },
     setSpecificationAbi(state, ABI){
         state.specificationAbi = ABI;
+    },
+    spinner(state, status){
+        state.spinner = status;
     }
 }
