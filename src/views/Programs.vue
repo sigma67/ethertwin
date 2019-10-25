@@ -1,0 +1,173 @@
+<template>
+    <div class="container mt-5">
+        <h2>Programs for Twin:  <small class="text-muted">{{ twinObject.deviceName }}</small></h2><br />
+        <h5>Call a program</h5>
+        <p>Select a component and enter the name of the sensor.</p>
+        <form class="row" @submit.prevent="addSensor">
+            <div class="col">
+                <div class="row">
+                    <div class="form-group col-md-3">
+                        <select id="component" class="form-control" v-model="selectedComponent">
+                            <option v-for="component in twinObject.components" v-bind:value="component.id">{{ component.name }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group col">
+                        <input type="text" class="form-control" id="name" placeholder="Sensor name" v-model="name">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group col-md-2">
+                <button id="upload" class="btn btn-secondary btn-block h-100">
+                    <font-awesome-icon icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="upload file"/>
+                     Add Sensor
+                </button>
+            </div>
+        </form>
+        <hr/>
+        <h5>Existing program calls</h5><br />
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Component</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(sensor, i) in sortedSensors">
+                    <td>{{ sensor.componentName }}</td>
+                    <td>{{ sensor.name }}</td>
+                    <td>
+                        <button class="acticon">
+                            <router-link :to="{ name: 'sensor', params: { component: sensor.componentHash, sensor: sensor.number } }">
+                                <font-awesome-icon icon="search" data-placement="bottom" title="view sensor data"/>
+                            </router-link>
+                        </button>
+                        <button class="acticon" v-on:click="removeSensor(sensor.componentId, sensor.number)">
+                            <font-awesome-icon icon="trash" data-placement="bottom" title="remove sensor"/>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+         </table>
+    </div>
+</template>
+
+<script>
+  export default {
+    name: "Sensors.vue",
+    data() {
+      return {
+        selectedComponent: "",
+        sensors: [],
+        name: ""
+      }
+    },
+    computed: {
+      account() {
+        return this.$store.state.user.address
+      },
+      specification() {
+        return this.twinObject.specification;
+      },
+      sortedSensors(){
+        return this.sensors.sort(function(a,b){
+          let val = 0;
+          if(a.componentName < b.componentName){
+            val = 1;
+            if(a.number < b.number){
+              val = 2;
+            }
+          }
+          return val;
+        })
+      },
+      twinAddress() {
+        return this.twinObject.address;
+      },
+      twinObject() {
+        return this.$store.state.twins
+          .filter(f => f.deviceId === this.twin)[0];
+      }
+    },
+    props: {
+      twin: {
+        required: true,
+      },
+    },
+    methods: {
+      async addSensor(){
+        let hash = await this.$swarm.createFeed(
+          this.twinObject.deviceAgent,
+          web3.utils.sha3(this.selectedComponent + this.sensors.length)
+        );
+
+        await this.specification.addSensor(
+          this.selectedComponent,
+          this.name,
+          this.$utils.swarmHashToBytes(hash),
+          { from: this.account }
+        );
+        await this.loadSensors();
+      },
+
+      async removeSensor(component, index){
+        console.log(component + index)
+        await this.specification.removeSensor(
+          component,
+          index,
+          { from: this.account }
+        );
+        this.$swal.fire({
+          type: "success",
+          title: "You have successfully removed this sensor!",
+          showConfirmButton: false,
+          timer: 2000
+        });
+        await this.loadSensors();
+      },
+
+      loadSensors(){
+        this.sensors = [];
+        return Promise.all(this.twinObject.components.map(this.loadSensor));
+      },
+
+      async loadSensor(component) {
+        let componentHash = web3.utils.sha3(component.id);
+        let count = await this.specification.getSensorCount(component.id);
+        for(let i = 0; i < count.toNumber(); i++){
+          console.log(component.id + ", " + i)
+          let sensor = await this.specification.sensors(componentHash,i);
+          sensor.componentId = component.id;
+          sensor.componentName = component.name;
+          sensor.componentHash = component.hash;
+          sensor.number = i;
+          this.sensors.push(sensor);
+        }
+      }
+
+    },
+
+    async beforeMount() {
+      if (this.twinObject.components) {
+        this.loadSensors();
+        this.selectedComponent = this.twinObject.components[0].id;
+      }
+      else {
+        this.$store.subscribe((mutation, state) => {
+          if (mutation.type === "addTwinComponents") {
+            this.loadSensors();
+            this.selectedComponent = mutation.payload.components[0].id;
+          }
+        })
+      }
+    }
+  }
+</script>
+
+<style scoped>
+    .acticon{
+        border-color: transparent;
+        background-color: transparent;
+    }
+</style>

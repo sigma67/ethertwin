@@ -9,12 +9,15 @@ import Documents from './views/Documents.vue'
 import Roles from './views/Roles.vue'
 import AddSensor from "./views/AddSensor";
 import Components from "./views/Components";
+import Sources from "./views/Sources";
+import Programs from "./views/Programs";
 
 Vue.use(Router);
 
 export default new Router({
   mode: 'history',
   base: process.env.BASE_URL,
+  linkActiveClass: "active",
   routes: [
     {
       path: '/',
@@ -64,9 +67,15 @@ export default new Router({
       props: true
     },
     {
-      path: '/twin/:twin/roles',
-      name: 'twin',
-      component: Roles,
+      path: '/twin/:twin/programs',
+      name: 'programs',
+      component: Programs,
+      props: true
+    },
+    {
+      path: '/twin/:twin/sources',
+      name: 'sources',
+      component: Sources,
       props: true
     },
   ]

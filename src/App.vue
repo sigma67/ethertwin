@@ -14,14 +14,14 @@
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="navbar-nav">
             <li class="nav-item dropdown">
-                <router-link to="/" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</router-link>
+                <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown" >
-                <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
+                <router-link :to="{ name: 'components', params: { twin: selectedTwin  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
               </div>
             </li>
             <template v-if="selectedTwin !== 0">
               <li class="nav-item"> <!-- v-if twin selected, show link to twin overview-->
-                <router-link :to="{ name: 'components', params: { twin: selectedTwin  }}" class="nav-link">Twin Overview</router-link>
+                <router-link :to="{ name: 'components', params: { twin: selectedTwin  }}" class="nav-link">Components</router-link>
               </li>
               <li class="nav-item"> 
                 <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">Specification</router-link>
@@ -31,6 +31,12 @@
               </li>
               <li class="nav-item"> 
                 <router-link :to="{ name: 'sensors', params: { twin: selectedTwin  }}" class="nav-link">Sensors</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link :to="{ name: 'sources', params: { twin: selectedTwin  }}" class="nav-link">Data sources</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link :to="{ name: 'programs', params: { twin: selectedTwin  }}" class="nav-link">Programs</router-link>
               </li>
             </template>
           </ul>
@@ -101,4 +107,5 @@
   background-color: transparent;
   border-color: transparent;
 }
+
 </style>

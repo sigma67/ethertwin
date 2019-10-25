@@ -35,6 +35,7 @@ contract Specification {
 
     struct ExternalSource {
         string URI;
+        string description;
         address owner;
     }
 
@@ -129,6 +130,15 @@ contract Specification {
         return documents[id].length;
     }
 
+    function removeDocument(string memory componentId, uint index) public {
+        bytes32 id = keccak256(bytes(componentId));
+        //todo permission check
+        require(index < documents[id].length);
+        documents[id][index] = documents[id][documents[id].length-1];
+        delete documents[id][documents[id].length-1];
+        documents[id].length--;
+    }
+
     //******* SENSORS *******//
 
     function addSensor(string memory componentId, string memory name, bytes32 hash) public {
@@ -158,9 +168,9 @@ contract Specification {
 
     //******* EXTERNAL SOURCES *******//
 
-    function addExternalSource(string memory URI) public {
+    function addExternalSource(string memory URI, string memory description) public {
         //todo permission check
-        sources.push(ExternalSource(URI, msg.sender));
+        sources.push(ExternalSource(URI, description, msg.sender));
     }
 
     function getExternalSource(uint index) public view returns (ExternalSource memory){
