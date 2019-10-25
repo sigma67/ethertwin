@@ -139,9 +139,9 @@
           alert("No file selected");
           return;
         }
-        let hash = await this.$swarm.uploadDoc(
-          Buffer.from(await this.fileObject.arrayBuffer()),
-          this.fileObject.type
+        let hash = await this.$swarm.uploadDoc(Buffer.from(await this.fileObject.arrayBuffer()),
+                this.fileObject.type
+          
         );
         await this.specification.addDocument(
           this.selectedComponent,
