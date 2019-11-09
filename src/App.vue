@@ -84,8 +84,6 @@
     },
 
     async beforeCreate() {
-      this.$store.commit('spinner', true);
-
       let ABIs = {
         registry: registryAbi,
         authorization: authorizationAbi,

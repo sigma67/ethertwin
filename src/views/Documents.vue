@@ -139,6 +139,7 @@
           alert("No file selected");
           return;
         }
+        this.$store.commit('spinner', true);
         let hash = await this.$swarm.uploadDoc(Buffer.from(await this.fileObject.arrayBuffer()),
                 this.fileObject.type
           
@@ -151,6 +152,7 @@
           {from: this.account}
         );
         await this.loadDocuments();
+        this.$store.commit('spinner', false);
       },
 
       async downloadDocument(hash, filename) {

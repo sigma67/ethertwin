@@ -60,7 +60,7 @@
         computed: {
             account() {
                 return this.$store.state.user.address
-            },
+            }
         },
         methods: {
 
@@ -86,13 +86,13 @@
                                     }
                                 );
                             })
-                            .then(function (result) {
-                                this.$store.commit('spinner', false);
+                            .then(function (result) {console.log(result)
+                                vm.$store.commit('spinner', false);
                                 vm.$store.dispatch('loadTwins');
                                 vm.$router.push('/');
                             })
                             .catch(function (err) {
-                                this.$store.commit('spinner', false);
+                                vm.$store.commit('spinner', false);
                                 alert(err);
                             });
                     });
