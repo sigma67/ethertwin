@@ -11,7 +11,7 @@ contract Specification {
     string public deviceID;
     address public deviceAgent;
 
-    constructor (address _authAddress) public {
+    constructor (address payable _authAddress) public {
         auth = Authorization(_authAddress);
     }
 

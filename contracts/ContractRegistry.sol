@@ -12,7 +12,7 @@ contract ContractRegistry {
     Authorization auth;
     Specification spec;
 
-    constructor (address _auth) public {
+    constructor (address payable _auth) public {
         auth = Authorization(_auth);
     }
 

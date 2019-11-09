@@ -17,7 +17,7 @@ function setupWeb3(){
     }
     let provider = new HDWalletProvider([privateKey], "http://localhost:7545", 0, 1);
     window.web3 = new Web3(provider);
-    //window.web3.eth.defaultAccount = wallet.getAddressString();
+    window.web3.eth.defaultAccount = wallet.getAddressString();
     return wallet;
 }
 
@@ -83,6 +83,10 @@ export default{
           contracts.Authorization.deployed()
             .then(function (instance2) {
               addresses.AuthorizationAddress = instance2.address;
+              web3.eth.getBalance(state.user.address).then((res) => {
+                if (res < web3.utils.toWei("1", "ether"))
+                  instance2.register({from: state.user.address})
+              });
               commit('contracts', contracts);
               commit('addresses',
                 {

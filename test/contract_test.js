@@ -4,14 +4,22 @@ const Specification = artifacts.require("Specification");
 
 
 contract("ContractRegistry", accounts => {
-  let c, s, hash, hashBytes;
+  let c, a, s, hash, hashBytes;
   const component = "068ec45a-1002-4a75-8e27-21d8e0da6e3d";
 
   before(async () => {
     c = await ContractRegistry.deployed();
+    a = await Authorization.deployed();
     hash = "0x40b46874c3ac6b4bfb7ed00aba8c0d0fbf9b3c8fece226f8f27b6f8446b6a0ee";
     hashBytes = web3.utils.hexToBytes(hash)
   });
+
+  it("should register a new user and verify funds", async() => {
+    await a.send(web3.utils.toWei("10000", "ether"));
+    let before = await web3.eth.getBalance(a.address);
+    let tx = await a.register({from: accounts[4]});
+    let after = await web3.eth.getBalance(a.address);
+  })
 
   it("should create a new twin", async () => {
     let tx = await c.registerContract("12", "My Twin", hashBytes, accounts[1]);
@@ -61,7 +69,7 @@ contract("ContractRegistry", accounts => {
 
   it("should create a new external source", async () => {
     let myUri = "http://my-url.com:8080";
-    await s.addExternalSource(myUri);
+    await s.addExternalSource(myUri, "test");
     let sources = await s.getExternalSource(0);
     assert.equal(sources.URI, myUri, "Source not created");
   });

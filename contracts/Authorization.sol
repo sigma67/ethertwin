@@ -18,18 +18,32 @@ contract Authorization {
     // local storage of the device agent address
     address public deviceAgentAddress;
 
+    mapping(address => bool) userRegistered;
+    address[] users;
+
     //map contract address to single roles for every contract
     mapping(address => mapping(uint => Roles.Role)) private roleMapping;
 
     //this constructor defines the static address of the device agent at deployment
-    constructor (address _deviceAgent) public
+    constructor (address _deviceAgent) public payable
     {
         deviceAgentAddress = _deviceAgent;
     }
+
+    function () external payable {}
+
     // is called by the ContractRegistry.sol --> initial step to register a device
     function initializeDevice(address _operator, address _contract) public {
         //require(_operator == deviceAgentAddress, "You are not authorized to register devices.");
         roleMapping[_contract][uint(RBAC.OWNER)].add(_operator);
+    }
+
+    //registers user address and pays out Ether to conduct transactions
+    function register() public {
+        require(!userRegistered[msg.sender]);
+        users.push(msg.sender);
+        userRegistered[msg.sender] = true;
+        msg.sender.transfer(50 ether);
     }
 
     //checks if an user has the given role for a specific contract
