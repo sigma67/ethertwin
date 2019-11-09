@@ -1,8 +1,5 @@
 
 export default {
-    web3Provider(state, web3Provider){
-        state.web3Provider = web3Provider;
-    },
     contracts(state, contracts){
         state.contracts = contracts;
     },
@@ -12,7 +9,8 @@ export default {
         if (payload.callback) payload.callback(state)
     },
     account(state, account){
-        state.user.address = account;
+        state.user.wallet = account;
+        state.user.address = account.getAddressString();
     },
     addTwin(state, twin){
         state.twins.push(twin);

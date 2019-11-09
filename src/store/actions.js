@@ -1,54 +1,24 @@
 import Web3 from 'web3'
 import TruffleContract from '@truffle/contract'
-import $ from 'jquery'
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+const ethereumjs = require('ethereumjs-wallet');
 
 function setupWeb3(){
-  try {
-    let web3Provider;
-    if (window.ethereum) {
-      // for modern DApps browser
-      web3Provider = window.web3.currentProvider;
-      window.web3 = new Web3(ethereum);
-      try {
-        ethereum.enable();
-      } catch (error) {
-        console.error(error);
-      }
-    } else if (web3) {
-      // for old DApps browser
-      if (typeof web3 !== "undefined") {
-        // If a web3 instance is already provided by Meta Mask
-        web3Provider = web3.currentProvider;
-        window.web3 = new Web3(web3.currentProvider);
-      } else {
-        // Specify default instance if no web3 instance provided
-        web3Provider = new Web3.providers.HttpProvider(
-          "http://localhost:8545"
-        );
-        window.web3 = new Web3(web3Provider);
-      }
-    } else {
-      alert(
-        "Non-Ethereum browser detected. You should consider trying MetaMask!"
-      );
+    let wallet;
+    let privateKey = localStorage.getItem('privateKey');
+    if(!privateKey) {
+      wallet = ethereumjs.generate();
+      privateKey = wallet.getPrivateKey().toString('hex');
+      localStorage.setItem('privateKey', wallet.getPrivateKey().toString('hex'))
     }
-    return web3Provider;
-  }
-  catch (err) {
-    alert(err.message);
-  }
-}
-
-async function loadAccount(){
-  return new Promise((resolve, reject) => {
-    window.web3.eth.getAccounts(function (error, result) {
-      if (!error) {
-        resolve(result[0]);
-      } else {
-        reject(error);
-      }
-    });
-  })
+    else{
+      let privateKeyBuffer = new Buffer(privateKey, "hex");
+      wallet = ethereumjs.fromPrivateKey(privateKeyBuffer)
+    }
+    let provider = new HDWalletProvider([privateKey], "http://localhost:7545", 0, 1);
+    window.web3 = new Web3(provider);
+    //window.web3.eth.defaultAccount = wallet.getAddressString();
+    return wallet;
 }
 
 async function getSpecification(address, state){
@@ -58,17 +28,18 @@ async function getSpecification(address, state){
     let utils = state.utils;
     state.contracts.Authorization.deployed()
       .then(function (instance) {
-        return instance.getRole.call(vm.user.address, address);
+        return instance.getRole(vm.user.address, address);
       })
       .then(function (roleNo) {
         let role = utils.enum2String(Number(roleNo));
+
         if (role !== null && roleNo < 5) {
           let twin = {};
           twin.roleNo = roleNo;
           twin.role = role;
 
           vm.contracts.SpecificationContract = TruffleContract(state.specificationAbi);
-          vm.contracts.SpecificationContract.setProvider(vm.web3Provider);
+          vm.contracts.SpecificationContract.setProvider(web3.currentProvider);
           vm.contracts.SpecificationContract.at(address).then(function (instance1) {
             twin.specification = instance1;
             twin.address = instance1.address;
@@ -90,10 +61,8 @@ async function getSpecification(address, state){
 
 export default{
   async setup({ commit }){
-    let web3Provider = setupWeb3();
-    commit('web3Provider', web3Provider);
-    let account = await loadAccount();
-    commit('account', account);
+    let wallet = setupWeb3();
+    commit('account', wallet);
   },
 
   async initContracts({ commit, state }, ABIs){
@@ -101,10 +70,10 @@ export default{
     let addresses = {};
     return new Promise((resolve, reject) => {
       contracts.Authorization = TruffleContract(ABIs.authorization);
-      contracts.Authorization.setProvider(state.web3Provider);
+      contracts.Authorization.setProvider(web3.currentProvider);
 
       contracts.ContractRegistry = TruffleContract(ABIs.registry);
-      contracts.ContractRegistry.setProvider(state.web3Provider);
+      contracts.ContractRegistry.setProvider(web3.currentProvider);
 
       contracts.ContractRegistry.deployed()
         .then(function (instance1) {
