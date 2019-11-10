@@ -31,15 +31,15 @@
     width: 100%;
   }
   .spinner:after {
-    background-image: url(https://media.giphy.com/media/xTk9ZvMnbIiIew7IpW/giphy.gif);
+    background-image: url("../assets/spinner.gif");
     background-size: 100%;
     content: '';
     display: block;
-    height: 200px;
+    height: 100px;
+    width: 100px;
     left: 50%;
     margin: -30px 0 0 -30px;
     position: absolute;
     top: 50%;
-    width: 200px;
   }
 </style>
