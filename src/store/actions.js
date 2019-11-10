@@ -1,5 +1,6 @@
 import Web3 from 'web3'
 import TruffleContract from '@truffle/contract'
+import config from '../../config.json'
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const ethereumjs = require('ethereumjs-wallet');
 
@@ -15,7 +16,7 @@ function setupWeb3(){
       let privateKeyBuffer = new Buffer(privateKey, "hex");
       wallet = ethereumjs.fromPrivateKey(privateKeyBuffer)
     }
-    let provider = new HDWalletProvider([privateKey], "http://localhost:7545", 0, 1);
+    let provider = new HDWalletProvider([privateKey], config.ethereum, 0, 1);
     window.web3 = new Web3(provider);
     window.web3.eth.defaultAccount = wallet.getAddressString();
     return wallet;
