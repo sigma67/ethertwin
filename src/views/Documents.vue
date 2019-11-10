@@ -208,6 +208,7 @@
       },
 
       async loadDocuments() {
+        this.$store.commit('spinner', true);
         let components = await Promise.all(this.twinObject.components.map(this.getDocumentCounts));
 
         for (let i = 0; i < components.length; i++) {
@@ -220,6 +221,7 @@
           }
         }
         this.components = components;
+        this.$store.commit('spinner', false);
       }
 
     },

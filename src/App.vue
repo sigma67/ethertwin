@@ -58,6 +58,7 @@
   import registryAbi from '../public/contracts/ContractRegistry.json'
   import authorizationAbi from '../public/contracts/Authorization.json'
   import specificationAbi from '../public/contracts/Specification.json'
+  let crypto = require('crypto')
   
   export default {
     components: {
@@ -89,6 +90,16 @@
         authorization: authorizationAbi,
         specification: specificationAbi
       };
+
+      // let publicKey = this.$store.state.user.wallet.getPublicKey().toString('hex');
+      // let privateKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
+      // let fileKey = crypto.randomBytes(32);
+      // let ciphertext = this.$crypto.encryptECIES(publicKey, fileKey.toString('hex'));
+      // let plaintext = this.$crypto.decryptECIES(privateKey, ciphertext)
+      // let key = new Buffer(plaintext, 'hex');
+      // let docEncrypt = this.$crypto.encryptAES('s3cret', key) //returns a js object with ciphertext, key, iv
+      // let doc = this.$crypto.decryptAES(docEncrypt.encryptedData, key, docEncrypt.iv)
+      // console.log(doc)
 
       if(!this.$store.state.contracts.hasOwnProperty("Authorization")) {
         this.$store.commit('setSpecificationAbi', ABIs.specification);
