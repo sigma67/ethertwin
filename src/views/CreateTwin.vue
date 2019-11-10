@@ -108,6 +108,9 @@
                 }
 
             }
+        },
+        beforeMount(){
+          this.deviceAgent = this.account;
         }
     }
 

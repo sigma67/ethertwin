@@ -1,17 +1,29 @@
 import {SwarmClient} from '@erebos/swarm-browser';
 import { createKeyPair, sign } from '@erebos/secp256k1'
-
-//todo: use dynamic private key from app wallet
-let keyPair = createKeyPair("79f771f8d5840b11e8bdb9704b40d7ae2cd6ae77af7e56701d1910d9240776a3");
-const client = new SwarmClient({
-  bzz: {
-    signBytes: bytes => Promise.resolve(sign(bytes, keyPair)),
-    url: 'http://132.199.123.236:5000'
-  }
-});
+import config from '../../config'
 
 export default {
-  install(Vue) {
+  install(Vue, store) {
+
+    // Set up client based on app wallet
+    let user = store.state.user;
+    let keyPair = createKeyPair(user.wallet.getPrivateKey().toString('hex'));
+    const client = new SwarmClient({
+      bzz: {
+        signBytes: bytes => Promise.resolve(sign(bytes, keyPair)),
+        url: config.swarm
+      }
+    });
+
+    //If not yet published, publish user public key to feed
+    client.bzz.getFeedContent({user: user.address}).catch(() => {
+      client.bzz.setFeedContent(
+        {user: user.address},
+        user.wallet.getPublicKey().toString('hex'),
+        {contentType: "text/plain"}
+      );
+    });
+
     Vue.prototype.$swarm = {
       async uploadDoc(content, contentType) {
         return new Promise((resolve, reject) => {
