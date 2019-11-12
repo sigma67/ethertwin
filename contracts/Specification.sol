@@ -6,6 +6,7 @@ import "./Authorization.sol";
 contract Specification {
 
     Authorization auth;
+    address contractRegistry;
 
     string public deviceName;
     string public deviceID;
@@ -13,6 +14,7 @@ contract Specification {
 
     constructor (address payable _authAddress) public {
         auth = Authorization(_authAddress);
+        contractRegistry = msg.sender;
     }
 
     //generic version blueprint for file stored on DHT
@@ -63,6 +65,7 @@ contract Specification {
 
     function updateTwin(string memory _deviceID, string memory _deviceName, address _deviceAgent) public
     {
+        require(msg.sender == contractRegistry || auth.hasPermission(msg.sender, Authorization.PERMISSION.TWIN_UPDATE, address(this)));
         deviceID = _deviceID;
         deviceName = _deviceName;
         deviceAgent = _deviceAgent;
@@ -94,7 +97,7 @@ contract Specification {
     //register a new document (always appends to the end)
     function addDocument(string memory componentId, string memory name, string memory description, bytes32 docHash) public {
         bytes32 id = keccak256(bytes(componentId));
-        //todo access control based on component
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_CREATE, id, address(this)));
 
         documents[id].length++;
         Document storage doc = documents[id][documents[id].length - 1];
@@ -109,6 +112,7 @@ contract Specification {
     //update Document storage metadata
     function updateDocument(string memory componentId, uint documentId, string memory name, string memory description) public {
         bytes32 id = keccak256(bytes(componentId));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
         documents[id][documentId].name = name;
         documents[id][documentId].description = description;
     }
@@ -116,6 +120,7 @@ contract Specification {
     //add new document version
     function addDocumentVersion(string memory componentId, uint documentId, bytes32 docHash) public {
         bytes32 id = keccak256(bytes(componentId));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
         Version memory updated = Version(now, msg.sender, docHash);
         documents[id][documentId].versions.push(updated);
     }
@@ -132,7 +137,7 @@ contract Specification {
 
     function removeDocument(string memory componentId, uint index) public {
         bytes32 id = keccak256(bytes(componentId));
-        //todo permission check
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_DELETE, id, address(this)));
         require(index < documents[id].length);
         documents[id][index] = documents[id][documents[id].length-1];
         delete documents[id][documents[id].length-1];
@@ -143,7 +148,7 @@ contract Specification {
 
     function addSensor(string memory componentId, string memory name, bytes32 hash) public {
         bytes32 id = keccak256(bytes(componentId));
-        //todo permission check
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.SENSOR_CREATE, id, address(this)));
         sensors[id].push(Sensor(name, hash));
     }
 
@@ -159,7 +164,7 @@ contract Specification {
 
     function removeSensor(string memory componentId, uint index) public {
         bytes32 id = keccak256(bytes(componentId));
-        //todo permission check
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.SENSOR_DELETE, id, address(this)));
         require(index < sensors[id].length);
         sensors[id][index] = sensors[id][sensors[id].length-1];
         delete sensors[id][sensors[id].length-1];
@@ -169,7 +174,6 @@ contract Specification {
     //******* EXTERNAL SOURCES *******//
 
     function addExternalSource(string memory URI, string memory description) public {
-        //todo permission check
         sources.push(ExternalSource(URI, description, msg.sender));
     }
 

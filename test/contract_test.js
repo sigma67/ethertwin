@@ -6,6 +6,7 @@ const Specification = artifacts.require("Specification");
 contract("ContractRegistry", accounts => {
   let c, a, s, hash, hashBytes;
   const component = "068ec45a-1002-4a75-8e27-21d8e0da6e3d";
+  const componentHash = web3.utils.sha3(component)
 
   before(async () => {
     c = await ContractRegistry.deployed();
@@ -35,6 +36,12 @@ contract("ContractRegistry", accounts => {
     let aml = await s.getAMLHistory();
     assert.equal(aml.length, 2, "Doc Version not created");
     assert.equal(aml[1].hash, hash, "Doc hash not equal");
+  });
+
+  it("should add component attribute", async() => {
+    await a.addAttribute(accounts[0], componentHash, s.address)
+    let authorized = await a.hasAttribute(accounts[0], componentHash, s.address)
+    assert.equal(authorized, true, "Attribute not added")
   });
 
   it("should create a new document", async () => {
