@@ -46,95 +46,134 @@
         </div>
         <hr />
         <textarea id="amlResult" class="form-control" rows="30" v-model="aml"></textarea>
+        <br/>
+        <form class="row" @submit.prevent="uploadDocument">
+            <div class="col">
+                <div class="row">
+                    <div class="input-group mb-3 col">
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="inputGroupFile01" @change="processFile">
+                            <label class="custom-file-label" for="inputGroupFile01">{{ file }} {{ fileType ? '(' +
+                                fileType + ')' : '' }}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group col-md-2">
+                <button id="upload" class="btn btn-secondary btn-block h-100">
+                    <font-awesome-icon icon="file-upload" data-toggle="tooltip" data-placement="bottom"
+                                       title="upload file"/>
+                    Upload
+                </button>
+            </div>
+        </form>
+        
     </div>
 </template>
 
 <script>
-  //const Prism = require('prismjs');
-
   export default {
-    name: "Specification",
-    data() {
-      return {
-        versions: [],
-        author: "",
-        aml: "",
-        version: 0,
-      }
-    },
-    props: {
-      twin: {
-        required: true,
+      name: "Specification",
+      data() {
+          return {
+              versions: [],
+              author: "",
+              aml: "",
+              version: 0,
+              file: "Choose file",
+              fileType: "",
+              fileObject: null
+          }
       },
-    },
-    mounted() {
-      let script = document.createElement('script')
-      //let css = document.createElement('css')
-      //script.setAttribute('src', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/highlight.min.js')
-      script.setAttribute('src', 'highlight.pack.js')
-      //css.setAttribute('stylesheet', 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.12.0/build/styles/default.min.css')
-      document.head.appendChild(script)
-      //document.head.appendChild(css)
-    },
-    computed: {
-      account() {
-        return this.$store.state.user.address
+      props: {
+          twin: {
+              required: true,
+          },
       },
-      twinObject() {
-        return this.$store.state.twins
-          .filter(f => f.deviceId === this.twin)[0];
+      mounted() {
+          let script = document.createElement('script')
+          script.setAttribute('src', 'highlight.pack.js')
+          document.head.appendChild(script)
       },
-      twinAddress() {
-        return this.twinObject.address;
-      }
-    },
-    methods: {
-      async loadVersions() {
-        let vm = this;
-        await this.specification.getAMLHistory.call({from: vm.account}, function (err, latest) {
-          vm.versions = latest.reverse();
-          vm.loadAML(vm.versions[0], vm.versions.length);
-        });
+      computed: {
+          account() {
+              return this.$store.state.user.address
+          },
+          twinObject() {
+              return this.$store.state.twins
+                      .filter(f => f.deviceId === this.twin)[0];
+          },
+          twinAddress() {
+              return this.twinObject.address;
+          }
       },
+      methods: {
+          async loadVersions() {
+              let vm = this;
+              await this.specification.getAMLHistory.call({from: vm.account}, function (err, latest) {
+                  vm.versions = latest.reverse();
+                  vm.loadAML(vm.versions[0], vm.versions.length);
+              });
+          },
 
-      async loadAML(version, versionNumber) {
-        let vm = this;
-        this.version = versionNumber;
-        this.author = version[1];
-        let hash = this.$utils.hexToSwarmHash(version[2]);
-        this.$swarm.downloadDoc(hash)
-          .then(doc => {
-            vm.aml = doc.toString();
-            // highlighting
-          })
+          async loadAML(version, versionNumber) {
+              let vm = this;
+              this.version = versionNumber;
+              this.author = version[1];
+              let hash = this.$utils.hexToSwarmHash(version[2]);
+              this.$swarm.downloadDoc(hash)
+                      .then(doc => {
+                          vm.aml = doc.toString();
+                          // highlighting
+                      })
+          },
+
+          saveAML() {
+              let vm = this;
+              console.log(this.aml)
+              this.$swarm.uploadDoc(this.aml, 'text/plain').then(hash => {
+                  vm.specification.addNewAMLVersion.sendTransaction(
+                          web3.utils.hexToBytes("0x" + hash),
+                          {from: vm.account}
+                  ).then(() => {
+                      vm.loadVersions();
+                  });
+              });
+          },
+          async uploadDocument() {
+              if (!this.fileObject) {
+                  alert("No file selected");
+                  return;
+              }
+              this.$store.commit('spinner', true);
+              let vm = this;
+              this.$swarm.uploadDoc(Buffer.from(await this.fileObject.arrayBuffer()), 'text/plain').then(hash => {
+                  vm.specification.addNewAMLVersion.sendTransaction(
+                          web3.utils.hexToBytes("0x" + hash),
+                          {from: vm.account}
+                  ).then(() => {
+                      vm.loadVersions();
+                      this.$store.commit('spinner', false);
+                  });
+              });
+          },
+          processFile(event) {
+              let file = event.target.files[0];
+              if (file.name.length > 29)
+                  this.file = file.name.slice(0, 29).concat('...');
+              else
+                  this.file = file.name.split('.')[0]
+              this.fileType = file.type;
+              this.fileObject = file;
+          }
       },
-
-      saveAML() {
-        let vm = this;
-        console.log(this.aml)
-        this.$swarm.uploadDoc(this.aml, 'text/plain').then(hash => {
-          vm.specification.addNewAMLVersion.sendTransaction(
-            web3.utils.hexToBytes("0x" + hash),
-            {from: vm.account}
-          ).then(() => {
-            vm.loadVersions();
-          });
-        });
-      }
-    },
-
-    async beforeMount() {
-      this.$store.commit('spinner', true);
-      this.specification = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
-      await this.loadVersions();
-      this.$store.commit('spinner', false);
-    }
-    /*,
-    mounted() {
-        const xml = document.getElementById("amlResult").value;
-        const html= Prism.highlight(xml, Prism.languages.xml, 'xml');
-        document.getElementById("amlResult").value = html;
-    }*/
+          async beforeMount() {
+              this.$store.commit('spinner', true);
+              this.specification = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
+              await this.loadVersions();
+              this.$store.commit('spinner', false);
+          }
+      
   }
 
 </script>
