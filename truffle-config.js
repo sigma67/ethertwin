@@ -57,7 +57,12 @@ module.exports = {
       host: '127.0.0.1',
       port: 7545,
       network_id: '*'
-    }    // Any network (default: none)
+    },
+    pi: {
+      host: "132.199.123.57",
+      port: "8501",
+      network_id: "*"
+    }
 
 
   // Another network with more advanced options...

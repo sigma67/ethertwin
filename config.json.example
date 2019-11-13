@@ -1,4 +1,8 @@
 {
   "swarm": "http://132.199.123.236:5000",
-  "ethereum": "http://localhost:7545"
+  "ethereum": {
+    "rpc": "http://localhost:7545",
+    "registry": "0x98abd356b17C8CD88d2321F219C04B825746B29D",
+    "authorization": "0x9BDbCe5F41648d0C5F8ef2D05BfB8A52997f4e21"
+  }
 }

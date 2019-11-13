@@ -156,12 +156,12 @@
     },
 
     async beforeMount() {
-      if (this.twinObject.components) {
+      if (this.twinObject.components && this.twinObject.components.length > 0) {
         await this.load(this.twinObject.components[0].id);
       }
       else {
         this.$store.subscribe((mutation, state) => {
-          if (mutation.type === "addTwinComponents") {
+          if (mutation.type === "addTwinComponents" && mutation.payload.components.length > 0) {
             this.load(mutation.payload.components[0].id);
           }
         })

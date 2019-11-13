@@ -227,12 +227,12 @@
     },
 
     async beforeMount() {
-      if (this.twinObject.components) {
+      if (this.twinObject.components && this.twinObject.components.length > 0) {
         this.loadDocuments();
         this.selectedComponent = this.twinObject.components[0].id;
       }
       this.$store.subscribe((mutation, state) => {
-        if (mutation.type === "addTwinComponents") {
+        if (mutation.type === "addTwinComponents" && mutation.payload.components.length > 0) {
           this.loadDocuments();
           this.selectedComponent = mutation.payload.components[0].id;
         }

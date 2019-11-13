@@ -7,7 +7,8 @@
             <div class="col-md-1 mr-0"><br/>
                 <router-link :to="{ name: 'twin-create' }">
                     <button type="submit" class="acticon">
-                        <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add twin"/>
+                        <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip"
+                                           data-placement="bottom" title="add twin"/>
                     </button>
                 </router-link>
             </div>
@@ -39,18 +40,20 @@
                         <td>
                             <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }">
-                                    <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom" title="see specification"/>
+                                    <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom"
+                                                       title="see specification"/>
                                 </router-link>
                             </button>
                             <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }">
-                                    <font-awesome-icon icon="sitemap" data-toggle="tooltip" data-placement="bottom" title="see components"/>
+                                    <font-awesome-icon icon="sitemap" data-toggle="tooltip" data-placement="bottom"
+                                                       title="see components"/>
                                 </router-link>
                             </button>
                             <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'documents', params: { twin: twin.deviceId  } }">
-                                <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
-                            </router-link>
+                                    <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
+                                </router-link>
                             </button>
                             <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }">
@@ -59,13 +62,15 @@
                             </button>
                             <button class="acticon" v-on:click="parseAML(twin.deviceId, i)">
                                 <router-link :to="{ name: 'sources', params: { twin: twin.deviceId  } }">
-                                    <font-awesome-icon icon="database" data-placement="bottom" title="view external sources"/>
+                                    <font-awesome-icon icon="database" data-placement="bottom"
+                                                       title="view external sources"/>
                                 </router-link>
                             </button>
                             <button class="acticon" v-on:click="shareTwin(twin.address)">
-                                <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom" title="share twin"/>
+                                <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom"
+                                                   title="share twin"/>
                             </button>
-                            <button class="acticon"  v-on:click="removeRole(twin.address, twin.roleNo)">
+                            <button class="acticon" v-on:click="removeRole(twin.address, twin.roleNo)">
                                 <font-awesome-icon icon="trash" data-placement="bottom" title="remove role"/>
                             </button>
                         </td>
@@ -86,7 +91,7 @@
   export default {
     name: 'Index',
     computed: {
-      account () {
+      account() {
         return this.$store.state.user.address
       },
       contracts() {
@@ -97,58 +102,58 @@
       }
     },
     methods: {
-       async parseAML(deviceId, twinIndex){
-         if(deviceId != null){
-           this.$store.commit('selectTwin', deviceId);
-           let twin = this.$store.state.twins.filter(f => f.deviceId === deviceId)[0];
-           if(twin.hasOwnProperty('components')) return;
-           //let specification = this.$store.state.contracts.SpecificationContract.at(address);
-           let length = await twin.specification.getAMLCount();
-           let index = length.toNumber()-1;
-           //console.log(length.toNumber());
-           
-           //get latest version of specification-AML
-           let amlInfo = await twin.specification.getAML(index);
-    
-           //get AML from Swarm using aml-hash: amlInfo.hash
-           let aml = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(amlInfo.hash));
-             
-           //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
-           // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
-           let parser = new DOMParser();
-           let amlDoc = parser.parseFromString(aml, "text/xml");
-           let instanceHierarchy =amlDoc.documentElement.getElementsByTagName("InstanceHierarchy");
+      async parseAML(deviceId, twinIndex) {
+        if (deviceId != null) {
+          this.$store.commit('selectTwin', deviceId);
+          let twin = this.$store.state.twins.filter(f => f.deviceId === deviceId)[0];
+          if (twin.hasOwnProperty('components')) return;
+          //let specification = this.$store.state.contracts.SpecificationContract.at(address);
+          let length = await twin.specification.getAMLCount();
+          let index = length.toNumber() - 1;
+          //console.log(length.toNumber());
 
-           //all child nodes are high-level components
-           let childNodes = instanceHierarchy[0].children;
-             
-           let components = [];
-           for (let i = 0; i < childNodes.length; i++) {
-               //all children of type "InternalElement" are high-level components 
-               if(childNodes[i].nodeName === "InternalElement"){
-                   //console.log(childNodes[i].getAttribute("ID"));
-                   let id = childNodes[i].getAttribute("ID");
-                   let name = childNodes[i].getAttribute("Name");
-                   let hash = web3.utils.sha3(id);
-                   // add parsed components to the components array
-                   components.push({id: id, name: name, hash: hash});
-               }
+          //get latest version of specification-AML
+          let amlInfo = await twin.specification.getAML(index);
+
+          //get AML from Swarm using aml-hash: amlInfo.hash
+          let aml = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(amlInfo.hash));
+
+          //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
+          // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
+          let parser = new DOMParser();
+          let amlDoc = parser.parseFromString(aml, "text/xml");
+          let instanceHierarchy = amlDoc.documentElement.getElementsByTagName("InstanceHierarchy");
+
+          //all child nodes are high-level components
+          let childNodes = instanceHierarchy[0].children;
+
+          let components = [];
+          for (let i = 0; i < childNodes.length; i++) {
+            //all children of type "InternalElement" are high-level components
+            if (childNodes[i].nodeName === "InternalElement") {
+              //console.log(childNodes[i].getAttribute("ID"));
+              let id = childNodes[i].getAttribute("ID");
+              let name = childNodes[i].getAttribute("Name");
+              let hash = web3.utils.sha3(id);
+              // add parsed components to the components array
+              components.push({id: id, name: name, hash: hash});
             }
+          }
 
-            //filter by attributes
-            if(twin.role !== "Owner") {
-              let a = await this.$store.state.contracts.Authorization.deployed();
-              let c = await Promise.all(components.map(component => a.hasAttribute(
-                this.account,
-                web3.utils.hexToBytes(component.hash),
-                twin.specification.address
-              )));
-              components = components.filter((d, ind) => c[ind]);
-            }
+          //filter by attributes
+          if (twin.role !== "Owner") {
+            let a = this.$store.state.contracts.Authorization;
+            let c = await Promise.all(components.map(component => a.hasAttribute(
+              this.account,
+              web3.utils.hexToBytes(component.hash),
+              twin.specification.address
+            )));
+            components = components.filter((d, ind) => c[ind]);
+          }
 
-            this.$store.commit('addTwinComponents', {twin: twinIndex, components: components});
-         }
-       },
+          this.$store.commit('addTwinComponents', {twin: twinIndex, components: components});
+        }
+      },
       async removeRole(twinAddress, role) {
         let vm = this;
         this.$swal.fire({
@@ -159,32 +164,27 @@
           confirmButtonText: "yes",
           cancelButtonText: "no"
         })
-        .then(function (result) {
-          if (result.value) {
-            vm.contracts.Authorization.deployed()
-              .then(function (auth) {
-                return auth.removeRole.sendTransaction(vm.account, role, twinAddress, {
-                  from: vm.account
-                });
-              })
-              .then(function () {
-                vm.$store.commit('removeTwin', twinAddress);
+          .then(function (result) {
+            if (result.value) {
+              vm.contracts.Authorization.removeRole(vm.account, role, twinAddress, {from: vm.account})
+                .then(function () {
+                  vm.$store.commit('removeTwin', twinAddress);
 
-                vm.$swal.fire({
-                  type: "success",
-                  title: "You have successfully removed this device!",
-                  showConfirmButton: false,
-                  timer: 2000
+                  vm.$swal.fire({
+                    type: "success",
+                    title: "You have successfully removed this device!",
+                    showConfirmButton: false,
+                    timer: 2000
+                  });
+                })
+                .catch(function (err) {
+                  alert(err.message);
                 });
-              })
-              .catch(function (err) {
-                alert(err.message);
-              });
-          }
-        });
+            }
+          });
       },
 
-      async shareTwin(deviceAddress){
+      async shareTwin(deviceAddress) {
         let self = this.$store.state;
         let vm = this;
         this.$swal({
@@ -208,18 +208,14 @@
               let role = $("#swal-input1").val();
               let address = $("#swal-input2").val();
 
-              self.contracts.Authorization.deployed()
-                .then(function (instance) {
-                  return instance.addRole.sendTransaction(
-                    address,
-                    Number(role),
-                    deviceAddress,
-                    {
-                      from: vm.account
-                    }
-                  );
-                })
-                .then(function (result) {
+              self.contracts.Authorization.addRole(
+                address,
+                Number(role),
+                deviceAddress,
+                {
+                  from: vm.account
+                }
+              ).then(function (result) {
                   vm.$swal.fire({
                     type: "success",
                     title: "Account has been successfully added.",
@@ -243,7 +239,7 @@
           },
           function (dismiss) {
             if (dismiss == "cancel") {
-              swal("Cancelled", "Device not shared!", "error");
+              vm.$swal.fire("Cancelled", "Device not shared!", "error");
             }
           }
         );
@@ -256,18 +252,13 @@
     h3 {
         margin: 40px 0 0;
     }
-    /*
-    td img {
-        height:25px;
-        width:25px;
-        cursor: pointer;
-        margin-right: 10px;
-    }*/
-    .acticon{
+
+    .acticon {
         border-color: transparent;
         background-color: transparent;
     }
-    #createIcon{
+
+    #createIcon {
         width: 30px;
         height: 30px;
     }

@@ -16,7 +16,7 @@ function setupWeb3(){
       let privateKeyBuffer = new Buffer(privateKey, "hex");
       wallet = ethereumjs.fromPrivateKey(privateKeyBuffer)
     }
-    let provider = new HDWalletProvider([privateKey], config.ethereum, 0, 1);
+    let provider = new HDWalletProvider([privateKey], config.ethereum.rpc, 0, 1);
     window.web3 = new Web3(provider);
     window.web3.eth.defaultAccount = wallet.getAddressString();
     return wallet;
@@ -27,10 +27,7 @@ async function getSpecification(address, state){
   return new Promise((resolve, reject) => {
     let vm = state;
     let utils = state.utils;
-    state.contracts.Authorization.deployed()
-      .then(function (instance) {
-        return instance.getRole(vm.user.address, address);
-      })
+    state.contracts.Authorization.getRole(vm.user.address, address)
       .then(function (roleNo) {
         let role = utils.enum2String(Number(roleNo));
 
@@ -69,6 +66,7 @@ export default{
   async initContracts({ commit, state }, ABIs){
     let contracts = {};
     let addresses = {};
+    let instances = {};
     return new Promise((resolve, reject) => {
       contracts.Authorization = TruffleContract(ABIs.authorization);
       contracts.Authorization.setProvider(web3.currentProvider);
@@ -76,19 +74,27 @@ export default{
       contracts.ContractRegistry = TruffleContract(ABIs.registry);
       contracts.ContractRegistry.setProvider(web3.currentProvider);
 
-      contracts.ContractRegistry.deployed()
-        .then(function (instance1) {
+      let registry = (config.ethereum.registry) ?
+        contracts.ContractRegistry.at(config.ethereum.registry) :
+        contracts.ContractRegistry.deployed();
+
+      registry.then(function (instance1) {
+          instances.ContractRegistry = instance1;
           addresses.ContractRegistryAddress = instance1.address;
         })
         .then(function () {
-          contracts.Authorization.deployed()
-            .then(function (instance2) {
+          let auth = (config.ethereum.authorization) ?
+            contracts.Authorization.at(config.ethereum.authorization) :
+            contracts.Authorization.deployed();
+
+          auth.then(function (instance2) {
+              instances.Authorization = instance2;
               addresses.AuthorizationAddress = instance2.address;
               web3.eth.getBalance(state.user.address).then((res) => {
                 if (res < web3.utils.toWei("1", "ether"))
                   instance2.register({from: state.user.address})
               });
-              commit('contracts', contracts);
+              commit('contracts', instances);
               commit('addresses',
                 {
                   addresses: addresses,
@@ -106,10 +112,7 @@ export default{
   async loadTwins({ commit, state }) {
     let vm = this;
     return new Promise((resolve, reject) => {
-      state.contracts.ContractRegistry.deployed()
-        .then(function (instance1) {
-          return instance1.getContracts();
-        })
+      state.contracts.ContractRegistry.getContracts()
         .then(function (contracts) {
           //iteration through all elements
           if (contracts.length > 0) {

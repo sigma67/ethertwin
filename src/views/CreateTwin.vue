@@ -74,27 +74,24 @@
                     this.$store.commit('spinner', true);
                     //upload file to swarm and get swarm hash
                     this.$swarm.uploadDoc(this.twinAML, 'text/plain').then(hash => {
-                        vm.$store.state.contracts.ContractRegistry.deployed()
-                            .then(function (instance) {
-                                return instance.registerContract.sendTransaction(
-                                    vm.twinID,
-                                    vm.twinName,
-                                    web3.utils.hexToBytes("0x" + hash),
-                                    vm.deviceAgent,
-                                    {
-                                        from: vm.account
-                                    }
-                                );
-                            })
-                            .then(function (result) {console.log(result)
-                                vm.$store.commit('spinner', false);
-                                vm.$store.dispatch('loadTwins');
-                                vm.$router.push('/');
-                            })
-                            .catch(function (err) {
-                                vm.$store.commit('spinner', false);
-                                alert(err);
-                            });
+                        vm.$store.state.contracts.ContractRegistry.registerContract(
+                            vm.twinID,
+                            vm.twinName,
+                            web3.utils.hexToBytes("0x" + hash),
+                            vm.deviceAgent,
+                            {
+                                from: vm.account
+                            }
+                        )
+                        .then(function (result) {
+                            vm.$store.commit('spinner', false);
+                            vm.$store.dispatch('loadTwins');
+                            vm.$router.push('/');
+                        })
+                        .catch(function (err) {
+                            vm.$store.commit('spinner', false);
+                            alert(err);
+                        });
                     });
                 }
             },
