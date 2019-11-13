@@ -133,7 +133,19 @@
                    // add parsed components to the components array
                    components.push({id: id, name: name, hash: hash});
                }
-            }              
+            }
+
+            //filter by attributes
+            if(twin.role !== "Owner") {
+              let a = await this.$store.state.contracts.Authorization.deployed();
+              let c = await Promise.all(components.map(component => a.hasAttribute(
+                this.account,
+                web3.utils.hexToBytes(component.hash),
+                twin.specification.address
+              )));
+              components = components.filter((d, ind) => c[ind]);
+            }
+
             this.$store.commit('addTwinComponents', {twin: twinIndex, components: components});
          }
        },
