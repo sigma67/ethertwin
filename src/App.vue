@@ -42,7 +42,7 @@
           </ul>
         </div>
         <div class="nav-item">
-          <button type="button" id="icon" class="btn btn-secondary" data-toggle="tooltip" data-placement="bottom" :title="account">
+          <button type="button" id="icon" class="btn btn-secondary" data-toggle="tooltip" data-placement="bottom" :title="account" @click="$router.push('/account')">
           </button>
         </div>
       </div>

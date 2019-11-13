@@ -8,9 +8,10 @@ import store from './store'
 import 'bootstrap'
 import VueSweetalert2 from 'vue-sweetalert2';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import {faUserSecret, faTrash, faShareAlt, faSearch, faPlusSquare, faSave, faFileAlt, faFileUpload, faFileDownload, faWifi, faSitemap, faDatabase} from '@fortawesome/free-solid-svg-icons'
+import {faUserSecret, faTrash, faShareAlt, faSearch, faPlusSquare, faSave, faFileAlt, faFileUpload, faFileDownload, faWifi, faSitemap, faDatabase, faKey, faAddressCard} from '@fortawesome/free-solid-svg-icons'
+import {faEthereum} from '@fortawesome/free-brands-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
-library.add(faUserSecret, faTrash, faShareAlt, faSearch, faPlusSquare, faSave, faFileAlt, faFileUpload, faFileDownload,  faWifi, faSitemap, faDatabase)
+library.add(faUserSecret, faTrash, faShareAlt, faSearch, faPlusSquare, faSave, faFileAlt, faFileUpload, faFileDownload,  faWifi, faSitemap, faDatabase, faKey, faAddressCard, faEthereum)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 //plugins

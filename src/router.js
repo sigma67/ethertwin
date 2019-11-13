@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
+import Account from "./views/Account";
 import CreateTwin from './views/CreateTwin.vue'
 import Specification from './views/Specification.vue'
 import Sensors from './views/Sensors.vue'
@@ -23,6 +24,12 @@ export default new Router({
       path: '/',
       name: 'home',
       component: Home
+    },
+    {
+      path: '/account',
+      name: 'account',
+      component: Account,
+      props: true
     },
     {
       path: '/twin/:twin/components',
