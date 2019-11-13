@@ -32,6 +32,12 @@ export default new Router({
       props: true
     },
     {
+      path: '/twin/:twin/users',
+      name: 'roles',
+      component: Roles,
+      props: true
+    },
+    {
       path: '/twin/:twin/components',
       name: 'components',
       component: Components,

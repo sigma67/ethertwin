@@ -81,8 +81,8 @@
                     let buffer = Buffer.from(this.privateKeyNew, 'hex');
                     let wallet = ethereumjs.fromPrivateKey(buffer);
                     localStorage.setItem('privateKey', this.privateKeyNew);
-                    console.log(this.privateKeyNew);
                     //refresh site
+                    location.reload();
                 }catch (e) {
                     console.log(e);
                     this.$swal.fire({

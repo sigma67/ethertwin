@@ -39,6 +39,11 @@
                 <router-link :to="{ name: 'programs', params: { twin: selectedTwin  }}" class="nav-link">Programs</router-link>
               </li>-->
             </template>
+            <template v-if="isOwner == true">
+              <li class="nav-item" v-if="true">
+                <router-link :to="{ name: 'roles', params: { twin: selectedTwin  }}" class="nav-link">Users</router-link>
+              </li>
+            </template>
           </ul>
         </div>
         <div class="nav-item">
@@ -81,7 +86,13 @@
       },
       twins() {
         return this.$store.state.twins
-      }
+      },
+      isOwner() {
+         let twinID= this.$store.state.selectedTwin;
+         for(let i=0; i< this.$store.state.twins.length; i++){
+             if(this.$store.state.twins[i].deviceId === twinID && this.$store.state.twins[i].role === "Owner") return true
+         }
+        }
     },
 
     async beforeCreate() {
