@@ -67,7 +67,7 @@
                                 </div>
                                 <div class="col">
                                     <a href="#" class="btn btn-primary btn-block"
-                                       v-on:click.prevent.stop="downloadDocument(document[2][document.selectedVersion][2], document[0])">
+                                       v-on:click.prevent.stop="downloadDocument(document[2][document.selectedVersion][2], document[0], component.id)">
                                         <font-awesome-icon icon="file-download" data-toggle="tooltip"
                                                            data-placement="bottom" title="upload file"/>
                                         Download
@@ -134,16 +134,43 @@
         this.fileObject = file;
       },
 
+      async getFileKey(component){
+        // //todo: done by device agent. until then, run once to upload files
+        // let crypto = require('crypto')
+        // let key = crypto.randomBytes(32);
+        // let publicKey = this.$store.state.user.wallet.getPublicKey().toString('hex');
+        // let ciphertext = this.$crypto.encryptECIES(publicKey, key.toString('base64'));
+        // let update = [{address: this.account, fileKey: ciphertext}];
+        let feed = {
+          user: this.account,//this.twinObject.address,
+          topic: web3.utils.sha3(component)
+        };
+        // await this.$swarm.updateFeedSimple(feed, update);
+
+        //get file key from device agent feed
+        let fileKeys = await this.$swarm.getUserFeedLatest(feed.user, feed.topic);console.log(fileKeys);
+        let keyObject = fileKeys.filter(f => f.address === this.account)[0];
+        let privateKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
+        let plainKey = this.$crypto.decryptECIES(privateKey, keyObject.fileKey)
+        return new Buffer(plainKey, 'base64');
+      },
+
       async uploadDocument() {
         if (!this.fileObject) {
           alert("No file selected");
           return;
         }
         this.$store.commit('spinner', true);
-        let hash = await this.$swarm.uploadDoc(Buffer.from(await this.fileObject.arrayBuffer()),
-                this.fileObject.type
-          
-        );
+
+        let plaintext = Buffer.from(await this.fileObject.arrayBuffer());
+
+        //Get file key and encrypt
+        let fileKey = await this.getFileKey(this.selectedComponent);
+        let cipherText = this.$crypto.encryptAES(plaintext, fileKey);
+        cipherText.contentType = this.fileObject.type;
+
+        //upload to Swarm and add to blockchain
+        let hash = await this.$swarm.uploadDoc(JSON.stringify(cipherText), "application/json");
         await this.specification.addDocument(
           this.selectedComponent,
           this.fileObject.name,
@@ -151,19 +178,24 @@
           this.$utils.swarmHashToBytes(hash),
           {from: this.account}
         );
+
+        //reload documents
         await this.loadDocuments();
         this.$store.commit('spinner', false);
       },
 
-      async downloadDocument(hash, filename) {
-        let response = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(hash), 'file');
-        let contentType = response.headers.get("content-type");
-        let blob = new Blob([await response.arrayBuffer()], {type: contentType})
+      async downloadDocument(hash, filename, component) {
+        this.$store.commit('spinner', true);
+        let fileKey = await this.getFileKey(component);
+        let response = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(hash), 'json');
+        let plaintext = this.$crypto.decryptAES(response.encryptedData, fileKey, response.iv)
+        let blob = new Blob([plaintext], {type: response.contentType})
         let link = document.createElement('a')
         link.href = window.URL.createObjectURL(blob);
         link.setAttribute('download', filename);
         document.body.appendChild(link);
         link.click();
+        this.$store.commit('spinner', false);
       },
 
       async addDocumentVersion(componentId, version) {
@@ -230,6 +262,7 @@
       if (this.twinObject.components && this.twinObject.components.length > 0) {
         this.loadDocuments();
         this.selectedComponent = this.twinObject.components[0].id;
+        console.log(await this.getFileKey())
       }
       this.$store.subscribe((mutation, state) => {
         if (mutation.type === "addTwinComponents" && mutation.payload.components.length > 0) {
@@ -237,7 +270,7 @@
           this.selectedComponent = mutation.payload.components[0].id;
         }
       })
-    }
+    },
 
   }
 

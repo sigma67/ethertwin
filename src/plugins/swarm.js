@@ -25,6 +25,13 @@ export default {
     });
 
     Vue.prototype.$swarm = {
+
+      //todo remove this later
+      async updateFeedSimple(feed, update){
+        await client.bzz.createFeedManifest(feed)
+        return client.bzz.setFeedContent(feed, JSON.stringify(update), {contentType: "application/json"})
+      },
+
       async uploadDoc(content, contentType) {
         return new Promise((resolve, reject) => {
           try {
@@ -49,6 +56,8 @@ export default {
                     case "text":
                       resolve(response.text());
                       break;
+                    case "json":
+                      resolve(response.json())
                     case "file":
                       resolve(response)
                   }
@@ -141,6 +150,14 @@ export default {
           user: meta.feed.user,
           topic: meta.feed.topic,
           time: time
+        });
+        return await content.json();
+      },
+
+      async getUserFeedLatest(user, topic) {
+        let content = await client.bzz.getFeedContent({
+          user: user,
+          topic: topic
         });
         return await content.json();
       }
