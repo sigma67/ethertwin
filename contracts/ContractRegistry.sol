@@ -1,7 +1,7 @@
 pragma experimental ABIEncoderV2;
-pragma solidity ^0.5.12;
+pragma solidity 0.5.13;
 
-import "../node_modules/openzeppelin-solidity/contracts/access/Roles.sol";
+import "./auth/Roles.sol";
 import "./Specification.sol";
 import "./Authorization.sol";
 
@@ -9,14 +9,14 @@ contract ContractRegistry {
 
     address[] public contracts;
 
-    Authorization auth;
-    Specification spec;
+    Authorization internal auth;
+    Specification internal spec;
 
     constructor (address payable _auth) public {
         auth = Authorization(_auth);
     }
 
-    function registerContract(string memory _deviceID, string memory _deviceName, bytes32 _deviceAML, address _deviceAgent) public returns(address) {
+    function registerContract(string calldata _deviceID, string calldata _deviceName, bytes32 _deviceAML, address _deviceAgent) external returns(address) {
 
         //require RBAC.DEVICEAGENT PRIVILEGES --> device agent has value 0
         //require(auth.getRole(msg.sender, address(this)) == 0, "Your account has no privileges of device agent!");
@@ -32,7 +32,7 @@ contract ContractRegistry {
         spec.updateTwin(_deviceID, _deviceName, _deviceAgent);
 
         //add AML to specification contract
-        spec.addNewAMLVersion(_deviceAML);
+        spec._addNewAMLVersion(_deviceAML, msg.sender);
 
         //add contract to all contracts
         contracts.push(contractAddress);
@@ -40,7 +40,7 @@ contract ContractRegistry {
         return contractAddress;
     }
 
-    function getContracts() public view returns (address[] memory){
+    function getContracts() external view returns (address[] memory){
         return contracts;
     }
 

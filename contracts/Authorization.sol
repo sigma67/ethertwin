@@ -1,7 +1,7 @@
 pragma experimental ABIEncoderV2;
 
-import "../node_modules/openzeppelin-solidity/contracts/access/Roles.sol";
-import "./Attributes.sol";
+import "./auth/Roles.sol";
+import "./auth/Attributes.sol";
 import "./Specification.sol";
 import "./ContractRegistry.sol";
 
@@ -24,23 +24,19 @@ contract Authorization {
     // local storage of the device agent address
     address public deviceAgentAddress;
 
-    mapping(address => bool) userRegistered;
-    address[] users;
+    mapping(address => bool) public userRegistered;
+    address[] public users;
 
     //map twin to mapping(role => users)
-    mapping(address => mapping(uint => Roles.Role)) private roleMapping;
+    mapping(address => mapping(uint => Roles.Role)) internal roleMapping;
 
     //on-chain permissions
     //map role to mapping(permission => bool)
-    mapping(address => mapping(uint => mapping(uint => bool))) permissions;
+    mapping(address => mapping(uint => mapping(uint => bool))) internal permissions;
 
     //on-chain permissions for components
     //map twin to mapping(attribute => users)
-    mapping(address => mapping(bytes32 => Attributes.Attribute)) attributes;
-
-    //file key storage addresses
-    //map address to mapping(component => hash)
-    mapping(bytes32 => bytes32) fileKeys;
+    mapping(address => mapping(bytes32 => Attributes.Attribute)) internal attributes;
 
     //this constructor defines the static address of the device agent at deployment
     constructor (address _deviceAgent) public payable
@@ -51,7 +47,7 @@ contract Authorization {
     function () external payable {}
 
     // is called by the ContractRegistry.sol --> initial step to register a device
-    function initializeDevice(address _operator, address _contract) public {
+    function initializeDevice(address _operator, address _contract) external {
         //require(_operator == deviceAgentAddress, "You are not authorized to register devices.");
         roleMapping[_contract][uint(RBAC.OWNER)].add(_operator);
 
@@ -83,7 +79,7 @@ contract Authorization {
     }
 
     //registers user address and pays out Ether to conduct transactions
-    function register() public {
+    function register() external {
         require(!userRegistered[msg.sender]);
         users.push(msg.sender);
         userRegistered[msg.sender] = true;
@@ -95,7 +91,7 @@ contract Authorization {
     //////////
 
     //checks if an user has the given role for a specific contract
-    function hasRole(address _operator, uint _role, address _contract) public view returns (bool){
+    function hasRole(address _operator, uint _role, address _contract) external view returns (bool){
         return roleMapping[_contract][_role].has(_operator);
     }
 
@@ -140,35 +136,35 @@ contract Authorization {
     // PERMISSIONS
     ///////////////
 
-    function hasPermission(address _user, PERMISSION permission, address _contract) public view returns (bool){
+    function hasPermission(address _user, PERMISSION permission, address _contract) external view returns (bool){
         uint role = getRole(_user, _contract);
         return permissions[_contract][role][uint(permission)];
     }
 
-    function hasPermissionAndAttribute(address _user, PERMISSION permission, bytes32 _component, address _contract) public view returns (bool){
+    function hasPermissionOrAttribute(address _user, PERMISSION permission, bytes32 _component, address _contract) external view returns (bool){
         uint role = getRole(_user, _contract);
-        return permissions[_contract][role][uint(permission)] && attributes[_contract][_component].has(_user);
+        return permissions[_contract][role][uint(permission)] || attributes[_contract][_component].has(_user);
     }
 
     ///////////////
     // ATTRIBUTES
     ///////////////
 
-    function addAttribute(address _user, bytes32 _component, address _contract) public {
+    function addAttribute(address _user, bytes32 _component, address _contract) external {
         attributes[_contract][_component].add(_user);
     }
 
-    function removeAttribute(address _user, bytes32 _component, address _contract) public {
+    function removeAttribute(address _user, bytes32 _component, address _contract) external {
         attributes[_contract][_component].remove(_user);
     }
 
     //check if a user has the given attribute for a specific contract
-    function hasAttribute(address _user, bytes32 _component, address _contract) public view returns (bool){
+    function hasAttribute(address _user, bytes32 _component, address _contract) external view returns (bool){
         return attributes[_contract][_component].has(_user);
     }
 
     // if the address of the device agent is changed, the old device agent can call this method to change the address
-    function changeDeviceAgent(address _operator, address _contract) public onlyDeviceAgent(_contract) {
+    function changeDeviceAgent(address _operator, address _contract) external onlyDeviceAgent(_contract) {
         addRole(_operator, uint(RBAC.DEVICEAGENT), _contract);
         removeRole(msg.sender, uint(RBAC.DEVICEAGENT), _contract);
         deviceAgentAddress = _operator;

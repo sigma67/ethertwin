@@ -1,12 +1,12 @@
 pragma experimental ABIEncoderV2;
-pragma solidity ^0.5.12;
+pragma solidity 0.5.13;
 
 import "./Authorization.sol";
 
 contract Specification {
 
-    Authorization auth;
-    address contractRegistry;
+    Authorization internal auth;
+    address internal contractRegistry;
 
     string public deviceName;
     string public deviceID;
@@ -59,11 +59,11 @@ contract Specification {
     //array index of the most recently run program
     mapping(bytes32 => uint) public programCounter;
 
-    function getTwin() public view returns (string memory, string memory, address){
+    function getTwin() external view returns (string memory, string memory, address){
         return (deviceID, deviceName, deviceAgent);
     }
 
-    function updateTwin(string memory _deviceID, string memory _deviceName, address _deviceAgent) public
+    function updateTwin(string calldata _deviceID, string calldata _deviceName, address _deviceAgent) external
     {
         require(msg.sender == contractRegistry || auth.hasPermission(msg.sender, Authorization.PERMISSION.TWIN_UPDATE, address(this)));
         deviceID = _deviceID;
@@ -73,31 +73,37 @@ contract Specification {
 
     //******* AML *******//
 
-    function addNewAMLVersion(bytes32 _newAMLVersion) public {
+    //overload function with msg.sender variant, since Solidity does not support optional parameters
+    function _addNewAMLVersion(bytes32 _newAMLVersion, address sender) external {
         // AML can be inserted by each role except unauthorized accounts
-        // must use tx.origin since it is also called from ContractRegistry
-        require(!(auth.getRole(tx.origin, address(this)) == 404), "Your account has no privileges");
-        AML.push(Version(now, tx.origin, _newAMLVersion));
+        require(!(auth.getRole(sender, address(this)) == 404), "Your account has no privileges");
+        AML.push(Version(now, sender, _newAMLVersion));
     }
 
-    function getAML(uint id) public view returns (Version memory){
+    function addNewAMLVersion(bytes32 _newAMLVersion) external {
+        // AML can be inserted by each role except unauthorized accounts
+        require(!(auth.getRole(msg.sender, address(this)) == 404), "Your account has no privileges");
+        AML.push(Version(now, msg.sender, _newAMLVersion));
+    }
+
+    function getAML(uint id) external view returns (Version memory){
         return AML[id];
     }
 
-    function getAMLCount() public view returns (uint){
+    function getAMLCount() external view returns (uint){
         return AML.length;
     }
 
-    function getAMLHistory() public view returns (Version[] memory){
+    function getAMLHistory() external view returns (Version[] memory){
         return AML;
     }
 
     //******* DOCUMENTS *******//
 
     //register a new document (always appends to the end)
-    function addDocument(string memory componentId, string memory name, string memory description, bytes32 docHash) public {
+    function addDocument(string calldata componentId, string calldata name, string calldata description, bytes32 docHash) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_CREATE, id, address(this)));
+        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_CREATE, id, address(this)));
 
         documents[id].length++;
         Document storage doc = documents[id][documents[id].length - 1];
@@ -110,107 +116,107 @@ contract Specification {
     }
 
     //update Document storage metadata
-    function updateDocument(string memory componentId, uint documentId, string memory name, string memory description) public {
+    function updateDocument(string calldata componentId, uint documentId, string calldata name, string calldata description) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
+        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
         documents[id][documentId].name = name;
         documents[id][documentId].description = description;
     }
 
     //add new document version
-    function addDocumentVersion(string memory componentId, uint documentId, bytes32 docHash) public {
+    function addDocumentVersion(string calldata componentId, uint documentId, bytes32 docHash) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
+        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
         Version memory updated = Version(now, msg.sender, docHash);
         documents[id][documentId].versions.push(updated);
     }
 
-    function getDocument(string memory componentId, uint index) public view returns (Document memory){
+    function getDocument(string calldata componentId, uint index) external view returns (Document memory){
         bytes32 id = keccak256(bytes(componentId));
         return documents[id][index];
     }
 
-    function getDocumentCount(string memory componentId) public view returns (uint){
+    function getDocumentCount(string calldata componentId) external view returns (uint){
         bytes32 id = keccak256(bytes(componentId));
         return documents[id].length;
     }
 
-    function removeDocument(string memory componentId, uint index) public {
+    function removeDocument(string calldata componentId, uint index) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_DELETE, id, address(this)));
+        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_DELETE, id, address(this)));
         require(index < documents[id].length);
         documents[id][index] = documents[id][documents[id].length-1];
         delete documents[id][documents[id].length-1];
-        documents[id].length--;
+        documents[id].pop();
     }
 
     //******* SENSORS *******//
 
-    function addSensor(string memory componentId, string memory name, bytes32 hash) public {
+    function addSensor(string calldata componentId, string calldata name, bytes32 hash) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.SENSOR_CREATE, id, address(this)));
+        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.SENSOR_CREATE, id, address(this)));
         sensors[id].push(Sensor(name, hash));
     }
 
-    function getSensor(string memory componentId, uint index) public view returns (Sensor memory){
+    function getSensor(string calldata componentId, uint index) external view returns (Sensor memory){
         bytes32 id = keccak256(bytes(componentId));
         return sensors[id][index];
     }
 
-    function getSensorCount(string memory componentId) public view returns (uint){
+    function getSensorCount(string calldata componentId) external view returns (uint){
         bytes32 id = keccak256(bytes(componentId));
         return sensors[id].length;
     }
 
-    function removeSensor(string memory componentId, uint index) public {
+    function removeSensor(string calldata componentId, uint index) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.SENSOR_DELETE, id, address(this)));
+        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.SENSOR_DELETE, id, address(this)));
         require(index < sensors[id].length);
         sensors[id][index] = sensors[id][sensors[id].length-1];
         delete sensors[id][sensors[id].length-1];
-        sensors[id].length--;
+        sensors[id].pop();
     }
 
     //******* EXTERNAL SOURCES *******//
 
-    function addExternalSource(string memory URI, string memory description) public {
+    function addExternalSource(string calldata URI, string calldata description) external {
         sources.push(ExternalSource(URI, description, msg.sender));
     }
 
-    function getExternalSource(uint index) public view returns (ExternalSource memory){
+    function getExternalSource(uint index) external view returns (ExternalSource memory){
         return sources[index];
     }
 
-    function getExternalSourceHistory() public view returns (ExternalSource[] memory){
+    function getExternalSourceHistory() external view returns (ExternalSource[] memory){
         return sources;
     }
 
-    function removeExternalSource(uint index) public {
+    function removeExternalSource(uint index) external {
         //todo permission check
         require(index < sources.length);
         sources[index] = sources[sources.length-1];
         delete sources[sources.length-1];
-        sources.length--;
+        sources.pop();
     }
 
     //******* PROGRAM CALLS *******//
-    function addProgramCall(string memory componentId, string memory call) public {
+    function addProgramCall(string calldata componentId, string calldata call) external {
         bytes32 id = keccak256(bytes(componentId));
         //todo permission check
         programCallQueue[id].push(ProgramCall(now, msg.sender, call));
     }
 
-    function getProgramCallQueue(string memory componentId) public view returns (ProgramCall[] memory){
+    function getProgramCallQueue(string calldata componentId) external view returns (ProgramCall[] memory){
         bytes32 id = keccak256(bytes(componentId));
         return programCallQueue[id];
     }
 
-    function getProgramCounter(string memory componentId) public view returns (uint){
+    function getProgramCounter(string calldata componentId) external view returns (uint){
         bytes32 id = keccak256(bytes(componentId));
         return programCounter[id];
     }
 
-    function updateProgramCounter(string memory componentId, uint counter) public {
+    function updateProgramCounter(string calldata componentId, uint counter) external {
         bytes32 id = keccak256(bytes(componentId));
         //todo permission check
         programCounter[id] = counter;
