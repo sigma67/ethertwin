@@ -11,6 +11,7 @@ contract Specification {
     string public deviceName;
     string public deviceID;
     address public deviceAgent;
+    address public owner;
 
     constructor (address payable _authAddress) public {
         auth = Authorization(_authAddress);
@@ -59,16 +60,17 @@ contract Specification {
     //array index of the most recently run program
     mapping(bytes32 => uint) public programCounter;
 
-    function getTwin() external view returns (string memory, string memory, address){
-        return (deviceID, deviceName, deviceAgent);
+    function getTwin() external view returns (string memory, string memory, address, address){
+        return (deviceID, deviceName, deviceAgent, owner);
     }
 
-    function updateTwin(string calldata _deviceID, string calldata _deviceName, address _deviceAgent) external
+    function updateTwin(string calldata _deviceID, string calldata _deviceName, address _deviceAgent, address _owner) external
     {
         require(msg.sender == contractRegistry || auth.hasPermission(msg.sender, Authorization.PERMISSION.TWIN_UPDATE, address(this)));
         deviceID = _deviceID;
         deviceName = _deviceName;
         deviceAgent = _deviceAgent;
+        owner = _owner;
     }
 
     //******* AML *******//

@@ -16,11 +16,9 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 //plugins
 import utils from './plugins/utils'
 import swarm from './plugins/swarm'
-import crypto from './plugins/crypto'
 
 //VUE setup
 Vue.use(utils)
-Vue.use(crypto)
 Vue.use(VueSweetalert2);
 Vue.config.productionTip = false
 

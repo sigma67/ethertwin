@@ -90,11 +90,6 @@
               required: true,
           },
       },
-      mounted() {
-          let script = document.createElement('script')
-          script.setAttribute('src', 'highlight.pack.js')
-          document.head.appendChild(script)
-      },
       computed: {
           account() {
               return this.$store.state.user.address
@@ -121,20 +116,24 @@
               this.version = versionNumber;
               this.author = version[1];
               let hash = this.$utils.hexToSwarmHash(version[2]);
-              this.$swarm.downloadDoc(hash)
+              this.$swarm.downloadEncryptedDoc(this.twinObject.owner, web3.utils.sha3(this.twinObject.deviceId), hash)
                       .then(doc => {
-                          vm.aml = doc.toString();
+                          vm.aml = doc.content;
                           // highlighting
                       })
           },
 
           saveAML() {
               let vm = this;
-              console.log(this.aml)
-              this.$swarm.uploadDoc(this.aml, 'text/plain').then(hash => {
+              this.$swarm.uploadEncryptedDoc(
+                this.aml,
+                'text/plain',
+                this.twinObject.owner,//todo replace with deviceagent
+                web3.utils.sha3(this.twinObject.deviceId)
+              ).then(hash => {
                   vm.specification.addNewAMLVersion.sendTransaction(
-                          web3.utils.hexToBytes("0x" + hash),
-                          {from: vm.account}
+                      web3.utils.hexToBytes("0x" + hash),
+                      {from: vm.account}
                   ).then(() => {
                       vm.loadVersions();
                   });
@@ -167,12 +166,17 @@
               this.fileObject = file;
           }
       },
-          async beforeMount() {
-              this.$store.commit('spinner', true);
-              this.specification = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
-              await this.loadVersions();
-              this.$store.commit('spinner', false);
-          }
+      async beforeMount() {
+          this.$store.commit('spinner', true);
+          this.specification = await this.$store.state.contracts.SpecificationContract.at(this.twinAddress);
+          await this.loadVersions();
+          this.$store.commit('spinner', false);
+      },
+        mounted() {
+          let script = document.createElement('script')
+          script.setAttribute('src', 'highlight.pack.js')
+          document.head.appendChild(script)
+        },
       
   }
 

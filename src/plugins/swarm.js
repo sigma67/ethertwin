@@ -1,6 +1,8 @@
 import {SwarmClient} from '@erebos/swarm-browser';
 import { createKeyPair, sign } from '@erebos/secp256k1'
 import config from '../../config'
+import crypto from './crypto'
+let c = require('crypto');
 
 export default {
   install(Vue, store) {
@@ -26,9 +28,8 @@ export default {
 
     Vue.prototype.$swarm = {
 
-      //todo remove this later
       async updateFeedSimple(feed, update){
-        await client.bzz.createFeedManifest(feed)
+        await client.bzz.createFeedManifest(feed);
         return client.bzz.setFeedContent(feed, JSON.stringify(update), {contentType: "application/json"})
       },
 
@@ -57,7 +58,8 @@ export default {
                       resolve(response.text());
                       break;
                     case "json":
-                      resolve(response.json())
+                      resolve(response.json());
+                      break;
                     case "file":
                       resolve(response)
                   }
@@ -76,12 +78,10 @@ export default {
        */
       async createFeed(device, topic) {
         try {
-          let feedHash = await client.bzz.createFeedManifest({
+          return await client.bzz.createFeedManifest({
             user: device,
             topic: topic,
           });
-
-          return feedHash;
         } catch (err) {
           alert(err);
         }
@@ -160,7 +160,73 @@ export default {
           topic: topic
         });
         return await content.json();
-      }
+      },
+
+      async getUserFeedText(user){
+        let content = await client.bzz.getFeedContent({user: user});
+        return await content.text();
+      },
+      
+      /** Functions related to uploading and downloading encrypted files **/
+
+      async createFileKey(user, topic) {
+        let key = c.randomBytes(32);
+        let publicKey = store.state.user.wallet.getPublicKey().toString('hex');
+        let ciphertext = crypto.encryptECIES(publicKey, key.toString('base64'));
+        let update = [{address: user, fileKey: ciphertext}];
+        await this.updateFeedSimple({user: user, topic: topic}, update);
+        return key;
+      },
+
+      //share an existing key on the user's own feed with another user
+      async shareFileKey(user, topic, userAddress) {
+        //get existing keys and decrypt key
+        let fileKeys = await this.getUserFeedLatest(user, topic);
+        let keyObject = fileKeys.filter(f => f.address === user)[0];
+        let privateKey = store.state.user.wallet.getPrivateKey().toString('hex');
+        let plainKey = crypto.decryptECIES(privateKey, keyObject.fileKey);
+
+        //encrypt for new user
+        let userPublicKey = await this.getUserFeedText(userAddress);
+        let newKey = crypto.encryptECIES(userPublicKey, plainKey);
+        fileKeys.push({address: userAddress, fileKey: newKey});
+        await this.updateFeedSimple({user: user, topic: topic}, fileKeys);
+      },
+
+      //gets from any feed and decrypts a file key, which was encrypted for the current user
+      async getFileKey(user, topic) {
+        let fileKeys = await this.getUserFeedLatest(user, topic);
+        let keyObject = fileKeys[0];
+        //let keyObject = fileKeys.filter(f => f.address === store.state.user.address)[0];
+        let privateKey = store.state.user.wallet.getPrivateKey().toString('hex');
+        let plainKey = crypto.decryptECIES(privateKey, keyObject.fileKey);
+        return new Buffer(plainKey, 'base64');
+      },
+
+      async uploadEncryptedDoc (content, contentType, user, topic, newKey = false) {
+        let key = newKey ?
+          await this.createFileKey(user, topic) :
+          await this.getFileKey(user, topic) ;
+
+        return await this.encryptAndUpload(content, contentType, key)
+      },
+
+      //content: buffer
+      async encryptAndUpload(content, contentType, key) {
+        let cipherText = crypto.encryptAES(content, key);
+        cipherText.contentType = contentType;
+        return this.uploadDoc(JSON.stringify(cipherText), "application/json");
+      },
+
+      async downloadEncryptedDoc(user, topic, hash) {
+        let key = await this.getFileKey(user, topic);
+        let response = await client.bzz.download(hash);
+        let res = await response.json();
+        return {
+          content: crypto.decryptAES(res.encryptedData, key, res.iv),
+          type: res.type
+        };
+      },
     }
   }
 };

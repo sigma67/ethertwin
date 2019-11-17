@@ -132,37 +132,15 @@
         this.fileObject = file;
       },
 
-      async getFileKey(component){
-        // //todo: done by device agent. until then, run once to upload files
-        // let crypto = require('crypto')
-        // let key = crypto.randomBytes(32);
-        // let publicKey = this.$store.state.user.wallet.getPublicKey().toString('hex');
-        // let ciphertext = this.$crypto.encryptECIES(publicKey, key.toString('base64'));
-        // let update = [{address: this.account, fileKey: ciphertext}];
-        let feed = {
-          user: this.account,//this.twinObject.address,
-          topic: web3.utils.sha3(component)
-        };
-        // await this.$swarm.updateFeedSimple(feed, update);
-
-        //get file key from device agent feed
-        let fileKeys = await this.$swarm.getUserFeedLatest(feed.user, feed.topic);
-        let keyObject = fileKeys.filter(f => f.address === this.account)[0];
-        let privateKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
-        let plainKey = this.$crypto.decryptECIES(privateKey, keyObject.fileKey)
-        return new Buffer(plainKey, 'base64');
-      },
-
       async encryptAndUpload(file, component){
         let plaintext = Buffer.from(await file.arrayBuffer());
 
-        //Get file key and encrypt
-        let fileKey = await this.getFileKey(component);
-        let cipherText = this.$crypto.encryptAES(plaintext, fileKey);
-        cipherText.contentType = file.type;
-
-        //upload to Swarm and return hash
-        return this.$swarm.uploadDoc(JSON.stringify(cipherText), "application/json");
+        return this.$swarm.uploadEncryptedDoc(
+          plaintext,
+          file.type,
+          this.account,//todo replace with deviceagent
+          web3.utils.sha3(component)
+        );
       },
 
       async uploadDocument() {
@@ -189,10 +167,15 @@
 
       async downloadDocument(hash, filename, component) {
         this.$store.commit('spinner', true);
-        let fileKey = await this.getFileKey(component);
-        let response = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(hash), 'json');
-        let plaintext = this.$crypto.decryptAES(response.encryptedData, fileKey, response.iv)
-        let blob = new Blob([plaintext], {type: response.contentType})
+
+        //todo replace this.account with deviceagent
+        let file = await this.$swarm.downloadEncryptedDoc(
+          this.account,
+          web3.utils.sha3(component),
+          this.$utils.hexToSwarmHash(hash),
+        );
+
+        let blob = new Blob([file.content], {type: file.type})
         let link = document.createElement('a')
         link.href = window.URL.createObjectURL(blob);
         link.setAttribute('download', filename);

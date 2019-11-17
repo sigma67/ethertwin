@@ -66,7 +66,7 @@
                                                        title="view external sources"/>
                                 </router-link>
                             </button>
-                            <button class="acticon" v-on:click="shareTwin(twin.address)">
+                            <button class="acticon" v-on:click="shareTwin(twin.address, twin.deviceId)">
                                 <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom"
                                                    title="share twin"/>
                             </button>
@@ -111,10 +111,8 @@
 
           //get latest version of specification-AML
           let amlInfo = await twin.specification.getAML(index);
-
           //get AML from Swarm using aml-hash: amlInfo.hash
-          let aml = await this.$swarm.downloadDoc(this.$utils.hexToSwarmHash(amlInfo.hash));
-
+          let aml = (await this.$swarm.downloadEncryptedDoc(twin.owner, web3.utils.sha3(deviceId), this.$utils.hexToSwarmHash(amlInfo.hash))).content;
           //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
           // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
           let parser = new DOMParser();
@@ -180,7 +178,7 @@
           });
       },
 
-      async shareTwin(deviceAddress) {
+      async shareTwin(deviceAddress, deviceId) {
         let self = this.$store.state;
         let vm = this;
         this.$swal({
@@ -204,14 +202,17 @@
               let role = document.getElementById("swal-input1").value;
               let address = document.getElementById("swal-input2").value;
 
-              self.contracts.Authorization.addRole(
-                address,
-                Number(role),
-                deviceAddress,
-                {
-                  from: vm.account
-                }
-              ).then(function (result) {
+              //share specification and add role
+              Promise.all([
+                vm.$swarm.shareFileKey(vm.account, web3.utils.sha3(deviceId), address),
+                self.contracts.Authorization.addRole(
+                  address,
+                  Number(role),
+                  deviceAddress,
+                  {
+                    from: vm.account
+                  })
+                ]).then(function () {
                   vm.$swal.fire({
                     type: "success",
                     title: "Account has been successfully added.",

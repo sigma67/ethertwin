@@ -29,7 +29,7 @@ contract ContractRegistry {
         auth.initializeDevice(msg.sender, contractAddress);
 
         //set params in the specification contract
-        spec.updateTwin(_deviceID, _deviceName, _deviceAgent);
+        spec.updateTwin(_deviceID, _deviceName, _deviceAgent, msg.sender);
 
         //add AML to specification contract
         spec._addNewAMLVersion(_deviceAML, msg.sender);

@@ -45,6 +45,7 @@ async function getSpecification(address, state){
               twin.deviceId = res[0];
               twin.deviceName = res[1];
               twin.deviceAgent = res[2];
+              twin.owner = res[3];
             });
           }).then(function () {
             resolve(twin);

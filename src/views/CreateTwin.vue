@@ -73,7 +73,10 @@
 
                     this.$store.commit('spinner', true);
                     //upload file to swarm and get swarm hash
-                    this.$swarm.uploadDoc(this.twinAML, 'text/plain').then(hash => {
+                    let hash = this.$swarm.uploadEncryptedDoc(
+                            this.twinAML, 'text/plain', this.account,
+                            web3.utils.sha3(vm.twinID), true);
+                    hash.then(hash => {
                         vm.$store.state.contracts.ContractRegistry.registerContract(
                             vm.twinID,
                             vm.twinName,
