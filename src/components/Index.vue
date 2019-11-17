@@ -86,8 +86,6 @@
 </template>
 
 <script>
-  import $ from 'jquery';
-
   export default {
     name: 'Index',
     computed: {
@@ -110,7 +108,6 @@
           //let specification = this.$store.state.contracts.SpecificationContract.at(address);
           let length = await twin.specification.getAMLCount();
           let index = length.toNumber() - 1;
-          //console.log(length.toNumber());
 
           //get latest version of specification-AML
           let amlInfo = await twin.specification.getAML(index);
@@ -131,7 +128,6 @@
           for (let i = 0; i < childNodes.length; i++) {
             //all children of type "InternalElement" are high-level components
             if (childNodes[i].nodeName === "InternalElement") {
-              //console.log(childNodes[i].getAttribute("ID"));
               let id = childNodes[i].getAttribute("ID");
               let name = childNodes[i].getAttribute("Name");
               let hash = web3.utils.sha3(id);
@@ -143,7 +139,7 @@
           //filter by attributes
           if (twin.role !== "Owner") {
             let a = this.$store.state.contracts.Authorization;
-            let c = await Promise.all(components.map(component => a.hasAttribute(
+            let c = await Promise.all(components.map(component => a.hasAttribute.call(
               this.account,
               web3.utils.hexToBytes(component.hash),
               twin.specification.address
@@ -205,8 +201,8 @@
           function (result) {
             if (result.value) {
               // function when confirm button clicked
-              let role = $("#swal-input1").val();
-              let address = $("#swal-input2").val();
+              let role = document.getElementById("swal-input1").value;
+              let address = document.getElementById("swal-input2").value;
 
               self.contracts.Authorization.addRole(
                 address,

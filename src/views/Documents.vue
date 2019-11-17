@@ -84,8 +84,6 @@
 </template>
 
 <script>
-  import $ from 'jquery'
-
   export default {
     name: "Documents.vue",
     data() {
@@ -148,11 +146,23 @@
         // await this.$swarm.updateFeedSimple(feed, update);
 
         //get file key from device agent feed
-        let fileKeys = await this.$swarm.getUserFeedLatest(feed.user, feed.topic);console.log(fileKeys);
+        let fileKeys = await this.$swarm.getUserFeedLatest(feed.user, feed.topic);
         let keyObject = fileKeys.filter(f => f.address === this.account)[0];
         let privateKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
         let plainKey = this.$crypto.decryptECIES(privateKey, keyObject.fileKey)
         return new Buffer(plainKey, 'base64');
+      },
+
+      async encryptAndUpload(file, component){
+        let plaintext = Buffer.from(await file.arrayBuffer());
+
+        //Get file key and encrypt
+        let fileKey = await this.getFileKey(component);
+        let cipherText = this.$crypto.encryptAES(plaintext, fileKey);
+        cipherText.contentType = file.type;
+
+        //upload to Swarm and return hash
+        return this.$swarm.uploadDoc(JSON.stringify(cipherText), "application/json");
       },
 
       async uploadDocument() {
@@ -162,15 +172,8 @@
         }
         this.$store.commit('spinner', true);
 
-        let plaintext = Buffer.from(await this.fileObject.arrayBuffer());
-
-        //Get file key and encrypt
-        let fileKey = await this.getFileKey(this.selectedComponent);
-        let cipherText = this.$crypto.encryptAES(plaintext, fileKey);
-        cipherText.contentType = this.fileObject.type;
-
-        //upload to Swarm and add to blockchain
-        let hash = await this.$swarm.uploadDoc(JSON.stringify(cipherText), "application/json");
+        let hash = await this.encryptAndUpload(this.fileObject, this.selectedComponent);
+        console.log(hash)
         await this.specification.addDocument(
           this.selectedComponent,
           this.fileObject.name,
@@ -213,14 +216,12 @@
             '<input type="file" class="form-control-file text-center" id="swal-input1">'
         });
         if (result.value) {
-          let files = $("#swal-input1").prop('files');
+          let files = document.getElementById("swal-input1").files;
           if (files.length === 0) return;
           let file = files[0];
 
-          let hash = await this.$swarm.uploadDoc(
-            Buffer.from(await file.arrayBuffer()),
-            file.type
-          );
+          let hash = await this.encryptAndUpload(file, componentId);
+
           await this.specification.addDocumentVersion(
             componentId,
             version,
@@ -262,7 +263,6 @@
       if (this.twinObject.components && this.twinObject.components.length > 0) {
         this.loadDocuments();
         this.selectedComponent = this.twinObject.components[0].id;
-        console.log(await this.getFileKey())
       }
       this.$store.subscribe((mutation, state) => {
         if (mutation.type === "addTwinComponents" && mutation.payload.components.length > 0) {

@@ -5,7 +5,6 @@ import router from './router'
 import store from './store'
 
 //UI
-import 'bootstrap'
 import VueSweetalert2 from 'vue-sweetalert2';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {faUserSecret, faTrash, faShareAlt, faSearch, faPlusSquare, faSave, faFileAlt, faFileUpload, faFileDownload, faWifi, faSitemap, faDatabase, faKey, faAddressCard, faHistory, faUserTag, faUserCircle} from '@fortawesome/free-solid-svg-icons'

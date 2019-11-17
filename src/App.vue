@@ -130,7 +130,7 @@
 
 
 <style>
-@import'~bootstrap/dist/css/bootstrap.css';
+@import 'https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css';
 @import '~sweetalert2/dist/sweetalert2.min.css';
 
 #icon {
