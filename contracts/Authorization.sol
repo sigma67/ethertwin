@@ -131,7 +131,14 @@ contract Authorization {
             return 404;
         }
     }
+    
+    //return all users
+    function getUsers() external view returns (address[] memory){
+        return users; 
+    }
 
+    
+    
     ///////////////
     // PERMISSIONS
     ///////////////

@@ -92,8 +92,8 @@ export default{
               instances.Authorization = instance2;
               addresses.AuthorizationAddress = instance2.address;
               web3.eth.getBalance(state.user.address).then((res) => {
-                if (res < web3.utils.toWei("1", "ether"))
-                  instance2.register({from: state.user.address})
+                  if (web3.utils.fromWei(res,'ether') < 50)
+                      instance2.register({from: state.user.address})
               });
               commit('contracts', instances);
               commit('addresses',
