@@ -208,7 +208,7 @@ export default {
           await this.createFileKey(user, topic) :
           await this.getFileKey(user, topic) ;
 
-        return await this.encryptAndUpload(content, contentType, key)
+        return this.encryptAndUpload(content, contentType, key)
       },
 
       //content: buffer

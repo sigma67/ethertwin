@@ -49,7 +49,9 @@
                 <div class="col-sm-5" v-for="(document, i) in component.documents">
                     <div class="card mb-4">
                         <div class="card-body">
-                            <p class="card-title">{{ document[0] }}</p>
+                            <p class="card-title">{{ document[0] }}
+                                <font-awesome-icon icon="trash" data-placement="bottom" title="remove sensor" class="float-right button" v-on:click="removeDocument(component.id, i)"/>
+                            </p>
                             <p class="card-text">{{ document[1] }}</p>
                             <select id="document" class="form-control mb-3" v-model="document.selectedVersion">
                                 <option v-for="(version, j) in document[2]" v-bind:value="j">Version {{
@@ -139,7 +141,8 @@
           plaintext,
           file.type,
           this.account,//todo replace with deviceagent
-          web3.utils.sha3(component)
+          web3.utils.sha3(component),
+          true
         );
       },
 
@@ -215,6 +218,34 @@
         }
       },
 
+      async removeDocument(componentId, index){
+        let vm = this;
+        this.$swal.fire({
+          type: "warning",
+          title: "Do you really want to remove this document?",
+          showConfirmButton: true,
+          showCancelButton: true,
+          confirmButtonText: "yes",
+          cancelButtonText: "no"
+        })
+          .then(function (result) {
+            if (result.value) {
+              vm.twinObject.specification.removeDocument(componentId, index, {from: vm.account})
+                .then(function () {
+                  vm.$swal.fire({
+                    type: "success",
+                    title: "Document successfully removed!",
+                    showConfirmButton: false,
+                    timer: 2000
+                  });
+                })
+                .catch(function (err) {
+                  alert(err.message);
+                });
+            }
+          });
+      },
+
       async getDocumentCounts(component) {
         return {
           id: component.id,
@@ -262,5 +293,8 @@
 <style scoped>
     .card-title {
         font-weight: bold;
+    }
+    svg {
+        cursor: pointer;
     }
 </style>
