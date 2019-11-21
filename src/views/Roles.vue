@@ -27,7 +27,7 @@
                         <button class="acticon">
                             <font-awesome-icon icon="history" data-toggle="tooltip" data-placement="bottom" title="view change history"/>
                         </button>
-                        <button class="acticon" v-on:click="addRole(user.address, twinObject.address, user.roleNumber)">
+                        <button class="acticon" v-on:click="changeRole(user.address, twinObject.address, user.roleNumber)">
                             <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="change role"/>
                         </button>
                         <button class="acticon" v-on:click="addAttribute(user.address, twinObject.address)">
@@ -66,7 +66,7 @@
         }
       },
       methods:{
-          async addRole(userAddress, twinAddress, userOldRoleNumber) {
+          async changeRole(userAddress, twinAddress, userOldRoleNumber) {
               let self = this.$store.state;
               let vm = this;
               this.$swal({
@@ -85,11 +85,11 @@
               }).then(
                        function (result) { // function when confirm button clicked
                           if (result.value) {
-                              self.contracts.Authorization.removeRole(userAddress, Number(userOldRoleNumber), twinAddress,
-                              {from: vm.account});
                               let role = document.getElementById("newRole").value;
-                              self.contracts.Authorization.addRole(userAddress, Number(role), twinAddress, 
-                                      {from: vm.account}).then(function () {
+                              Promise.all([self.contracts.Authorization.removeRole(userAddress, Number(userOldRoleNumber), twinAddress,
+                                      {from: vm.account}),self.contracts.Authorization.addRole(userAddress, Number(role), twinAddress,
+                                      {from: vm.account})])
+                              .then(function () {
                                   vm.$swal.fire({
                                       type: "success",
                                       title: "Role of account " + userAddress + " has been successfully changed.",
