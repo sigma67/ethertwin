@@ -27,13 +27,13 @@
                         <button class="acticon">
                             <font-awesome-icon icon="history" data-toggle="tooltip" data-placement="bottom" title="view change history"/>
                         </button>
-                        <button class="acticon" v-on:click="addRole(user.address, twinObject.address, role)">
-                            <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="assign new role"/>
+                        <button class="acticon" v-on:click="addRole(user.address, twinObject.address, user.roleNumber)">
+                            <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="change role"/>
                         </button>
-                        <button class="acticon" v-on:click="addAttribute(user.address, twinObject.address, attribute)">
-                            <font-awesome-icon icon="user-tag" data-toggle="tooltip" data-placement="bottom" title="add attribute"/>
+                        <button class="acticon" v-on:click="addAttribute(user.address, twinObject.address)">
+                            <font-awesome-icon icon="user-tag" data-toggle="tooltip" data-placement="bottom" title="change attribute(s)"/>
                         </button>
-                        <button class="acticon" v-on:click="removeRole(user.address, twinObject.address, role)">
+                        <button class="acticon" v-on:click="removeRole(user.address, twinObject.address, user.roleNumber)">
                             <font-awesome-icon icon="trash" data-toggle="tooltip" data-placement="bottom" title="remove user"/>
                         </button>
                     </td>
@@ -66,21 +66,76 @@
         }
       },
       methods:{
-            //todo
-          //add role to user (address) -- role has to be a number     uint(RBAC.OWNER)
-          async addRole(userAddress, twinAddress, role){
-           await this.$store.state.contracts.Authorization.addRole(userAddress, role, twinAddress);
+          async addRole(userAddress, twinAddress, userOldRoleNumber) {
+              let self = this.$store.state;
+              let vm = this;
+              this.$swal({
+                  title: "Change role of user",
+                  confirmButtonClass: "confirm-class",
+                  cancelButtonClass: "cancel-class",
+                  showCancelButton: true,
+                  reverseButtons: true,
+                  html:
+                          "<p>You can change the role of this account. Specify its new role to grant it access.</p>" +
+                          "</br>" +
+                          "<h5>Address: " + userAddress + "</h5>" +
+                          "</br>" +
+                          "<h5>Role</h5>" +
+                          '<select id="newRole" class="swal2-input"> <option value="1">Manufacturer</option><option value="2">Owner</option><option value="3">Distributor</option><option value="4">Maintainer</option></select>' + "</br>"
+              }).then(
+                       function (result) { // function when confirm button clicked
+                          if (result.value) {
+                              self.contracts.Authorization.removeRole(userAddress, Number(userOldRoleNumber), twinAddress,
+                              {from: vm.account});
+                              let role = document.getElementById("newRole").value;
+                              self.contracts.Authorization.addRole(userAddress, Number(role), twinAddress, 
+                                      {from: vm.account}).then(function () {
+                                  vm.$swal.fire({
+                                      type: "success",
+                                      title: "Role of account " + userAddress + " has been successfully changed.",
+                                      showConfirmButton: false,
+                                      timer: 2000
+                                  })
+                              }).catch(function (err) {
+                                          alert(err);
+                                          vm.$swal.fire({
+                                              type: "error",
+                                              title: "Oops...",
+                                              text: "Something went wrong!",
+                                              footer:
+                                                      "Please check if the new role is correct and keep your privileges in mind!",
+                                              showConfirmButton: false,
+                                              timer: 6000
+                                          });
+                                      });
+                          }
+                      }, 
+                      function (dismiss) {
+                          if (dismiss == "cancel") {
+                              vm.$swal.fire("Cancelled", "Role not altered!", "error");
+                          }
+                      });
           },
           
           //todo
           //add attribute to user (address)
-          async addAttribute(userAddress, twinAddress, attribute){
+          async addAttribute(userAddress, twinAddress){
+              let attribute = "";
+              let self = this.$store.state;
+              let vm = this;
             await this.$store.state.contracts.Authorization.addAttribute(userAddress, attribute, twinAddress);
           },
-          //remove role from user (address) -- role has to be a number     uint(RBAC.OWNER)
+
           async removeRole(userAddress, twinAddress, role){
-              await this.$store.state.contracts.Authorization.removeRole(userAddress, role, twinAddress);
+              await this.$store.state.contracts.Authorization.removeRole(userAddress, Number(role), twinAddress,  {from: this.account});
+              this.$swal.fire({
+                  type: "success",
+                  title: "Role of account " + userAddress + " has been successfully removed.",
+                  showConfirmButton: false,
+                  timer: 2000
+              })
           },
+          //todo
           //remove attribute from user (address)
 
       }, 
@@ -93,6 +148,7 @@
             let user =  new Object;
             user.address = users[i];
             user.role = roleString;
+            user.roleNumber = role;
             this.usersObject.push(user);
         }
         //todo: get attributes
