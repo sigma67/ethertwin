@@ -47,11 +47,14 @@ contract Authorization {
     function () external payable {}
 
     // is called by the ContractRegistry.sol --> initial step to register a device
-    function initializeDevice(address _operator, address _contract) external {
+    function initializeDevice(address _contract, address _operator, address _deviceAgent) external {
         //require(_operator == deviceAgentAddress, "You are not authorized to register devices.");
         roleMapping[_contract][uint(RBAC.OWNER)].add(_operator);
+        roleMapping[_contract][uint(RBAC.DEVICEAGENT)].add(_deviceAgent);
 
         //initialize permissions - only true must be defined, default value is false
+        permissions[_contract][uint(RBAC.DEVICEAGENT)][uint(PERMISSION.SENSOR_READ)] = true;
+        permissions[_contract][uint(RBAC.DEVICEAGENT)][uint(PERMISSION.DOC_READ)] = true;
         permissions[_contract][uint(RBAC.DEVICEAGENT)][uint(PERMISSION.SENSOR_UPDATE)] = true;
 
         permissions[_contract][uint(RBAC.OWNER)][uint(PERMISSION.TWIN_CREATE)] = true;
@@ -68,13 +71,16 @@ contract Authorization {
 
         permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.TWIN_CREATE)] = true;
         permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.DOC_CREATE)] = true;
+        permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.DOC_READ)] = true;
         permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.DOC_UPDATE)] = true;
 
         permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.DOC_CREATE)] = true;
+        permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.DOC_READ)] = true;
         permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.DOC_UPDATE)] = true;
         permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.SENSOR_CREATE)] = true;
 
         permissions[_contract][uint(RBAC.DISTRIBUTOR)][uint(PERMISSION.DOC_CREATE)] = true;
+        permissions[_contract][uint(RBAC.DISTRIBUTOR)][uint(PERMISSION.DOC_READ)] = true;
         permissions[_contract][uint(RBAC.DISTRIBUTOR)][uint(PERMISSION.DOC_UPDATE)] = true;
     }
 
@@ -136,7 +142,6 @@ contract Authorization {
     function getUsers() external view returns (address[] memory){
         return users; 
     }
-
     
     
     ///////////////
@@ -148,9 +153,10 @@ contract Authorization {
         return permissions[_contract][role][uint(permission)];
     }
 
-    function hasPermissionOrAttribute(address _user, PERMISSION permission, bytes32 _component, address _contract) external view returns (bool){
+    function hasPermissionAndAttribute(address _user, PERMISSION permission, bytes32 _component, address _contract) external view returns (bool){
         uint role = getRole(_user, _contract);
-        return permissions[_contract][role][uint(permission)] || attributes[_contract][_component].has(_user);
+        //including the owner here removes the need to set all attributes for the owner
+        return role == uint(RBAC.OWNER) || (permissions[_contract][role][uint(permission)] && attributes[_contract][_component].has(_user));
     }
 
     ///////////////

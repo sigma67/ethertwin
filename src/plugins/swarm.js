@@ -169,11 +169,16 @@ export default {
       
       /** Functions related to uploading and downloading encrypted files **/
 
-      async createFileKey(user, topic) {
+      async createFileKey(user, topic, shareAddress) {
         let key = c.randomBytes(32);
-        let publicKey = store.state.user.wallet.getPublicKey().toString('hex');
-        let ciphertext = crypto.encryptECIES(publicKey, key.toString('base64'));
+        let ownPublicKey = store.state.user.wallet.getPublicKey().toString('hex');
+        let ciphertext = crypto.encryptECIES(ownPublicKey, key.toString('base64'));
         let update = [{address: user, fileKey: ciphertext}];
+        if(shareAddress){
+          let sharePublicKey = await this.getUserFeedText(shareAddress);
+          ciphertext = crypto.encryptECIES(sharePublicKey.substr(2, sharePublicKey.length), key.toString('base64'));
+          update.push({address: shareAddress, fileKey: ciphertext})
+        }
         await this.updateFeedSimple({user: user, topic: topic}, update);
         return key;
       },
@@ -203,9 +208,9 @@ export default {
         return new Buffer(plainKey, 'base64');
       },
 
-      async uploadEncryptedDoc (content, contentType, user, topic, newKey = false) {
+      async uploadEncryptedDoc (content, contentType, user, topic, newKey = false, shareAddress) {
         let key = newKey ?
-          await this.createFileKey(user, topic) :
+          await this.createFileKey(user, topic, shareAddress) :
           await this.getFileKey(user, topic) ;
 
         return this.encryptAndUpload(content, contentType, key)

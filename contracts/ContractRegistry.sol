@@ -6,7 +6,7 @@ import "./Specification.sol";
 import "./Authorization.sol";
 
 contract ContractRegistry {
-
+    event TwinCreated(address owner, bytes32 aml, address deviceAgent);
     address[] public contracts;
 
     Authorization internal auth;
@@ -26,7 +26,7 @@ contract ContractRegistry {
         address contractAddress = address(spec);
 
         // set role for contract owner
-        auth.initializeDevice(msg.sender, contractAddress);
+        auth.initializeDevice(contractAddress, msg.sender, _deviceAgent);
 
         //set params in the specification contract
         spec.updateTwin(_deviceID, _deviceName, _deviceAgent, msg.sender);
@@ -36,6 +36,8 @@ contract ContractRegistry {
 
         //add contract to all contracts
         contracts.push(contractAddress);
+
+        emit TwinCreated(msg.sender, _deviceAML, _deviceAgent);
 
         return contractAddress;
     }

@@ -105,7 +105,7 @@ contract Specification {
     //register a new document (always appends to the end)
     function addDocument(string calldata componentId, string calldata name, string calldata description, bytes32 docHash) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_CREATE, id, address(this)));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_CREATE, id, address(this)));
 
         documents[id].length++;
         Document storage doc = documents[id][documents[id].length - 1];
@@ -120,7 +120,7 @@ contract Specification {
     //update Document storage metadata
     function updateDocument(string calldata componentId, uint documentId, string calldata name, string calldata description) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
         documents[id][documentId].name = name;
         documents[id][documentId].description = description;
     }
@@ -128,7 +128,7 @@ contract Specification {
     //add new document version
     function addDocumentVersion(string calldata componentId, uint documentId, bytes32 docHash) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_UPDATE, id, address(this)));
         Version memory updated = Version(now, msg.sender, docHash);
         documents[id][documentId].versions.push(updated);
     }
@@ -145,7 +145,7 @@ contract Specification {
 
     function removeDocument(string calldata componentId, uint index) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.DOC_DELETE, id, address(this)));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.DOC_DELETE, id, address(this)));
         require(index < documents[id].length);
         documents[id][index] = documents[id][documents[id].length-1];
         delete documents[id][documents[id].length-1];
@@ -156,7 +156,7 @@ contract Specification {
 
     function addSensor(string calldata componentId, string calldata name, bytes32 hash) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.SENSOR_CREATE, id, address(this)));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.SENSOR_CREATE, id, address(this)));
         sensors[id].push(Sensor(name, hash));
     }
 
@@ -172,7 +172,7 @@ contract Specification {
 
     function removeSensor(string calldata componentId, uint index) external {
         bytes32 id = keccak256(bytes(componentId));
-        require(auth.hasPermissionOrAttribute(msg.sender, Authorization.PERMISSION.SENSOR_DELETE, id, address(this)));
+        require(auth.hasPermissionAndAttribute(msg.sender, Authorization.PERMISSION.SENSOR_DELETE, id, address(this)));
         require(index < sensors[id].length);
         sensors[id][index] = sensors[id][sensors[id].length-1];
         delete sensors[id][sensors[id].length-1];
