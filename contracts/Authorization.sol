@@ -102,36 +102,37 @@ contract Authorization {
     }
 
     // adds a role for an user for a specific specification contract
-    function addRole(address _operator, uint _role, address _contract) public {
-        if (_role == uint(RBAC.OWNER)) {
-            require(roleMapping[_contract][_role].has(_operator), "You are not authorized to change the Twin owner.");
-            emit RoleAdded(_operator, _role);
-        }
-        else {
-            roleMapping[_contract][_role].add(_operator);
-            emit RoleAdded(_operator, _role);
-        }
+    function addRole(address _operator, uint _role, address _contract) public onlyOwner(_contract) {
+        roleMapping[_contract][_role].add(_operator);
+        emit RoleAdded(_operator, _role);
+    }
+
+    //update a user's own role
+    function updateRole(uint _role, address _contract) external onlyOwner(_contract) {
+        removeRole(msg.sender, _role, _contract);
+        addRole(msg.sender, _role, _contract);
     }
 
     //removes an user of a role for a specific specification contract
     function removeRole(address _operator, uint _role, address _contract) public {
-        require(roleMapping[_contract][_role].has(_operator), "You do not have this role");
+        require(roleMapping[_contract][uint(RBAC.OWNER)].has(msg.sender) ||
+            roleMapping[_contract][_role].has(_operator), "You are not authorized to remove this role!");
         roleMapping[_contract][_role].remove(_operator);
         emit RoleRemoved(_operator, _role);
     }
 
     // return the role of an user for a specific contract
     function getRole(address _operator, address _contract) public view returns (uint){
-        if (roleMapping[_contract][uint(RBAC.DEVICEAGENT)].has(_operator)) {
-            return uint(RBAC.DEVICEAGENT);
+        if (roleMapping[_contract][uint(RBAC.OWNER)].has(_operator)) {
+            return uint(RBAC.OWNER);
         } else if (roleMapping[_contract][uint(RBAC.MANUFACTURER)].has(_operator)) {
             return uint(RBAC.MANUFACTURER);
-        } else if (roleMapping[_contract][uint(RBAC.OWNER)].has(_operator)) {
-            return uint(RBAC.OWNER);
-        } else if (roleMapping[_contract][uint(RBAC.DISTRIBUTOR)].has(_operator)) {
-            return uint(RBAC.DISTRIBUTOR);
         } else if (roleMapping[_contract][uint(RBAC.MAINTAINER)].has(_operator)) {
             return uint(RBAC.MAINTAINER);
+        } else if (roleMapping[_contract][uint(RBAC.DISTRIBUTOR)].has(_operator)) {
+            return uint(RBAC.DISTRIBUTOR);
+        } else if (roleMapping[_contract][uint(RBAC.DEVICEAGENT)].has(_operator)) {
+            return uint(RBAC.DEVICEAGENT);
         }
         else {
             return 404;
@@ -163,11 +164,11 @@ contract Authorization {
     // ATTRIBUTES
     ///////////////
 
-    function addAttribute(address _user, bytes32 _component, address _contract) external {
+    function addAttribute(address _user, bytes32 _component, address _contract) external onlyOwner(_contract) {
         attributes[_contract][_component].add(_user);
     }
 
-    function removeAttribute(address _user, bytes32 _component, address _contract) external {
+    function removeAttribute(address _user, bytes32 _component, address _contract) external onlyOwner(_contract) {
         attributes[_contract][_component].remove(_user);
     }
 
@@ -184,16 +185,14 @@ contract Authorization {
         emit DeviceAgentChanged(_operator);
     }
 
-    //modifier used for functions: only device agent can call method
-    modifier onlyDeviceAgent(address _contract){
-        require(isDeviceAgent() == true, "You do not have the permissions.");
+    modifier onlyOwner(address _contract){
+        require(roleMapping[_contract][uint(RBAC.OWNER)].has(msg.sender), "You are not authorized to change Twin roles.");
         _;
     }
 
-    //modifier used for functions: only authorized user who has a role in a contract can call
-    modifier onlyAuthorizedAccounts(address _operator, address _contract){
-        uint checkVal = getRole(_operator, _contract);
-        require(roleMapping[_contract][checkVal].has(_operator), "You are not authorized.");
+    //modifier used for functions: only device agent can call method
+    modifier onlyDeviceAgent(address _contract){
+        require(isDeviceAgent() == true, "You do not have the permissions.");
         _;
     }
 
