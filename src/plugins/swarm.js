@@ -176,7 +176,7 @@ export default {
         let update = [{address: user, fileKey: ciphertext}];
         if(shareAddress){
           let sharePublicKey = await this.getUserFeedText(shareAddress);
-          ciphertext = crypto.encryptECIES(sharePublicKey.substr(2, sharePublicKey.length), key.toString('base64'));
+          ciphertext = crypto.encryptECIES(sharePublicKey, key.toString('base64'));
           update.push({address: shareAddress, fileKey: ciphertext})
         }
         await this.updateFeedSimple({user: user, topic: topic}, update);
