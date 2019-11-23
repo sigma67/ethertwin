@@ -145,7 +145,7 @@
             components = components.filter((d, ind) => c[ind]);
           }
 
-          this.$store.commit('addTwinComponents', {twin: twinIndex, components: components});
+          this.$store.commit('addTwinComponents', {twin: twinIndex, aml: aml, components: components});
         }
       },
       async removeRole(twinAddress, role) {
