@@ -39,8 +39,8 @@ client.bzz.getFeedContent({user: address}).catch(() => {
 });
 
 /** Web3 and Contracts Setup **/
-const webSocketProvider = new Web3.providers.WebsocketProvider("ws://localhost:7545");
-let provider = new HDWalletProvider([privateKey], webSocketProvider /*config.ethereum.rpc*/, 0, 1);
+const webSocketProvider = new Web3.providers.WebsocketProvider(config.ethereum.rpc);
+let provider = new HDWalletProvider([privateKey], webSocketProvider, 0, 1);
 let web3 = new Web3(provider);
 let truffle = TruffleContract(ContractRegistry);
 truffle.setProvider(web3.currentProvider);

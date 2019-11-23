@@ -16,7 +16,8 @@ function setupWeb3(){
       let privateKeyBuffer = new Buffer(privateKey, "hex");
       wallet = ethereumjs.fromPrivateKey(privateKeyBuffer)
     }
-    let provider = new HDWalletProvider([privateKey], config.ethereum.rpc, 0, 1);
+    let webSocketProvider = new Web3.providers.WebsocketProvider(config.ethereum.rpc);
+    let provider = new HDWalletProvider([privateKey], webSocketProvider, 0, 1);
     window.web3 = new Web3(provider);
     window.web3.eth.defaultAccount = wallet.getAddressString();
     return wallet;
