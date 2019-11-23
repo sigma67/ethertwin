@@ -67,7 +67,7 @@
             addTwin() {
                 let vm = this;
 
-                if (this.twinID === "" || this.twinName === "" || this.twinAML === "" && this.selected === "Text" || !web3.utils.isAddress(this.deviceAgent)) {
+                if (this.twinID === "" || this.twinName === "" || this.twinAML === "" && this.selected === "Text" ) { //|| !web3.utils.isAddress(this.deviceAgent)
                     alert("Empty values are not accepted!");
                 } else {
 

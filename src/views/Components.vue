@@ -50,38 +50,39 @@
             parseComponent(componentId, htmlElement) {
                 //check if elements are already appended
                 if (document.getElementById(htmlElement).innerHTML.indexOf("ul") === -1) {
-                  //parse aml to get the relevant components: componentIndex
-                  let parser = new DOMParser();
-                  let amlDoc = parser.parseFromString(this.specification, "text/xml");
-                  let instanceHierarchy = amlDoc.documentElement.getElementsByTagName("InstanceHierarchy");
-                  let childNodes = instanceHierarchy[0].children;
-                  let component;
-                  //search for the right component
-                  for (let i = 0; i < childNodes.length; i++) {
-                      //all children of type "InternalElement" are high-level components
-                      if (childNodes[i].nodeName === "InternalElement" && childNodes[i].getAttribute("ID") === componentId) {
-                          component = childNodes[i];
-                      }
-                  }
-                  let htmlText = "<div class=\"card card-body\">Elements: <ul>";
-                  for (let i = 0; i < component.children.length; i++) {
-                      if (component.children[i].nodeName === "InternalElement") {
-                          let component_id = component.children[i].getAttribute("ID");
-                          let component_name = component.children[i].getAttribute("Name");
-                          htmlText += "<li>" + component_name + " (" + component_id + ") </li>";
-                      }
-                  }
-                  document.getElementById(htmlElement).innerHTML += htmlText + "</ul></div>";
+                    //parse aml to get the relevant components: componentIndex
+                    let parser = new DOMParser();
+                    let amlDoc = parser.parseFromString(this.specification, "text/xml");
+                    let instanceHierarchy = amlDoc.documentElement.getElementsByTagName("InstanceHierarchy");
+                    let childNodes = instanceHierarchy[0].children;
+                    let component;
+                    //search for the right component
+                    for (let i = 0; i < childNodes.length; i++) {
+                        //all children of type "InternalElement" are high-level components
+                        if (childNodes[i].nodeName === "InternalElement" && childNodes[i].getAttribute("ID") === componentId) {
+                            component = childNodes[i];
+                        }
+                    }
+                    let htmlText = "<div class=\"card card-body\">Elements: <ul>";
+                    for (let i = 0; i < component.children.length; i++) {
+                        if (component.children[i].nodeName === "InternalElement") {
+                            let component_id = component.children[i].getAttribute("ID");
+                            let component_name = component.children[i].getAttribute("Name");
+                            htmlText += "<li>" + component_name + " (" + component_id + ") </li>";
+                        }
+                    }
+                    document.getElementById(htmlElement).innerHTML += htmlText + "</ul></div>";
                 }
             }
         },
         async beforeMount() {
-            if(this.twinObject.aml)
-              this.specification = this.twinObject.aml;
+            if (this.twinObject.aml)
+                this.specification = this.twinObject.aml;
             this.$store.subscribe((mutation, state) => {
                 if (mutation.type === "addTwinComponents") {
-                  this.specification = this.twinObject.aml;
+                    this.specification = this.twinObject.aml;
                 }
+                this.$forceUpdate(); //to load if its first click
             })
         }
     }
