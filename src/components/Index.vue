@@ -99,7 +99,7 @@
           this.$store.commit('selectTwin', deviceId);
           let twin = this.$store.state.twins.filter(f => f.deviceId === deviceId)[0];
           if (twin.hasOwnProperty('components')) return;
-          //let specification = this.$store.state.contracts.SpecificationContract.at(address);
+          this.$store.commit('spinner', true);
           let length = await twin.specification.getAMLCount();
           let index = length.toNumber() - 1;
 
@@ -139,8 +139,8 @@
             );
             components = components.filter((d, ind) => c[ind]);
           }
-
           this.$store.commit('addTwinComponents', {twin: twinIndex, aml: aml, components: components});
+          this.$store.commit('spinner', false);
         }
       },
       async removeRole(twinAddress, role) {
@@ -195,8 +195,7 @@
                  <select id="swal-input1" class="swal2-input"> <option value="1">Manufacturer</option><option value="2">Owner</option><option value="3">Distributor</option><option value="4">Maintainer</option></select></br>
                  <h5>Attributes</h5>
                  <ul id="swal-input3" class="checkbox-grid custom-control custom-checkbox">${options}</ul>`
-            }).then(
-              function (result) {
+            }).then((result) => {
                 if (result.value) { // function when confirm button clicked
                   let role = document.getElementById("swal-input1").value;
                   let address = document.getElementById("swal-input2").value;
@@ -206,7 +205,7 @@
                       attributes.push(document.getElementById("swal-input3").children[i].children[0].value); //hash of component is attribute in authorization contract
                   }
                   attributes.map(web3.utils.hexToBytes);
-                  //vm.$store.state.commit('spinner', true);
+                  vm.$store.commit('spinner', true);
                   //share specification, add role and attributes
                   Promise.all([
                     vm.$swarm.shareFileKey(vm.account, web3.utils.sha3(deviceId), address),
@@ -225,7 +224,7 @@
                       }
                     )
                   ]).then(function () {
-                    //vm.$store.state.commit('spinner', false);
+                    vm.$store.commit('spinner', false);
                     vm.$swal.fire({
                       type: "success",
                       title: "Account has been successfully added.",

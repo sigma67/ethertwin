@@ -76,20 +76,23 @@
         },
         methods: {
             async savePrivateKey() {
-                try{
+                if(this.privateKeyNew) {
+                  try {
                     //check if valid
                     let buffer = Buffer.from(this.privateKeyNew, 'hex');
                     let wallet = ethereumjs.fromPrivateKey(buffer);
-                    localStorage.setItem('privateKey', this.privateKeyNew);
-                    location.reload(); //refresh site
-                }catch (e) {
+                  } catch (e) {
                     console.log(e);
                     this.$swal.fire({
-                        type: "warning",
-                        title: "Error: Private key does not satisfy the curve requirements (i.e. it is invalid)"
+                      type: "warning",
+                      title: "Error: Private key does not satisfy the curve requirements (i.e. it is invalid)"
                     })
+                    return;
+                  }
                 }
-                
+                localStorage.setItem('privateKey', this.privateKeyNew);
+                this.$router.push('/');
+                location.reload()//refresh site
             }
         },
         async beforeMount() {
