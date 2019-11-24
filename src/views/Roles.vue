@@ -24,14 +24,14 @@
         <td>{{ user.role }}</td>
         <td>{{ user.attribute }}</td> <!-- todo-->
         <td v-if="user.role !== 'Device Agent'">
-          <button class="acticon">
+          <!--<button class="acticon">
             <font-awesome-icon icon="history" data-toggle="tooltip" data-placement="bottom"
                                title="view change history"/>
-          </button>
+          </button>-->
           <button class="acticon" v-on:click="changeRole(user.address, twinObject.address, user.roleNumber)">
             <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="change role"/>
           </button>
-          <button class="acticon" v-on:click="addAttribute(user.address, twinObject.address)">
+          <button class="acticon" v-on:click="updateAttributes(user.address, twinObject.address, user.attribute)">
             <font-awesome-icon icon="user-tag" data-toggle="tooltip" data-placement="bottom"
                                title="change attribute(s)"/>
           </button>
@@ -71,7 +71,7 @@
             async changeRole(userAddress, twinAddress, userOldRoleNumber) {
                 let self = this.$store.state;
                 let vm = this;
-                this.$swal({
+                vm.$swal({
                     title: "Change role of user",
                     confirmButtonClass: "confirm-class",
                     cancelButtonClass: "cancel-class",
@@ -119,13 +119,73 @@
                     });
             },
 
-            //todo
-            //add attribute to user (address)
-            async addAttribute(userAddress, twinAddress) {
-                let attribute = "";
+            //todo: list all previous attributes to remove them before updating
+            //update attributes of user (address)
+            async updateAttributes(userAddress, twinAddress, userAttribute) {
                 let self = this.$store.state;
                 let vm = this;
-                await this.$store.state.contracts.Authorization.addAttribute(userAddress, attribute, twinAddress);
+                let options = '';
+                for (let i = 0; i < this.twinObject.components.length; i++) {
+                    options += '<input type="checkbox" id="component' + i + '"value="' + this.twinObject.components[i].hash + '">' + this.twinObject.components[i].name + '</input>';
+                }
+                vm.$swal({
+                    title: "Change attributes of user",
+                    confirmButtonClass: "confirm-class",
+                    cancelButtonClass: "cancel-class",
+                    showCancelButton: true,
+                    reverseButtons: true,
+                    html:
+                        `<p>You can change the attributes of this account. Specify its new attributes.</p></br>
+                        <h5>Address:  ${userAddress} </h5></br>
+                        <h5>Attributes</h5>
+                        <div id="swal-input1" class="checkbox-grid custom-control custom-checkbox">${options}</div>`
+                }).then(
+                    function (result) {
+                        if (result.value) { // function when confirm button clicked
+                            let attributes = []; //all checked attributes
+                            let previousAttributes = []; //all attributes the user had
+                            for (let i = 0; i < document.getElementById("swal-input1").children.length; i++) {
+                                console.log(document.getElementById("swal-input1").children[i].innerHTML);
+                                if (document.getElementById("swal-input1").children[i].checked == true) attributes.push(document.getElementById("swal-input1").children[i].value); //hash of component is attribute in authorization contract
+                                //if(userAttribute.includes(document.getElementById("swal-input1").children[i].value)) previousAttributes.push(document.getElementById("swal-input1").children[i].value);
+                            }
+                            attributes.map(web3.utils.hexToBytes);
+
+                            //console.log(userAttribute); 
+                            /*0: "Switch1"
+                            1: "IIoTGW1"
+                            2: "MQTTBrkr1"
+                            3: "RFIDr1"
+                            4: "AP1"
+                            */
+                            previousAttributes.map(web3.utils.hexToBytes);
+
+/*
+                            Promise.all([self.contracts.Authorization.removeAttributes(userAddress, previousAttributes, twinAddress,
+                            {from: vm.account}), self.contracts.Authorization.addAttributes(userAddress, attributes, twinAddress,
+                        {from: vm.account})]).then(
+                                    function () {
+                                vm.$swal.fire({
+                                    type: "success",
+                                    title: "Attributes have been successfully changed.",
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                })
+                            }).catch(function (err) {
+                                alert(err);
+                                vm.$swal.fire({
+                                    type: "error",
+                                    title: "Oops...",
+                                    text: "Something went wrong!",
+                                    footer:
+                                        "Please keep your privileges in mind!",
+                                    showConfirmButton: false,
+                                    timer: 6000
+                                });
+                            });*/
+                        }
+                    }
+            );
             },
 
             async removeRole(userAddress, twinAddress, role) {
@@ -137,22 +197,26 @@
                     timer: 2000
                 })
             },
-            //todo
-            //remove attribute from user (address)
 
         },
-        async created() {
+        async created() { 
             let users = await this.$store.state.contracts.Authorization.getUsers();
-            console.log("users length: "+users.length);
             let twinAddress = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].address;
             for (let i = 0; i < users.length; i++) {
                 let role = await this.$store.state.contracts.Authorization.getRole(users[i], twinAddress);
                 let roleString = this.$store.state.utils.enum2String(role.toNumber());
                 let attributes = [];
-                for (let j = 0; j < (this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].components.length); j++) { //for all possible attributes
-                    if (this.$store.state.contracts.Authorization.hasAttribute(users[i], web3.utils.hexToBytes((this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].components[j].hash)), twinAddress) == true) { //check if user has attribute - if so add it to the attributes array
-                        attributes.push(this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].components[j].name);
-                    }
+                let components = []; //otherwise undefined error is thrown
+                components = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].components;
+                let bytesComponents = [];
+                for (let j = 0; j < components.length; j++) { //for all possible attributes
+                    bytesComponents.push(web3.utils.hexToBytes(components[j].hash));
+                }
+                //check if user has attribute - if so add it to the attributes array
+                let hasAttributes =[];
+                hasAttributes = await this.$store.state.contracts.Authorization.hasAttributes(users[i], bytesComponents, twinAddress);
+                for (let k = 0; k < hasAttributes.length; k++) { 
+                    if(hasAttributes[k] === true) attributes.push(components[k].name);
                 }
                 let user = new Object;
                 user.address = users[i];
@@ -165,10 +229,17 @@
     }
 </script>
 
+
 <style scoped>
   .acticon {
     border-color: transparent;
     background-color: transparent;
+  }
+  .checkbox-grid li {
+    float: left;
+    width: 50%;
+    text-align:left;
+    list-style:none
   }
 
 </style>

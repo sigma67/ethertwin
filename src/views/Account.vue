@@ -81,13 +81,12 @@
                     let buffer = Buffer.from(this.privateKeyNew, 'hex');
                     let wallet = ethereumjs.fromPrivateKey(buffer);
                     localStorage.setItem('privateKey', this.privateKeyNew);
-                    //refresh site
-                    location.reload();
+                    location.reload(); //refresh site
                 }catch (e) {
                     console.log(e);
                     this.$swal.fire({
                         type: "warning",
-                        title: "Error: Private key does not satisfy the curve requirements (ie. it is invalid)"
+                        title: "Error: Private key does not satisfy the curve requirements (i.e. it is invalid)"
                     })
                 }
                 

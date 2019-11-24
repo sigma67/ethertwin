@@ -206,7 +206,7 @@
                       attributes.push(document.getElementById("swal-input3").children[i].children[0].value); //hash of component is attribute in authorization contract
                   }
                   attributes.map(web3.utils.hexToBytes);
-                  this.$store.state.commit('spinner', true);
+                  //vm.$store.state.commit('spinner', true);
                   //share specification, add role and attributes
                   Promise.all([
                     vm.$swarm.shareFileKey(vm.account, web3.utils.sha3(deviceId), address),
@@ -225,7 +225,7 @@
                       }
                     )
                   ]).then(function () {
-                    this.$store.state.commit('spinner', false);
+                    //vm.$store.state.commit('spinner', false);
                     vm.$swal.fire({
                       type: "success",
                       title: "Account has been successfully added.",
