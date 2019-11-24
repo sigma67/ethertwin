@@ -39,9 +39,9 @@ contract("ContractRegistry", accounts => {
   });
 
   it("should add component attribute", async() => {
-    await a.addAttribute(accounts[0], componentHash, s.address)
-    let authorized = await a.hasAttribute(accounts[0], componentHash, s.address)
-    assert.equal(authorized, true, "Attribute not added")
+    await a.addAttributes(accounts[0], [componentHash], s.address)
+    let authorized = await a.hasAttributes(accounts[0], [componentHash], s.address)
+    assert.equal(authorized[0], true, "Attribute not added")
   });
 
   it("should create a new document", async () => {

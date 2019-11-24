@@ -164,17 +164,31 @@ contract Authorization {
     // ATTRIBUTES
     ///////////////
 
-    function addAttribute(address _user, bytes32 _component, address _contract) external onlyOwner(_contract) {
-        attributes[_contract][_component].add(_user);
+    function addAttributes(address _user, bytes32[] calldata _components, address _contract) external onlyOwner(_contract) {
+        require(_components.length > 0, "No attributes supplied");
+        uint len = _components.length;
+        for (uint i=0; i < len; i++) {
+            attributes[_contract][_components[i]].add(_user);
+        }
     }
 
-    function removeAttribute(address _user, bytes32 _component, address _contract) external onlyOwner(_contract) {
-        attributes[_contract][_component].remove(_user);
+    function removeAttributes(address _user, bytes32[] calldata _components, address _contract) external onlyOwner(_contract) {
+        require(_components.length > 0, "No attributes supplied");
+        uint len = _components.length;
+        for (uint i=0; i < len; i++) {
+            attributes[_contract][_components[i]].remove(_user);
+        }
     }
 
     //check if a user has the given attribute for a specific contract
-    function hasAttribute(address _user, bytes32 _component, address _contract) external view returns (bool){
-        return attributes[_contract][_component].has(_user);
+    function hasAttributes(address _user, bytes32[] calldata _components, address _contract) external view returns (bool[] memory){
+        require(_components.length > 0, "No attributes supplied");
+        bool[] memory checks = new bool[](_components.length);
+        uint len = _components.length;
+        for (uint i = 0; i < len; i++) {
+            checks[i] = attributes[_contract][_components[i]].has(_user);
+        }
+        return checks;
     }
 
     // if the address of the device agent is changed, the old device agent can call this method to change the address
