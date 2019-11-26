@@ -159,24 +159,23 @@ export default {
           user: user,
           topic: topic
         });
-        return await content.json();
+        return content.json();
       },
 
       async getUserFeedText(user){
         let content = await client.bzz.getFeedContent({user: user});
-        return await content.text();
+        return content.text();
       },
       
       /** Functions related to uploading and downloading encrypted files **/
-
       async createFileKey(user, topic, shareAddress) {
         let key = c.randomBytes(32);
         let ownPublicKey = store.state.user.wallet.getPublicKey().toString('hex');
-        let ciphertext = crypto.encryptECIES(ownPublicKey, key.toString('base64'));
+        let ciphertext = crypto.encryptECIES(ownPublicKey, key);
         let update = [{address: user, fileKey: ciphertext}];
         if(shareAddress){
           let sharePublicKey = await this.getUserFeedText(shareAddress);
-          ciphertext = crypto.encryptECIES(sharePublicKey, key.toString('base64'));
+          ciphertext = crypto.encryptECIES(sharePublicKey, key);
           update.push({address: shareAddress, fileKey: ciphertext})
         }
         await this.updateFeedSimple({user: user, topic: topic}, update);
@@ -190,7 +189,6 @@ export default {
         let keyObject = fileKeys.filter(f => f.address === user)[0];
         let privateKey = store.state.user.wallet.getPrivateKey().toString('hex');
         let plainKey = crypto.decryptECIES(privateKey, keyObject.fileKey);
-
         //encrypt for new user
         let userPublicKey = await this.getUserFeedText(userAddress);
         let newKey = crypto.encryptECIES(userPublicKey, plainKey);
@@ -201,8 +199,7 @@ export default {
       //gets from any feed and decrypts a file key, which was encrypted for the current user
       async getFileKey(user, topic) {
         let fileKeys = await this.getUserFeedLatest(user, topic);
-        let keyObject = fileKeys[0];
-        //let keyObject = fileKeys.filter(f => f.address === store.state.user.address)[0];
+        let keyObject = fileKeys.filter(f => f.address === store.state.user.address)[0];
         let privateKey = store.state.user.wallet.getPrivateKey().toString('hex');
         let plainKey = crypto.decryptECIES(privateKey, keyObject.fileKey);
         return new Buffer(plainKey, 'base64');

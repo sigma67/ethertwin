@@ -2,22 +2,27 @@ const ecies = require('eth-ecies');
 const crypto = require('crypto');
 
 export default {
+
+  /**
+   *
+   * @param publicKey string
+   * @param data Buffer
+   * @returns {String}
+   */
   encryptECIES(publicKey, data) {
     let userPublicKey = new Buffer(publicKey, 'hex');
-    let bufferData = new Buffer(data);
-
-    let encryptedData = ecies.encrypt(userPublicKey, bufferData);
-
-    return encryptedData.toString('base64')
+    return ecies.encrypt(userPublicKey, data).toString('base64');
   },
 
+  /**
+   *
+   * @param privateKey string
+   * @param encryptedData base64 string
+   * @returns {Buffer}
+   */
   decryptECIES(privateKey, encryptedData) {
-    let userPrivateKey = new Buffer(privateKey, 'hex');
-    let bufferEncryptedData = new Buffer(encryptedData, 'base64');
-
-    let decryptedData = ecies.decrypt(userPrivateKey, bufferEncryptedData);
-
-    return decryptedData.toString('utf8');
+    let bufferData = new Buffer(encryptedData, 'base64')
+    return ecies.decrypt(privateKey, bufferData);
   },
 
   encryptAES(text, key) {
