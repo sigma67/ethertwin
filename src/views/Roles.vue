@@ -93,7 +93,13 @@
                                         title: "Role of account " + userAddress + " has been successfully changed.",
                                         showConfirmButton: false,
                                         timer: 2000
-                                    })
+                                    });
+                                    vm.loadRole(userAddress, twinAddress).then(
+                                        (loadedRole) => {
+                                            let index = vm.usersObject.findIndex(u => u.address === userAddress);
+                                            vm.usersObject[index].role = loadedRole.roleString;
+                                            vm.usersObject[index].roleNumber = loadedRole.roleNo;
+                                        })
                                 }).catch(function (err) {
                                 alert(err);
                                 vm.$swal.fire({
@@ -115,7 +121,6 @@
                     });
             },
 
-            //todo: list all previous attributes to remove them before updating
             //update attributes of user (address)
             async updateAttributes(userAddress, twinAddress, userAttributesHash) {
                 let self = this.$store.state;
@@ -179,7 +184,14 @@
                                         title: "Attributes have been successfully changed.",
                                         showConfirmButton: false,
                                         timer: 2000
-                                    })
+                                    });
+                                    vm.loadAttributes(userAddress, twinAddress).then(
+                                        (loadedAttributes) => {
+                                            let index = vm.usersObject.findIndex(u => u.address === userAddress);
+                                            vm.usersObject[index].attribute = loadedAttributes.attributes;
+                                            vm.usersObject[index].attributesHash = loadedAttributes.attributesHash;
+                                        }
+                                    )
                                 }).catch(function (err) {
                                 alert(err);
                                 vm.$swal.fire({
@@ -209,16 +221,14 @@
                     title: "Role of account " + userAddress + " has been successfully removed.",
                     showConfirmButton: false,
                     timer: 2000
-                })
+                });
+                let index = this.usersObject.findIndex(u => u.address === userAddress);
+                this.usersObject.splice(index, 1);
             },
-
-        },
-        async created() {
-            let users = await this.$store.state.contracts.Authorization.getUsers();
-            let twinAddress = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].address;
-            for (let i = 0; i < users.length; i++) {
-                let role = await this.$store.state.contracts.Authorization.getRole(users[i], twinAddress);
-                let roleString = this.$store.state.utils.enum2String(role.toNumber());
+            
+            async loadAttributes(userAddress, twinAddress) {
+                //check if user has attribute - if so add it to the attributes array
+                let hasAttributes = [];
                 let attributes = [];
                 let attributesHash = [];
                 let components = []; //otherwise undefined error is thrown
@@ -227,21 +237,36 @@
                 for (let j = 0; j < components.length; j++) { //for all possible attributes
                     bytesComponents.push(web3.utils.hexToBytes(components[j].hash));
                 }
-                //check if user has attribute - if so add it to the attributes array
-                let hasAttributes = [];
-                hasAttributes = await this.$store.state.contracts.Authorization.hasAttributes(users[i], bytesComponents, twinAddress);
+                hasAttributes = await this.$store.state.contracts.Authorization.hasAttributes(userAddress, bytesComponents, twinAddress);
                 for (let k = 0; k < hasAttributes.length; k++) {
                     if (hasAttributes[k] === true) {
                         attributes.push(components[k].name);
                         attributesHash.push(components[k].hash);
                     }
                 }
+                return{attributes: attributes, attributesHash: attributesHash};
+            },
+            
+            async loadRole(userAddress, twinAddress){
+                let roleNo = await this.$store.state.contracts.Authorization.getRole(userAddress, twinAddress);
+                let roleString = this.$store.state.utils.enum2String(roleNo.toNumber());
+                return{roleString: roleString, roleNo: roleNo};
+            }
+
+        },
+        async created() {
+            let users = await this.$store.state.contracts.Authorization.getUsers();
+            let twinAddress = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].address;
+            for (let i = 0; i < users.length; i++) {
+                let loadedRole = await this.loadRole(users[i], twinAddress);
+                if(loadedRole.roleNo.toNumber() === 404) continue; 
+                let loadedAttributes= await this.loadAttributes(users[i], twinAddress);
                 let user = new Object;
                 user.address = users[i];
-                user.role = roleString;
-                user.roleNumber = role;
-                user.attribute = attributes;
-                user.attributesHash = attributesHash;
+                user.role = loadedRole.roleString;
+                user.roleNumber = loadedRole.roleNo;
+                user.attribute = loadedAttributes.attributes;
+                user.attributesHash = loadedAttributes.attributesHash;
                 this.usersObject.push(user);
             }
         },
