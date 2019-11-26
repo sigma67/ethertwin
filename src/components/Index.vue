@@ -131,7 +131,7 @@
           //filter by attributes
           if (twin.role !== "Owner") {
             let a = this.$store.state.contracts.Authorization;
-            let componentsBytes = components.map(web3.utils.hexToBytes);
+            let componentsBytes = components.map(c => web3.utils.hexToBytes(c.hash));
             let c = await a.hasAttributes.call(
               this.account,
               componentsBytes,
