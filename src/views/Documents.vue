@@ -154,7 +154,6 @@
         this.$store.commit('spinner', true);
 
         let hash = await this.encryptAndUpload(this.fileObject, this.selectedComponent);
-        console.log(hash)
         await this.specification.addDocument(
           this.selectedComponent,
           this.fileObject.name,

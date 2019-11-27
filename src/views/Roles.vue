@@ -17,9 +17,12 @@
         <td> Owner</td>
         <td></td>
         <td>
+          <button class="acticon" v-on:click="changeRole(account, twinObject.address, 2)">
+            <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="change role"/>
+          </button>
         </td>
       </tr>
-      <tr v-for="user in usersObject" v-if="user.role !== 'Owner'">
+      <tr v-for="user in usersObject" v-if="user.address !== account">
         <td>{{ user.address }}</td>
         <td>{{ user.role }}</td>
         <td v-if="user.role !== 'Device Agent'">{{ user.attribute.join(", ") }}</td>

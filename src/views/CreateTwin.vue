@@ -30,7 +30,7 @@
             <br/>
             <input v-if="selected == 'File' " type="file" class="form-control-file" @change="processFile">
             <br/>
-            <textarea v-if="selected == 'Text'" class="form-control" type="text" v-model.lazy="twinAML"
+            <textarea v-if="selected == 'Text'" class="form-control" type="file" v-model.lazy="twinAML"
                       id="twinAML" rows="20" @change="processFile"/>
             <br/>
           </div>
