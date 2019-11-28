@@ -12,32 +12,22 @@
       </tr>
       </thead>
       <tbody>
-      <tr> <!-- list user/owner-->
-        <td>{{ account }}</td>
-        <td> Owner</td>
-        <td></td>
-        <td>
-          <button class="acticon" v-on:click="changeRole(account, twinObject.address, 2)">
-            <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="change role"/>
-          </button>
-        </td>
-      </tr>
       <tr v-for="user in usersObject" v-if="user.address !== account">
         <td>{{ user.address }}</td>
         <td>{{ user.role }}</td>
-        <td v-if="user.role !== 'Device Agent'">{{ user.attribute.join(", ") }}</td>
+        <td v-if="user.role !== 'Device Agent'">{{ user.attribute.join(", ") }}</td> <td  v-if="user.role == 'Device Agent'"></td>
         <td v-if="user.role !== 'Device Agent'" class="actions">
           <button class="acticon" v-on:click="changeRole(user.address, twinObject.address, user.roleNumber)">
             <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="change role"/>
           </button>
-          <button class="acticon" v-on:click="updateAttributes(user.address, twinObject.address, user.attributesHash)">
+          <button v-if="user.role !== 'Owner'" class="acticon" v-on:click="updateAttributes(user.address, twinObject.address, user.attributesHash)">
             <font-awesome-icon icon="user-tag" data-toggle="tooltip" data-placement="bottom"
                                title="change attribute(s)"/>
           </button>
-          <button class="acticon" v-on:click="removeRole(user.address, twinObject.address, user.roleNumber)">
+          <button v-if="user.role !== 'Owner'" class="acticon" v-on:click="removeRole(user.address, twinObject.address, user.roleNumber)">
             <font-awesome-icon icon="trash" data-toggle="tooltip" data-placement="bottom" title="remove user"/>
           </button>
-        </td>
+        </td><td  v-if="user.role == 'Device Agent'"></td>
       </tr>
       </tbody>
     </table>
