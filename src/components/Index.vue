@@ -197,6 +197,7 @@
                  <ul id="swal-input3" class="checkbox-grid custom-control custom-checkbox">${options}</ul>`
             }).then((result) => {
                 if (result.value) { // function when confirm button clicked
+                  let before = new Date()
                   let role = document.getElementById("swal-input1").value;
                   let address = document.getElementById("swal-input2").value;
                   let attributes = []; //all checked attributes
@@ -223,7 +224,10 @@
                         from: vm.account
                       }
                     )
-                  ]).then(function () {
+                  ]).then((res) => {
+                    console.log(web3.utils.fromWei((res[1].receipt.gasUsed + res[2].receipt.gasUsed).toString(), 'ether'))
+                    let after = new Date();
+                    console.log(after - before)
                     vm.$store.commit('spinner', false);
                     vm.$swal.fire({
                       type: "success",

@@ -73,6 +73,7 @@
 
                     this.$store.commit('spinner', true);
                     //upload file to swarm and get swarm hash
+                    let before = new Date();
                     let feed = {user: this.account, topic: web3.utils.sha3(vm.twinID)}
                     let hash = this.$swarm.uploadEncryptedDoc(
                             this.twinAML, 'text/plain', this.account,
@@ -89,6 +90,9 @@
                             }
                         )
                         .then(function (result) {
+                            console.log(result.receipt.gasUsed)
+                            let after = new Date();
+                            console.log(after - before)
                             vm.$store.commit('spinner', false);
                             vm.$store.dispatch('loadTwins');
                             vm.$router.push('/');

@@ -97,17 +97,21 @@
     },
     methods: {
       async addSensor(){
+        let before = new Date()
         let hash = await this.$swarm.createFeed(
           this.twinObject.deviceAgent,
           web3.utils.sha3(this.selectedComponent + this.sensors.length)
         );
 
-        await this.specification.addSensor(
+        let result = await this.specification.addSensor(
           this.selectedComponent,
           this.name,
           this.$utils.swarmHashToBytes(hash),
           { from: this.account }
         );
+        console.log(result.receipt.gasUsed)
+        let after = new Date();
+        console.log(after - before)
         await this.loadSensors();
       },
 

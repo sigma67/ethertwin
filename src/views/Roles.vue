@@ -83,11 +83,15 @@
                 }).then(
                     function (result) { // function when confirm button clicked
                         if (result.value) {
+                            let before = new Date()
                             let role = document.getElementById("newRole").value;
                             Promise.all([self.contracts.Authorization.removeRole(userAddress, Number(userOldRoleNumber), twinAddress,
                                 {from: vm.account}), self.contracts.Authorization.addRole(userAddress, Number(role), twinAddress,
                                 {from: vm.account})])
-                                .then(function () {
+                                .then((result) => {
+                                    console.log(result[0].receipt.gasUsed + result[1].receipt.gasUsed)
+                                    let after = new Date();
+                                    console.log(after - before)
                                     vm.$swal.fire({
                                         type: "success",
                                         title: "Role of account " + userAddress + " has been successfully changed.",

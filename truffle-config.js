@@ -52,17 +52,22 @@ module.exports = {
       host: '127.0.0.1',
       port: 8545,
       from: '0x00a329c0648769a73afac7f9381e08fb43dbea72',
-	  network_id: '*'
+	    network_id: '*'
     },
     ganache: {
       host: '127.0.0.1',
       port: 7545,
-      network_id: '*'
+      network_id: '*',
+      gasPrice: 15000000000
     },
     pi: {
-      host: "132.199.123.57",
-      port: "8501",
-      network_id: "*"
+      host: "132.199.123.229",
+      port: "8546",
+      network_id: "*",
+      from: '0x00a329c0648769a73afac7f9381e08fb43dbea72',
+      //gas: 4600000,           // Gas sent with each transaction (default: ~6700000)
+      gasPrice: 15000000000,
+      websockets:true
     }
 
 

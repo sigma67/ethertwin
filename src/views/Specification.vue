@@ -125,6 +125,7 @@
 
           saveAML() {
               let vm = this;
+              let before = new Date()
               this.$swarm.uploadEncryptedDoc(
                 this.aml,
                 'text/plain',
@@ -134,7 +135,10 @@
                   vm.specification.addNewAMLVersion.sendTransaction(
                       web3.utils.hexToBytes("0x" + hash),
                       {from: vm.account}
-                  ).then(() => {
+                  ).then((result) => {
+                    console.log(result.receipt.gasUsed)
+                    let after = new Date();
+                    console.log(after - before)
                       vm.loadVersions();
                   });
               });
@@ -150,7 +154,7 @@
                   vm.specification.addNewAMLVersion.sendTransaction(
                           web3.utils.hexToBytes("0x" + hash),
                           {from: vm.account}
-                  ).then(() => {
+                  ).then((result) => {
                       vm.loadVersions();
                       this.$store.commit('spinner', false);
                   });

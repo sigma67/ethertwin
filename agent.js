@@ -42,28 +42,35 @@ client.bzz.getFeedContent({user: address}).catch(() => {
 const webSocketProvider = new Web3.providers.WebsocketProvider(config.ethereum.rpc);
 let provider = new HDWalletProvider([privateKey], webSocketProvider, 0, 1);
 let web3 = new Web3(provider);
-let truffle = TruffleContract(ContractRegistry);
-truffle.setProvider(web3.currentProvider);
+let registryContract = TruffleContract(ContractRegistry);
+registryContract.setProvider(web3.currentProvider);
 let authContract = TruffleContract(Authorization);
 authContract.setProvider(web3.currentProvider);
 
+//subscribeTwinCreate()
 main()
 //updateFileKeys(web3)
 //subscribeTwinCreate()
 
 async function main(){
   let before = new Date();
-  let twin = await getTwin()
+  let twins = await getTwins()
+  let twin = twins[2]
+  console.log(twin.address)
   let components = await getComponents(twin)
   let users = await getUsers();
+  //console.log(components.map(c => c.id))
+  //get user role
+  let a = await authContract.at(config.ethereum.authorization);
+  let usersRoles = await Promise.all(users.map(u => a.getRole(u, twin.address)));
+  console.log(usersRoles.map(a => a.toNumber()))
+  users = users.filter((u, ind) => usersRoles[ind] < 5)
+  console.log(users)
+
   let usersPublicKeys = await Promise.all(users.map(getUserFeedText))
+  //add own address and publicKey
   users.push(address)
   usersPublicKeys.push(publicKey);
-  //check for each role if it has DOC_READ or SENSOR_READ permission
-  let validRoles;
-
-  //check for each user if he has a validRole
-  let validUsers;
 
   //check for each valid user and each component if the user has the attribute
   await Promise.all(components.map(component => updateComponentKeys(component, twin.address, users, usersPublicKeys)))
@@ -74,7 +81,6 @@ async function main(){
 }
 
 async function updateComponentKeys(component, twin, users, usersPublicKeys){
-  // let a = await authContract.deployed();
   // let c = await Promise.all(users.map(user => a.hasAttribute(
   //   user,
   //   web3.utils.hexToBytes(component.hash),
@@ -87,11 +93,12 @@ async function updateComponentKeys(component, twin, users, usersPublicKeys){
     users,
     usersPublicKeys
   );
-  // await createFileKey(
-  //   address,
-  //   web3.utils.sha3(twin + "sensor"),
-  //   users
-  // );
+  update = await createComponentKeys(
+    address,
+    web3.utils.sha3(component.id + "sensor"),
+    users,
+    usersPublicKeys
+  );
 }
 
 async function createComponentKeys(user, topic, shareAddresses, usersPublicKeys) {
@@ -107,7 +114,7 @@ function makeFileKey(key, shareAddress, sharePublicKey){
 }
 
 async function subscribeTwinCreate(){
-  let registry = await truffle.deployed()
+  let registry = await registryContract.deployed()
 
   registry.TwinCreated({}, (error, data) => {
     if (error)
@@ -117,12 +124,12 @@ async function subscribeTwinCreate(){
   })
 }
 
-async function getTwin(){
-  let registry = await truffle.deployed()
+async function getTwins(){
+  let registry = await registryContract.at(config.ethereum.registry)
   let addresses = await registry.getContracts()
   let contracts = await Promise.all(addresses.map(c => getSpecification(c)))
   let deviceAgents = await Promise.all(contracts.map(async function(c){return c.deviceAgent()}))
-  return contracts.filter((c, ind) => deviceAgents[ind].toLowerCase() === address)[0];
+  return contracts.filter((c, ind) => deviceAgents[ind].toLowerCase() === address);
 }
 
 
@@ -158,7 +165,7 @@ async function getComponents(twin){
 }
 
 async function getUsers(){
-  let auth = await authContract.deployed();
+  let auth = await authContract.at(config.ethereum.authorization);
   return auth.getUsers();
 }
 
@@ -187,8 +194,11 @@ async function getUserFeedText(user){
   return await content.text();
 }
 
+async function createFeed(feed){
+  return client.bzz.createFeedManifest(feed);
+}
+
 async function updateFeedSimple(feed, update){
-  await client.bzz.createFeedManifest(feed);
   return client.bzz.setFeedContent(feed, JSON.stringify(update), {contentType: "application/json"})
 }
 
@@ -203,23 +213,26 @@ async function getFileKey(user, topic) {
   return Buffer.from(plainKey, 'base64');
 }
 
-/** Crypto functions*/
+/**
+ *
+ * @param publicKey string
+ * @param data Buffer
+ * @returns {String}
+ */
 function encryptECIES(publicKey, data) {
-  let userPublicKey = Buffer.from(publicKey, 'hex');
-  let bufferData = Buffer.from(data);
-
-  let encryptedData = ecies.encrypt(userPublicKey, bufferData);
-
-  return encryptedData.toString('base64')
+  let userPublicKey = new Buffer(publicKey, 'hex');
+  return ecies.encrypt(userPublicKey, data).toString('base64');
 }
 
+/**
+ *
+ * @param privateKey string
+ * @param encryptedData base64 string
+ * @returns {Buffer}
+ */
 function decryptECIES(privateKey, encryptedData) {
-  let userPrivateKey = Buffer.from(privateKey, 'hex');
-  let bufferEncryptedData = Buffer.from(encryptedData, 'base64');
-
-  let decryptedData = ecies.decrypt(userPrivateKey, bufferEncryptedData);
-
-  return decryptedData.toString('utf8');
+  let bufferData = new Buffer(encryptedData, 'base64')
+  return ecies.decrypt(privateKey, bufferData);
 }
 
 function encryptAES(text, key) {

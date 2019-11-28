@@ -152,16 +152,19 @@
           return;
         }
         this.$store.commit('spinner', true);
-
+        let before = new Date()
         let hash = await this.encryptAndUpload(this.fileObject, this.selectedComponent);
         console.log(hash)
-        await this.specification.addDocument(
+        let result = await this.specification.addDocument(
           this.selectedComponent,
           this.fileObject.name,
           this.description,
           this.$utils.swarmHashToBytes(hash),
           {from: this.account}
         );
+        console.log(result.receipt.gasUsed)
+        let after = new Date();
+        console.log(after - before)
 
         //reload documents
         await this.loadDocuments();
@@ -202,18 +205,22 @@
             '<input type="file" class="form-control-file text-center" id="swal-input1">'
         });
         if (result.value) {
+          let before = new Date()
           let files = document.getElementById("swal-input1").files;
           if (files.length === 0) return;
           let file = files[0];
 
           let hash = await this.encryptAndUpload(file, componentId);
 
-          await this.specification.addDocumentVersion(
+          let result = await this.specification.addDocumentVersion(
             componentId,
             version,
             this.$utils.swarmHashToBytes(hash),
             {from: vm.account}
           );
+          console.log(result.receipt.gasUsed)
+          let after = new Date();
+          console.log(after - before)
           this.loadDocuments();
         }
       },
