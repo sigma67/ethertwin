@@ -16,7 +16,8 @@ The **ethertwin** prototype allows to:
 npm install
 ```
 
-###Prerequisites
+### Prerequisites
+
 Download [Parity](https://github.com/paritytech/parity-ethereum/releases) to set up your Ethereum blockchain. Create a folder `network`, add the `parity.exe` and `password.txt`.
 Then run the following console command in the `network` folder to start your blockchain:
 ```
@@ -35,7 +36,7 @@ npm -i truffle
 truffle migrate --network parity
 ```
 
-###Configuration
+### Configuration
 Add `config.json` with the corresponding values (IP) for the Swarm DHT etc.
 Note that the values for the `registry` and `authorization` are optional:
 ```
