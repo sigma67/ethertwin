@@ -112,7 +112,6 @@
       },
 
       async removeSensor(component, index){
-        console.log(component + index)
         await this.specification.removeSensor(
           component,
           index,
@@ -136,7 +135,6 @@
         let componentHash = web3.utils.sha3(component.id);
         let count = await this.specification.getSensorCount(component.id);
         for(let i = 0; i < count.toNumber(); i++){
-          console.log(component.id + ", " + i)
           let sensor = await this.specification.sensors(componentHash,i);
           sensor.componentId = component.id;
           sensor.componentName = component.name;

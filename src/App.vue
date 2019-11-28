@@ -110,7 +110,7 @@
       await this.$store.dispatch('loadTwins');
       //create user-icon based on their address when component is mounted (DOM-reachable)
       let address = parseInt(this.account,16); //hex-user-address to int
-      let img = jazzicon(50, Math.log(address));
+      let img = jazzicon(50, Math.log(address)*1000);
       document.getElementById("icon").appendChild(img);
 
       this.$store.commit('spinner', false);
