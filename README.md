@@ -11,6 +11,8 @@ The **ethertwin** prototype allows to:
 - control access of users by lifecycle roles and asset attributes
 - list asset components (specification parsing)
 
+An exemplary use case is given in the following [video](https://drive.google.com/open?id=1Bq8xNVj2TEluJ3_-DK3eLaDQvqv9rLQ8).
+
 ## Project setup
 ```
 npm install
