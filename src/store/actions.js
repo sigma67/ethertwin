@@ -134,4 +134,12 @@ export default{
         })
       });
   },
+
+  async loadUsers({commit, state}){
+    let users = await state.contracts.Authorization.getUsers();
+    return new Promise((resolve, reject) => {
+      commit('users', users)
+      resolve(users)
+    })
+  }
 }

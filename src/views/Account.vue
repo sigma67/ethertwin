@@ -46,6 +46,12 @@
       </tr>
       </tbody>
     </table>
+    <p v-if="!this.registered && this.balance > 0">
+      <button class="btn btn-secondary btn mx-0" type="submit" v-on:click="register()">
+        Register
+      </button>
+      Please register your address for other users<br />
+    </p>
     <br/>
     <br/>
     <h5>Update private key</h5>
@@ -71,7 +77,8 @@
         data(){
             return{
                 balance: 0,
-                privateKeyNew: ''
+                privateKeyNew: '',
+                registered: false
             }
         },
         methods: {
@@ -93,6 +100,17 @@
                 localStorage.setItem('privateKey', this.privateKeyNew);
                 this.$router.push('/');
                 location.reload()//refresh site
+            },
+
+            async checkRegistered(){
+              let users = await this.$store.dispatch('loadUsers')
+              users = users.map(u => u.toLowerCase())
+              this.registered = users.includes(this.account)
+            },
+
+            async register() {
+              await this.$store.state.contracts.Authorization.register({from: this.account})
+              await this.checkRegistered()
             }
         },
         async beforeMount() {
@@ -100,6 +118,8 @@
              this.privKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
              let balanceTenEightteen = await web3.eth.getBalance(this.account);
              this.balance = (balanceTenEightteen/Math.pow(10,18));
+
+             this.checkRegistered()
         }
     }
 </script>

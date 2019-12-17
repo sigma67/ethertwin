@@ -22,6 +22,9 @@ export default {
     selectTwin(state, id){
         state.selectedTwin = id;
     },
+    users(state, users){
+        state.users = users;
+    },
     twins(state, twins){
         state.twins = twins;
     },
