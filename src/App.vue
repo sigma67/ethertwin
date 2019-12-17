@@ -16,7 +16,7 @@
             <li class="nav-item dropdown">
                 <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown" >
-                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item">{{ twin.deviceName }}</router-link>
+                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item" v-bind:class="{'font-weight-bold': twin.deviceId === selectedTwin}">{{ twin.deviceName }}</router-link>
               </div>
             </li>
             <template v-if="selectedTwin !== 0">

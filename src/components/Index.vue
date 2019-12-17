@@ -3,6 +3,7 @@
         <div class="row justify-content-sm-center">
             <div class="col">
                 <h2>Digital Twin Overview</h2>
+                <p>Select a twin by clicking an action or choosing from the menu dropdown.</p>
             </div>
             <div class="col-md-1 mr-0"><br/>
                 <router-link :to="{ name: 'twin-create' }">
@@ -33,7 +34,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(twin, i) in twins" v-if="twins.length > 0">
+                    <tr v-for="(twin, i) in twins" v-if="twins.length > 0" v-bind:class="{'table-active': twin.deviceId === selectedTwin}">
                         <td>{{ twin.deviceName }}</td>
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
@@ -91,6 +92,9 @@
       },
       twins() {
         return this.$store.state.twins;
+      },
+      selectedTwin(){
+        return this.$store.state.selectedTwin
       }
     },
     methods: {
