@@ -5,10 +5,10 @@
     <table class="table table-hover">
       <thead class="thead-light">
       <tr>
-        <th scope="col">User address</th>
+        <th scope="col" class="col-4">User address</th>
         <th scope="col">Role</th>
         <th scope="col">Attribute(s)</th>
-        <th scope="col">Actions</th>
+        <th scope="col" class="col-2">Actions</th>
       </tr>
       </thead>
       <tbody>
