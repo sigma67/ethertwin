@@ -1,24 +1,28 @@
-const config = require('./config')
-const ContractRegistry = require('./public/contracts/ContractRegistry.json')
-const Authorization = require('./public/contracts/Authorization.json')
-const Specification = require('./public/contracts/Specification.json')
+const config = require('./config');
+//swarm
 const secp256k1 = require("@erebos/secp256k1");
 const erebos = require("@erebos/swarm-node");
+//web3
+const ethereumjs = require('ethereumjs-wallet');
+const WalletSubprovider = require('ethereumjs-wallet/provider-engine');
+const ProviderEngine = require('web3-provider-engine');
+const FixtureSubprovider = require('web3-provider-engine/subproviders/fixture.js');
+const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js');
+const WebsocketSubprovider = require('web3-provider-engine/subproviders/websocket.js');
+//contracts
 const Web3 = require('web3');
 const TruffleContract = require('@truffle/contract');
-const HDWalletProvider = require("@truffle/hdwallet-provider");
-const c = require('crypto')
-const ecies = require('eth-ecies')
+const ContractRegistry = require('./public/contracts/ContractRegistry.json');
+const Authorization = require('./public/contracts/Authorization.json');
+const Specification = require('./public/contracts/Specification.json');
+//crypto
+const c = require('crypto');
+const ecies = require('eth-ecies');
 
 /** Config **/
-let twin = ""
 let privateKey = "90cecdf9597eb555edce7a4fbf780e8e7b1bd3123a13b8acb045ff9641752eea";
-let publicKey = "a82623416dc0925330432ac5e34719d0e4e00ca305d283eee94aff2ec63a58f06e2a8ff83af1a5e05a70037a944f4366f486c32c26fa31de23dbb161cd3d1956"
-let address = "0x472c27020ed212627d3087ad546e21d220fb1c49"
-// const Wallet = require('ethereumjs-wallet')
-// const wallet = Wallet.fromPrivateKey(new Buffer(privateKey, 'hex'))
-// console.log(wallet.getAddressString())
-
+let publicKey = "a82623416dc0925330432ac5e34719d0e4e00ca305d283eee94aff2ec63a58f06e2a8ff83af1a5e05a70037a944f4366f486c32c26fa31de23dbb161cd3d1956";
+let address = "0x472c27020ed212627d3087ad546e21d220fb1c49";
 
 /** Swarm Setup **/
 let keyPair = secp256k1.createKeyPair(privateKey);
@@ -39,43 +43,61 @@ client.bzz.getFeedContent({user: address}).catch(() => {
 });
 
 /** Web3 and Contracts Setup **/
-const webSocketProvider = new Web3.providers.WebsocketProvider(config.ethereum.rpc);
-let provider = new HDWalletProvider([privateKey], webSocketProvider, 0, 1);
-let web3 = new Web3(provider);
-let truffle = TruffleContract(ContractRegistry);
-truffle.setProvider(web3.currentProvider);
+var engine = new ProviderEngine();
+let web3 = new Web3(engine);
+engine.addProvider(new FixtureSubprovider());
+engine.addProvider(new FilterSubprovider());
+let wallet = ethereumjs.fromPrivateKey(new Buffer(privateKey, 'hex'));
+engine.addProvider(new WalletSubprovider(wallet));
+engine.addProvider(new WebsocketSubprovider({rpcUrl: config.ethereum.rpc}));
+engine.start();
+
+let registryContract = TruffleContract(ContractRegistry);
+registryContract.setProvider(web3.currentProvider);
 let authContract = TruffleContract(Authorization);
 authContract.setProvider(web3.currentProvider);
 
-main()
-//updateFileKeys(web3)
-//subscribeTwinCreate()
+subscribe();
 
-async function main(){
-  let before = new Date();
-  let twin = await getTwin()
-  let components = await getComponents(twin)
-  let users = await getUsers();
-  let usersPublicKeys = await Promise.all(users.map(getUserFeedText))
-  users.push(address)
-  usersPublicKeys.push(publicKey);
-  //check for each role if it has DOC_READ or SENSOR_READ permission
-  let validRoles;
+async function subscribe() {
+  await web3.eth.net.getId();
+  let registry = await registryContract.deployed();
+  let auth = await authContract.deployed();
 
-  //check for each user if he has a validRole
-  let validUsers;
-
-  //check for each valid user and each component if the user has the attribute
-  await Promise.all(components.map(component => updateComponentKeys(component, twin.address, users, usersPublicKeys)))
-  let after = new Date();
-  console.log(after - before)
-
-  provider.engine.stop()
+  registry.TwinCreated({}, (error, data) => {
+    if (error)
+      console.log("Error: " + error);
+    else {
+      if(data.returnValues.deviceAgent.toLowerCase() === address)
+        createKeys(data)
+    }
+  });
+  auth.RoleChanged({}, (error, data) => {updateKeys(error, data)});
+  auth.AttributesChanged({}, (error, data) => {updateKeys(error, data)});
 }
 
-async function updateComponentKeys(component, twin, users, usersPublicKeys){
-  // let a = await authContract.deployed();
-  // let c = await Promise.all(users.map(user => a.hasAttribute(
+async function createKeys(data){
+  let before = new Date()
+  let components = await getComponents(data.returnValues.deviceId, data.returnValues.aml, data.returnValues.owner);
+  let users = await getUsers();
+  //get user role
+  let a = await authContract.deployed();
+  let usersRoles = await Promise.all(users.map(u => a.getRole(u.toLowerCase(), data.returnValues.contractAddress)));
+  users = users.filter((u, ind) => usersRoles[ind] < 5);
+
+  let usersPublicKeys = await Promise.all(users.map(getUserFeedText));
+  //add own address and publicKey
+  users.push(address);
+  usersPublicKeys.push(publicKey);
+
+  //check for each valid user and each component if the user has the attribute
+  await Promise.all(components.map(component => createAllKeys(component, data.returnValues.contractAddress, users, usersPublicKeys)));
+  let after = new Date();
+  console.log(after - before);
+}
+
+async function createAllKeys(component, twin, users, usersPublicKeys){
+  // let c = await Promise.all(users.map(user => a.hasAttributes(
   //   user,
   //   web3.utils.hexToBytes(component.hash),
   //   twin
@@ -83,57 +105,90 @@ async function updateComponentKeys(component, twin, users, usersPublicKeys){
   // users = users.filter((d, ind) => c[ind]);
   let update = await createComponentKeys(
     address,
-    web3.utils.sha3(component.id + "doc"),
+    web3.utils.sha3(component.hash + "doc"),
     users,
     usersPublicKeys
   );
-  // await createFileKey(
-  //   address,
-  //   web3.utils.sha3(twin + "sensor"),
-  //   users
-  // );
+  update = await createComponentKeys(
+    address,
+    web3.utils.sha3(component.hash + "sensor"),
+    users,
+    usersPublicKeys
+  );
 }
 
 async function createComponentKeys(user, topic, shareAddresses, usersPublicKeys) {
   let key = c.randomBytes(32);
-  let update = shareAddresses.map((d, ind) => makeFileKey(key, d, usersPublicKeys[ind]))
+  let update = shareAddresses.map((d, ind) => makeFileKey(key, d.toLowerCase(), usersPublicKeys[ind]));
   await updateFeedSimple({user: user, topic: topic}, update);
   return update;
 }
 
 function makeFileKey(key, shareAddress, sharePublicKey){
-  let ciphertext = encryptECIES(sharePublicKey, key.toString('base64'));
+  let ciphertext = encryptECIES(sharePublicKey, key);
   return {address: shareAddress, fileKey: ciphertext};
 }
 
-async function subscribeTwinCreate(){
-  let registry = await truffle.deployed()
+async function updateKeys(error, data, added = false){
+  if (error)
+    console.log("Error: " + error);
+  else {
+    //check if deviceAgent for this twin
+    let twin = await getSpecification(data.returnValues.twin)
+    let deviceAgent = await twin.deviceAgent();
+    if(deviceAgent.toLowerCase() === address) {
 
-  registry.TwinCreated({}, (error, data) => {
-    if (error)
-      console.log("Error: " + error);
-    else
-      console.log("Log data: " + data);
-  })
+      if (data.returnValues.added) {
+        //todo role added
+        if (data.returnValues.role) {
+          //add keys for all components if owner, else where attribute is present
+        }
+        //attribute added
+        else {
+          data.returnValues.attributes.map(attr =>
+            shareFileKey(
+              address,
+              web3.utils.sha3(attr + "doc"),
+              data.returnValues.operator
+            )
+          );
+          data.returnValues.attributes.map(attr =>
+            shareFileKey(
+              address,
+              web3.utils.sha3(attr + "sensor"),
+              data.returnValues.operator
+            )
+          );
+        }
+      } else {
+        //todo role removed: remove keys for all components
+        if (data.returnValues.role){
+
+        }
+        //attribute removed: remove key for that component
+        else{
+          data.returnValues.attributes.map(attr =>
+            removeFileKey(
+              address,
+              web3.utils.sha3(attr + "doc"),
+              data.returnValues.operator
+            )
+          );
+          data.returnValues.attributes.map(attr =>
+            removeFileKey(
+              address,
+              web3.utils.sha3(attr + "sensor"),
+              data.returnValues.operator
+            )
+          );
+        }
+      }
+    }
+  }
 }
 
-async function getTwin(){
-  let registry = await truffle.deployed()
-  let addresses = await registry.getContracts()
-  let contracts = await Promise.all(addresses.map(c => getSpecification(c)))
-  let deviceAgents = await Promise.all(contracts.map(async function(c){return c.deviceAgent()}))
-  return contracts.filter((c, ind) => deviceAgents[ind].toLowerCase() === address)[0];
-}
-
-
-async function getComponents(twin){
-  let res = await twin.getTwin()
-  let length = await twin.getAMLCount();
-  let index = length.toNumber() - 1;
-  let amlInfo = await twin.getAML(index);
-  //get AML from Swarm using aml-hash: amlInfo.hash
-  let hash = amlInfo.hash
-  let aml = (await downloadEncryptedDoc(res[3], web3.utils.sha3(res[0]), hash.substr(2, hash.length))).content.toString();
+async function getComponents(deviceId, amlHash, owner){
+  let aml = (await downloadEncryptedDoc(owner, web3.utils.sha3(deviceId), amlHash.substr(2, amlHash.length))).content.toString();
   //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
   // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
   var DomParser = require('xmldom').DOMParser;
@@ -162,8 +217,6 @@ async function getUsers(){
   return auth.getUsers();
 }
 
-
-
 /** HELPERS */
 async function getSpecification(address){
   let truffle = TruffleContract(Specification);
@@ -187,8 +240,19 @@ async function getUserFeedText(user){
   return await content.text();
 }
 
+async function getUserFeedLatest(user, topic) {
+  let content = await client.bzz.getFeedContent({
+    user: user,
+    topic: topic
+  });
+  return content.json();
+}
+
+async function createFeed(feed){
+  return client.bzz.createFeedManifest(feed);
+}
+
 async function updateFeedSimple(feed, update){
-  await client.bzz.createFeedManifest(feed);
   return client.bzz.setFeedContent(feed, JSON.stringify(update), {contentType: "application/json"})
 }
 
@@ -203,32 +267,46 @@ async function getFileKey(user, topic) {
   return Buffer.from(plainKey, 'base64');
 }
 
-/** Crypto functions*/
+//share an existing key on the user's own feed with another user
+async function shareFileKey(user, topic, userAddress) {
+  //get existing keys and decrypt key
+  let fileKeys = await getUserFeedLatest(user, topic);
+  let keyObject = fileKeys.filter(f => f.address === user)[0];
+  let plainKey = decryptECIES(privateKey, keyObject.fileKey);
+  //encrypt for new user
+  let userPublicKey = await getUserFeedText(userAddress);
+  let newKey = encryptECIES(userPublicKey, plainKey);
+  fileKeys.push({address: userAddress, fileKey: newKey});
+  await updateFeedSimple({user: user, topic: topic}, fileKeys);
+}
+
+//remove a user's file key
+async function removeFileKey(user, topic, userAddress) {
+  let fileKeys = await getUserFeedLatest(user, topic);
+  fileKeys = fileKeys.filter(f => f.address !== userAddress);
+  await updateFeedSimple({user: user, topic: topic}, fileKeys);
+}
+
+/**
+ *
+ * @param publicKey string
+ * @param data Buffer
+ * @returns {String}
+ */
 function encryptECIES(publicKey, data) {
-  let userPublicKey = Buffer.from(publicKey, 'hex');
-  let bufferData = Buffer.from(data);
-
-  let encryptedData = ecies.encrypt(userPublicKey, bufferData);
-
-  return encryptedData.toString('base64')
+  let userPublicKey = new Buffer(publicKey, 'hex');
+  return ecies.encrypt(userPublicKey, data).toString('base64');
 }
 
+/**
+ *
+ * @param privateKey string
+ * @param encryptedData base64 string
+ * @returns {Buffer}
+ */
 function decryptECIES(privateKey, encryptedData) {
-  let userPrivateKey = Buffer.from(privateKey, 'hex');
-  let bufferEncryptedData = Buffer.from(encryptedData, 'base64');
-
-  let decryptedData = ecies.decrypt(userPrivateKey, bufferEncryptedData);
-
-  return decryptedData.toString('utf8');
-}
-
-function encryptAES(text, key) {
-  const iv = randomBytes(16);
-  //ISO/IEC 10116:2017
-  let cipher = c.createCipheriv('aes-256-ctr', Buffer.from(key), iv);
-  let encrypted = cipher.update(text);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
-  return {iv: iv.toString('hex'), encryptedData: encrypted.toString('base64')};
+  let bufferData = new Buffer(encryptedData, 'base64');
+  return ecies.decrypt(privateKey, bufferData);
 }
 
 function decryptAES(text, key, init_vector) {

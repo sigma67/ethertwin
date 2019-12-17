@@ -17,8 +17,8 @@ contract Authorization {
         SENSOR_CREATE, SENSOR_READ, SENSOR_UPDATE, SENSOR_DELETE, SPECIFICATION_UPDATE}
 
     //events for removing and adding roles
-    event RoleAdded(address indexed operator, uint role);
-    event RoleRemoved(address indexed operator, uint role);
+    event RoleChanged(address indexed twin, address indexed operator, uint role, bool added);
+    event AttributesChanged(address indexed twin, address indexed operator, bytes32[] attributes, bool added);
     event DeviceAgentChanged(address indexed operator);
 
     // local storage of the device agent address
@@ -104,7 +104,7 @@ contract Authorization {
     // adds a role for an user for a specific specification contract
     function addRole(address _operator, uint _role, address _contract) public onlyOwner(_contract) {
         roleMapping[_contract][_role].add(_operator);
-        emit RoleAdded(_operator, _role);
+        emit RoleChanged(_contract, _operator, _role, true);
     }
 
     //update a user's own role
@@ -118,7 +118,7 @@ contract Authorization {
         require(roleMapping[_contract][uint(RBAC.OWNER)].has(msg.sender) ||
             roleMapping[_contract][_role].has(_operator), "You are not authorized to remove this role!");
         roleMapping[_contract][_role].remove(_operator);
-        emit RoleRemoved(_operator, _role);
+        emit RoleChanged(_contract, _operator, _role, false);
     }
 
     // return the role of an user for a specific contract
@@ -170,6 +170,7 @@ contract Authorization {
         for (uint i=0; i < len; i++) {
             attributes[_contract][_components[i]].add(_user);
         }
+        emit AttributesChanged(_contract, _user, _components, true);
     }
 
     function removeAttributes(address _user, bytes32[] calldata _components, address _contract) external onlyOwner(_contract) {
@@ -178,6 +179,7 @@ contract Authorization {
         for (uint i=0; i < len; i++) {
             attributes[_contract][_components[i]].remove(_user);
         }
+        emit AttributesChanged(_contract, _user, _components, false);
     }
 
     //check if a user has the given attribute for a specific contract

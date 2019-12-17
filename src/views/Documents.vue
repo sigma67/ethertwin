@@ -69,7 +69,7 @@
                                 </div>
                                 <div class="col">
                                     <a href="#" class="btn btn-primary btn-block"
-                                       v-on:click.prevent.stop="downloadDocument(document[2][document.selectedVersion][2], document[0], component.id)">
+                                       v-on:click.prevent.stop="downloadDocument(document[2][document.selectedVersion][2], document[0], component.hash)">
                                         <font-awesome-icon icon="file-download" data-toggle="tooltip"
                                                            data-placement="bottom" title="upload file"/>
                                         Download
@@ -140,9 +140,8 @@
         return this.$swarm.uploadEncryptedDoc(
           plaintext,
           file.type,
-          this.account,//todo replace with deviceagent
-          web3.utils.sha3(component),
-          true
+          this.twinObject.deviceAgent,
+          web3.utils.sha3(component + "doc")
         );
       },
 
@@ -153,7 +152,7 @@
         }
         this.$store.commit('spinner', true);
 
-        let hash = await this.encryptAndUpload(this.fileObject, this.selectedComponent);
+        let hash = await this.encryptAndUpload(this.fileObject, web3.utils.sha3(this.selectedComponent));
         await this.specification.addDocument(
           this.selectedComponent,
           this.fileObject.name,
@@ -170,10 +169,9 @@
       async downloadDocument(hash, filename, component) {
         this.$store.commit('spinner', true);
 
-        //todo replace this.account with deviceagent
         let file = await this.$swarm.downloadEncryptedDoc(
-          this.account,
-          web3.utils.sha3(component),
+          this.twinObject.deviceAgent,
+          web3.utils.sha3(component + "doc"),
           this.$utils.hexToSwarmHash(hash),
         );
 

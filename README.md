@@ -52,13 +52,18 @@ Note that the values for the `registry` and `authorization` are optional:
 }
 ```
 
-### Compilation
-Compiles and hot-reloads for development
+### Run
+Run the device agent
+```
+npm run agent
+```
+
+Run the main web app for development with hot reloads
 ```
 npm run serve
 ```
 
-Compiles and minifies for production
+Build static files for deployment
 ```
 npm run build
 ```

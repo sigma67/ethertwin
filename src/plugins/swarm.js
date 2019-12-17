@@ -199,7 +199,7 @@ export default {
       //gets from any feed and decrypts a file key, which was encrypted for the current user
       async getFileKey(user, topic) {
         let fileKeys = await this.getUserFeedLatest(user, topic);
-        let keyObject = fileKeys.filter(f => f.address === store.state.user.address)[0];
+        let keyObject = fileKeys.filter(f => f.address.toLowerCase() === store.state.user.address)[0];
         let privateKey = store.state.user.wallet.getPrivateKey().toString('hex');
         let plainKey = crypto.decryptECIES(privateKey, keyObject.fileKey);
         return new Buffer(plainKey, 'base64');
