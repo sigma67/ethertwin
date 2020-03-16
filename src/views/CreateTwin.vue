@@ -15,7 +15,7 @@
             <br/>
             <input class="form-control" type="text" id="twinName" v-model.lazy="twinName"/>
             <br/>
-            <label class="text-center" for="twinName">Public Key of Device Agent</label>
+            <label class="text-center" for="twinName">Device Agent address</label>
             <br/>
             <input class="form-control" type="text" id="publicKeyDeviceAgent" v-model.lazy="deviceAgent"/>
             <br/>
