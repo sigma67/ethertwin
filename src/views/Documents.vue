@@ -69,7 +69,7 @@
                                 </div>
                                 <div class="col">
                                     <a href="#" class="btn btn-primary btn-block"
-                                       v-on:click.prevent.stop="downloadDocument(document[2][document.selectedVersion][2], document[0], component.hash)">
+                                       v-on:click.prevent.stop="downloadDocument(document[2][document.selectedVersion][2], document[0], component.id)">
                                         <font-awesome-icon icon="file-download" data-toggle="tooltip"
                                                            data-placement="bottom" title="upload file"/>
                                         Download
@@ -152,7 +152,7 @@
         }
         this.$store.commit('spinner', true);
 
-        let hash = await this.encryptAndUpload(this.fileObject, web3.utils.sha3(this.selectedComponent));
+        let hash = await this.encryptAndUpload(this.fileObject, this.selectedComponent);
         await this.specification.addDocument(
           this.selectedComponent,
           this.fileObject.name,
