@@ -50,7 +50,8 @@
     methods: {
       async addEntry(){
         await this.$swarm.updateFeed(this.swarmHash, Math.random());
-        this.loadUpdates();
+        let update = await this.$swarm.getFeedItemJson(this.swarmHash, (new Date()) / 1000 - 1);
+        this.updates.unshift(update);
       },
 
       async loadSensor() {
@@ -60,7 +61,7 @@
       },
 
       async loadUpdates(){
-        this.updates = await this.$swarm.getFeedUpdates(this.swarmHash, 86400);
+        this.updates = await this.$swarm.getFeedUpdates(this.swarmHash, 600);
       }
     },
     async beforeMount() {
