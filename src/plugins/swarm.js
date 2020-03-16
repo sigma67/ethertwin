@@ -1,4 +1,5 @@
-import {SwarmClient} from '@erebos/swarm-browser';
+import { BzzFeed } from '@erebos/bzz-feed'
+import { BzzBrowser } from '@erebos/bzz-browser'
 import { createKeyPair, sign } from '@erebos/secp256k1'
 import config from '../../config'
 import crypto from './crypto'
@@ -10,16 +11,15 @@ export default {
     // Set up client based on app wallet
     let user = store.state.user;
     let keyPair = createKeyPair(user.wallet.getPrivateKey().toString('hex'));
-    const client = new SwarmClient({
-      bzz: {
-        signBytes: bytes => Promise.resolve(sign(bytes, keyPair)),
-        url: config.swarm
-      }
+    let client = new BzzBrowser({ url: config.swarm });
+    let feed = new BzzFeed({
+      bzz: client,
+      signBytes: bytes => Promise.resolve(sign(bytes, keyPair)),
     });
 
     //If not yet published, publish user public key to feed
-    client.bzz.getFeedContent({user: user.address}).catch(() => {
-      client.bzz.setFeedContent(
+    feed.getContent({user: user.address}).catch(() => {
+      feed.setContent(
         {user: user.address},
         user.wallet.getPublicKey().toString('hex'),
         {contentType: "text/plain"}
@@ -28,19 +28,19 @@ export default {
 
     Vue.prototype.$swarm = {
 
-      async updateFeedSimple(feed, update){
-        await client.bzz.createFeedManifest(feed);
-        return client.bzz.setFeedContent(feed, JSON.stringify(update), {contentType: "application/json"})
+      async updateFeedSimple(feedParams, update){
+        await feed.createManifest(feedParams);
+        return feed.setContent(feedParams, JSON.stringify(update), {contentType: "application/json"})
       },
 
       async uploadDoc(content, contentType) {
         return new Promise((resolve, reject) => {
           try {
-            client.bzz
-                .upload(content, {contentType: contentType})
-                .then(hash => {
-                  resolve(hash);
-                });
+            client
+              .uploadFile(content, {contentType: contentType})
+              .then(hash => {
+                resolve(hash);
+              });
           } catch (err) {
             reject(err);
           }
@@ -50,8 +50,7 @@ export default {
       async downloadDoc(hash, type = "text") {
         return new Promise((resolve, reject) => {
           try {
-            client.bzz
-                .download(hash)
+            client.download(hash)
                 .then(response => {
                   switch(type){
                     case "text":
@@ -74,11 +73,11 @@ export default {
        * Create a new feed
        * @param device valid Ethereum address
        * @param topic 32 byte hash (i.e. web3.utils.sha3)
-       * @returns {Promise<HexValue & string>}
+       * @returns {Promise<string>}
        */
       async createFeed(device, topic) {
         try {
-          return await client.bzz.createFeedManifest({
+          return await feed.createManifest({
             user: device,
             topic: topic,
           });
@@ -99,7 +98,7 @@ export default {
             time: Math.floor(new Date() / 1000),
             content: contents
           };
-          await client.bzz.setFeedContent(feedHash, JSON.stringify(update), {contentType: "application/json"})
+          await feed.setContent(feedHash, JSON.stringify(update), {contentType: "application/json"})
         } catch (err) {
           alert(err);
         }
@@ -123,7 +122,8 @@ export default {
 
           //get past updates until time - pastInterval
           while (lastTime > currentTime - pastInterval) {
-            let content = await this.getFeedItemJson(feedHash, lastTime - 1);
+            let content = await this.getFeedItemJson(feedHash, lastTime - 2);
+            console.log(content.time);
             if(lastTime === content.time)
               break;
             else {
@@ -145,8 +145,8 @@ export default {
        * @returns {Promise<any>}
        */
       async getFeedItemJson(feedHash, time = (new Date()) / 1000) {
-        let meta = await client.bzz.getFeedMetadata(feedHash);
-        let content = await client.bzz.getFeedContent({
+        let meta = await feed.getMetadata(feedHash);
+        let content = await feed.getContent({
           user: meta.feed.user,
           topic: meta.feed.topic,
           time: time
@@ -155,7 +155,7 @@ export default {
       },
 
       async getUserFeedLatest(user, topic) {
-        let content = await client.bzz.getFeedContent({
+        let content = await feed.getContent({
           user: user,
           topic: topic
         });
@@ -163,7 +163,7 @@ export default {
       },
 
       async getUserFeedText(user){
-        let content = await client.bzz.getFeedContent({user: user});
+        let content = await feed.getContent({user: user});
         return content.text();
       },
       
@@ -218,11 +218,12 @@ export default {
         let cipherText = crypto.encryptAES(content, key);
         cipherText.contentType = contentType;
         return this.uploadDoc(JSON.stringify(cipherText), "application/json");
+        //return client.uploadData(cipherText)
       },
 
       async downloadEncryptedDoc(user, topic, hash) {
         let key = await this.getFileKey(user, topic);
-        let response = await client.bzz.download(hash);
+        let response = await client.download(hash);
         let res = await response.json();
         return {
           content: crypto.decryptAES(res.encryptedData, key, res.iv),

@@ -1,7 +1,8 @@
 const config = require('./config');
 //swarm
 const secp256k1 = require("@erebos/secp256k1");
-const erebos = require("@erebos/swarm-node");
+const bzzfeed = require('@erebos/bzz-feed');
+const bzznode = require('@erebos/bzz-node');
 //web3
 const ethereumjs = require('ethereumjs-wallet');
 const WalletSubprovider = require('ethereumjs-wallet/provider-engine');
@@ -26,16 +27,15 @@ let address = "0x472c27020ed212627d3087ad546e21d220fb1c49";
 
 /** Swarm Setup **/
 let keyPair = secp256k1.createKeyPair(privateKey);
-const client = new erebos.SwarmClient({
-  bzz: {
-    signBytes: bytes => Promise.resolve(secp256k1.sign(bytes, keyPair)),
-    url: config.swarm
-  }
+const client = new bzznode.BzzNode({ url: config.swarm });
+const feed = new bzzfeed.BzzFeed({
+  bzz: client,
+  signBytes: bytes => Promise.resolve(secp256k1.sign(bytes, keyPair)),
 });
 
 //If not yet published, publish user public key to feed
-client.bzz.getFeedContent({user: address}).catch(() => {
-  client.bzz.setFeedContent(
+feed.getContent({user: address}).catch(() => {
+  feed.setContent(
     {user: address},
     publicKey,
     {contentType: "text/plain"}
@@ -77,7 +77,7 @@ async function subscribe() {
 }
 
 async function createKeys(data){
-  let before = new Date()
+  let before = new Date();
   let components = await getComponents(data.returnValues.deviceId, data.returnValues.aml, data.returnValues.owner);
   let users = await getUsers();
   //get user role
@@ -105,13 +105,13 @@ async function createAllKeys(component, twin, users, usersPublicKeys){
   // users = users.filter((d, ind) => c[ind]);
   let update = await createComponentKeys(
     address,
-    web3.utils.sha3(component.hash + "doc"),
+    web3.utils.sha3(component.id + "doc"),
     users,
     usersPublicKeys
   );
   update = await createComponentKeys(
     address,
-    web3.utils.sha3(component.hash + "sensor"),
+    web3.utils.sha3(component.id + "sensor"),
     users,
     usersPublicKeys
   );
@@ -129,12 +129,12 @@ function makeFileKey(key, shareAddress, sharePublicKey){
   return {address: shareAddress, fileKey: ciphertext};
 }
 
-async function updateKeys(error, data, added = false){
+async function updateKeys(error, data){
   if (error)
     console.log("Error: " + error);
   else {
     //check if deviceAgent for this twin
-    let twin = await getSpecification(data.returnValues.twin)
+    let twin = await getSpecification(data.returnValues.twin);
     let deviceAgent = await twin.deviceAgent();
     if(deviceAgent.toLowerCase() === address) {
 
@@ -227,37 +227,32 @@ async function getSpecification(address){
 async function downloadEncryptedDoc(user, topic, hash) {
   user = user.toLowerCase();
   let key = await getFileKey(user, topic);
-  let response = await client.bzz.download(hash);
-  let res = await response.json();
+  let response = await client.downloadData(hash);
   return {
-    content: decryptAES(res.encryptedData, key, res.iv),
-    type: res.type
+    content: decryptAES(response.encryptedData, key, response.iv),
+    type: response.type
   };
 }
 
 async function getUserFeedText(user){
-  let content = await client.bzz.getFeedContent({user: user});
+  let content = await feed.getContent({user: user});
   return await content.text();
 }
 
 async function getUserFeedLatest(user, topic) {
-  let content = await client.bzz.getFeedContent({
+  let content = await feed.getContent({
     user: user,
     topic: topic
   });
   return content.json();
 }
 
-async function createFeed(feed){
-  return client.bzz.createFeedManifest(feed);
-}
-
-async function updateFeedSimple(feed, update){
-  return client.bzz.setFeedContent(feed, JSON.stringify(update), {contentType: "application/json"})
+async function updateFeedSimple(feedParams, update){
+  return feed.setContent(feedParams, JSON.stringify(update), {contentType: "application/json"})
 }
 
 async function getFileKey(user, topic) {
-  let content = await client.bzz.getFeedContent({
+  let content = await feed.getContent({
     user: user,
     topic: topic
   });
