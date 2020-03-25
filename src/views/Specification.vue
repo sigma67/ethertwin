@@ -26,7 +26,7 @@
                         Version {{ version }}
                     </a>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                        <a v-for="(version, i) in versions" href="#"
+                        <a v-for="(version, i) in versions" v-bind:key="i" href="#"
                            v-on:click="loadAML(version, versions.length - i)" class="dropdown-item">
                             <strong>V{{(versions.length - i) + ": " }}</strong>
                             {{ $utils.date(version[0]) }}
@@ -72,6 +72,7 @@
 </template>
 
 <script>
+  let utils = window.web3;
   export default {
       name: "Specification",
       data() {
@@ -116,7 +117,7 @@
               this.version = versionNumber;
               this.author = version[1];
               let hash = this.$utils.hexToSwarmHash(version[2]);
-              this.$swarm.downloadEncryptedDoc(this.twinObject.owner, web3.utils.sha3(this.twinObject.deviceId), hash)
+              this.$swarm.downloadEncryptedDoc(this.twinObject.owner, utils.sha3(this.twinObject.deviceId), hash)
                       .then(doc => {
                           vm.aml = doc.content;
                           // highlighting
@@ -129,10 +130,10 @@
                 this.aml,
                 'text/plain',
                 this.twinObject.owner,//todo replace with deviceagent
-                web3.utils.sha3(this.twinObject.deviceId)
+                utils.sha3(this.twinObject.deviceId)
               ).then(hash => {
                   vm.specification.addNewAMLVersion.sendTransaction(
-                      web3.utils.hexToBytes("0x" + hash),
+                      utils.hexToBytes("0x" + hash),
                       {from: vm.account}
                   ).then(() => {
                       vm.loadVersions();
@@ -148,7 +149,7 @@
               let vm = this;
               this.$swarm.uploadDoc(Buffer.from(await this.fileObject.arrayBuffer()), 'text/plain').then(hash => {
                   vm.specification.addNewAMLVersion.sendTransaction(
-                          web3.utils.hexToBytes("0x" + hash),
+                          utils.hexToBytes("0x" + hash),
                           {from: vm.account}
                   ).then(() => {
                       vm.loadVersions();
@@ -161,7 +162,7 @@
               if (file.name.length > 29)
                   this.file = file.name.slice(0, 29).concat('...');
               else
-                  this.file = file.name.split('.')[0]
+                  this.file = file.name.split('.')[0];
               this.fileType = file.type;
               this.fileObject = file;
           }
@@ -173,8 +174,8 @@
           this.$store.commit('spinner', false);
       },
         mounted() {
-          let script = document.createElement('script')
-          script.setAttribute('src', 'highlight.pack.js')
+          let script = document.createElement('script');
+          script.setAttribute('src', 'highlight.pack.js');
           document.head.appendChild(script)
         },
       

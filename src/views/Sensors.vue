@@ -8,7 +8,9 @@
                 <div class="row">
                     <div class="form-group col-md-3">
                         <select id="component" class="form-control" v-model="selectedComponent">
-                            <option v-for="component in twinObject.components" v-bind:value="component.id">{{ component.name }}</option>
+                            <option v-for="component in twinObject.components" v-bind:value="component.id" v-bind:key="component.id">
+                                {{ component.name }}
+                            </option>
                         </select>
                     </div>
                     <div class="form-group col">
@@ -34,7 +36,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(sensor, i) in sortedSensors">
+                <tr v-for="(sensor, i) in sortedSensors" v-bind:key="i">
                     <td>{{ sensor.componentName }}</td>
                     <td>{{ sensor.name }}</td>
                     <td>
@@ -54,6 +56,7 @@
 </template>
 
 <script>
+  let utils = window.utils;
   export default {
     name: "Sensors.vue",
     data() {
@@ -71,7 +74,8 @@
         return this.twinObject.specification;
       },
       sortedSensors(){
-        return this.sensors.sort(function(a,b){
+        let unsorted = [...this.sensors]
+        return unsorted.sort(function(a,b){
           let val = 0;
           if(a.componentName < b.componentName){
             val = 1;
@@ -99,7 +103,7 @@
       async addSensor(){
         let hash = await this.$swarm.createFeed(
           this.twinObject.deviceAgent,
-          web3.utils.sha3(this.selectedComponent + this.sensors.length)
+          utils.sha3(this.selectedComponent + this.sensors.length)
         );
 
         await this.specification.addSensor(
@@ -132,7 +136,7 @@
       },
 
       async loadSensor(component) {
-        let componentHash = web3.utils.sha3(component.id);
+        let componentHash = utils.sha3(component.id);
         let count = await this.specification.getSensorCount(component.id);
         for(let i = 0; i < count.toNumber(); i++){
           let sensor = await this.specification.sensors(componentHash,i);
@@ -158,7 +162,7 @@
         await this.load(this.twinObject.components[0].id);
       }
       else {
-        this.$store.subscribe((mutation, state) => {
+        this.$store.subscribe((mutation) => {
           if (mutation.type === "addTwinComponents" && mutation.payload.components.length > 0) {
             this.load(mutation.payload.components[0].id);
           }

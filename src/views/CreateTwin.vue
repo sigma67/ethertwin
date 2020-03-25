@@ -23,15 +23,15 @@
             <br/>
             <select v-model="selected" class="form-control">
               <option disabled value="pleaseSelect">Please select</option>
-              <option v-for="option in options" v-bind:value="option.value">
+              <option v-for="option in options" v-bind:value="option.value" v-bind:key="option.text">
                 {{ option.text }}
               </option>
             </select>
             <br/>
-            <input v-if="selected == 'File' " type="file" class="form-control-file" @change="processFile">
+            <input v-if="selected === 'File' " type="file" class="form-control-file" @change="processFile">
             <br/>
-            <textarea v-if="selected == 'Text'" class="form-control" type="file" v-model.lazy="twinAML"
-                      id="twinAML" rows="20" @change="processFile"/>
+            <textarea v-if="selected === 'Text'" class="form-control" type="file" v-model.lazy="twinAML"
+                      id="twinAML" rows="20" @change="processFile"></textarea>
             <br/>
           </div>
         </form>
@@ -42,6 +42,7 @@
 </template>
 
 <script>
+    let utils = window.utils;
     export default {
         name: "CreateTwin",
         data() {
@@ -67,28 +68,27 @@
             addTwin() {
                 let vm = this;
 
-                if (this.twinID === "" || this.twinName === "" || this.twinAML === "" && this.selected === "Text" ) { //|| !web3.utils.isAddress(this.deviceAgent)
+                if (this.twinID === "" || this.twinName === "" || this.twinAML === "" && this.selected === "Text" ) {
                     alert("Empty values are not accepted!");
                 } else {
 
                     this.$store.commit('spinner', true);
                     //upload file to swarm and get swarm hash
-                    let feed = {user: this.account, topic: web3.utils.sha3(vm.twinID)}
                     let hash = this.$swarm.uploadEncryptedDoc(
                             this.twinAML, 'text/plain', this.account,
-                            web3.utils.sha3(vm.twinID), true, this.deviceAgent);
+                            utils.sha3(vm.twinID), true, this.deviceAgent);
 
                     hash.then(hash => {
                         vm.$store.state.contracts.ContractRegistry.registerContract(
                             vm.twinID,
                             vm.twinName,
-                            web3.utils.hexToBytes("0x" + hash),
+                            utils.hexToBytes("0x" + hash),
                             vm.deviceAgent,
                             {
                                 from: vm.account
                             }
                         )
-                        .then(function (result) {
+                        .then(() => {
                             vm.$store.commit('spinner', false);
                             vm.$store.dispatch('loadTwins');
                             vm.$router.push('/');
@@ -102,7 +102,7 @@
             },
             async processFile(event) {
                 try {
-                    if (this.selected == 'File') {
+                    if (this.selected === 'File') {
                         this.twinAML = Buffer.from(await event.target.files[0].arrayBuffer());
                     }
                 } catch (error) {

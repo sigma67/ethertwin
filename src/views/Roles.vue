@@ -12,10 +12,10 @@
       </tr>
       </thead>
       <tbody>
-      <tr v-for="user in usersObject" v-if="user.address !== account">
+      <tr v-for="user in otherUsers(account)" v-bind:key="user.address">
         <td>{{ user.address }}</td>
         <td>{{ user.role }}</td>
-        <td v-if="user.role !== 'Device Agent'">{{ user.attribute.join(", ") }}</td> <td  v-if="user.role == 'Device Agent'"></td>
+        <td v-if="user.role !== 'Device Agent'">{{ user.attribute.join(", ") }}</td> <td  v-if="user.role === 'Device Agent'"></td>
         <td v-if="user.role !== 'Device Agent'" class="actions">
           <button class="acticon" v-on:click="changeRole(user.address, twinObject.address, user.roleNumber)">
             <font-awesome-icon icon="user-circle" data-toggle="tooltip" data-placement="bottom" title="change role"/>
@@ -27,7 +27,7 @@
           <button v-if="user.role !== 'Owner'" class="acticon" v-on:click="removeRole(user.address, twinObject.address, user.roleNumber)">
             <font-awesome-icon icon="trash" data-toggle="tooltip" data-placement="bottom" title="remove user"/>
           </button>
-        </td><td  v-if="user.role == 'Device Agent'"></td>
+        </td><td  v-if="user.role === 'Device Agent'"></td>
       </tr>
       </tbody>
     </table>
@@ -35,6 +35,7 @@
 </template>
 
 <script>
+    let utils = window.utils;
     export default {
         name: "Roles",
         props: {
@@ -49,6 +50,9 @@
             twinObject() {
                 return this.$store.state.twins
                     .filter(f => f.deviceId === this.twin)[0];
+            },
+            otherUsers(account) {
+                return this.usersObject.filter(u => u.address !== account);
             }
         },
         data() {
@@ -108,7 +112,7 @@
                         }
                     },
                     function (dismiss) {
-                        if (dismiss == "cancel") {
+                        if (dismiss === "cancel") {
                             vm.$swal.fire("Cancelled", "Role not altered!", "error");
                         }
                     });
@@ -161,8 +165,8 @@
                                     removeAttributes.push(previousAttributes[k]);
                                 }
                             }
-                            addAttributes.map(web3.utils.hexToBytes);
-                            removeAttributes.map(web3.utils.hexToBytes);
+                            addAttributes.map(utils.hexToBytes);
+                            removeAttributes.map(utils.hexToBytes);
                   
                             //only remove when there are attributes to remove
                             let remove = (removeAttributes.length > 0) ? self.contracts.Authorization.removeAttributes(userAddress, removeAttributes, twinAddress,
@@ -228,7 +232,7 @@
                 components = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].components;
                 let bytesComponents = [];
                 for (let j = 0; j < components.length; j++) { //for all possible attributes
-                    bytesComponents.push(web3.utils.hexToBytes(components[j].hash));
+                    bytesComponents.push(utils.hexToBytes(components[j].hash));
                 }
                 hasAttributes = await this.$store.state.contracts.Authorization.hasAttributes(userAddress, bytesComponents, twinAddress);
                 for (let k = 0; k < hasAttributes.length; k++) {
@@ -254,7 +258,7 @@
                 let loadedRole = await this.loadRole(users[i], twinAddress);
                 if(loadedRole.roleNo.toNumber() === 404) continue; 
                 let loadedAttributes= await this.loadAttributes(users[i], twinAddress);
-                let user = new Object;
+                let user = {};
                 user.address = users[i];
                 user.role = loadedRole.roleString;
                 user.roleNumber = loadedRole.roleNo;

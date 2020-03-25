@@ -31,7 +31,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(source, i) in sources">
+                <tr v-for="(source, i) in sources" v-bind:key="i">
                     <td>{{ source[0] }}</td>
                     <td>{{ source[1] }}</td>
                     <td>

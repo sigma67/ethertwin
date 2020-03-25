@@ -11,7 +11,6 @@ import Roles from './views/Roles.vue'
 import AddSensor from "./views/AddSensor";
 import Components from "./views/Components";
 import Sources from "./views/Sources";
-import Programs from "./views/Programs";
 
 Vue.use(Router);
 
@@ -77,12 +76,6 @@ export default new Router({
       path: '/twin/:twin/documents',
       name: 'documents',
       component: Documents,
-      props: true
-    },
-    {
-      path: '/twin/:twin/programs',
-      name: 'programs',
-      component: Programs,
       props: true
     },
     {

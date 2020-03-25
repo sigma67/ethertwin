@@ -8,7 +8,7 @@
                 <div class="row">
                     <div class="form-group col-md-3">
                         <select id="component" class="form-control" v-model="selectedComponent">
-                            <option v-for="component in twinObject.components" v-bind:value="component.id">{{
+                            <option v-for="component in twinObject.components" v-bind:value="component.id" v-bind:key="component.id">{{
                                 component.name }}
                             </option>
                         </select>
@@ -42,11 +42,11 @@
         <div class="row">
         </div>
 
-        <div v-for="component in components">
+        <div v-for="component in components" v-bind:key="component.id">
             <template v-if="component.documents && component.documents.length > 0">
                 <strong>{{ component.name }}</strong>
                 <hr/>
-                <div class="col-sm-5" v-for="(document, i) in component.documents">
+                <div class="col-sm-5" v-for="(document, i) in component.documents" v-bind:key="i">
                     <div class="card mb-4">
                         <div class="card-body">
                             <p class="card-title">{{ document[0] }}
@@ -54,7 +54,7 @@
                             </p>
                             <p class="card-text">{{ document[1] }}</p>
                             <select id="document" class="form-control mb-3" v-model="document.selectedVersion">
-                                <option v-for="(version, j) in document[2]" v-bind:value="j">Version {{
+                                <option v-for="(version, j) in document[2]" v-bind:value="j" v-bind:key="j">Version {{
                                     document[2].length - j }} ({{$utils.date(version[0])}})
                                 </option>
                             </select>
@@ -86,6 +86,7 @@
 </template>
 
 <script>
+  let utils = window.utils;
   export default {
     name: "Documents.vue",
     data() {
@@ -128,7 +129,7 @@
         if (file.name.length > 29)
           this.file = file.name.slice(0, 29).concat('...');
         else
-          this.file = file.name.split('.')[0]
+          this.file = file.name.split('.')[0];
 
         this.fileType = file.type;
         this.fileObject = file;
@@ -141,7 +142,7 @@
           plaintext,
           file.type,
           this.twinObject.deviceAgent,
-          web3.utils.sha3(component + "doc")
+          utils.sha3(component + "doc")
         );
       },
 
@@ -171,12 +172,12 @@
 
         let file = await this.$swarm.downloadEncryptedDoc(
           this.twinObject.deviceAgent,
-          web3.utils.sha3(component + "doc"),
+          utils.sha3(component + "doc"),
           this.$utils.hexToSwarmHash(hash),
         );
 
-        let blob = new Blob([file.content], {type: file.type})
-        let link = document.createElement('a')
+        let blob = new Blob([file.content], {type: file.type});
+        let link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
         link.setAttribute('download', filename);
         document.body.appendChild(link);
@@ -275,7 +276,7 @@
         this.loadDocuments();
         this.selectedComponent = this.twinObject.components[0].id;
       }
-      this.$store.subscribe((mutation, state) => {
+      this.$store.subscribe((mutation) => {
         if (mutation.type === "addTwinComponents" && mutation.payload.components.length > 0) {
           this.loadDocuments();
           this.selectedComponent = mutation.payload.components[0].id;

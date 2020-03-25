@@ -3,7 +3,7 @@
     <h2>Components of Twin: <small class="text-muted">{{ twinObject.deviceName }}</small></h2><br/>
 
     <br/>
-    <div v-for="(component,i) in twinObject.components" class="card">
+    <div v-for="(component,i) in twinObject.components" v-bind:key="i" class="card">
 
       <div class="card-header" id="headingOne">
         <h5 class="mb-0">
@@ -78,7 +78,7 @@
         async beforeMount() {
             if (this.twinObject.aml)
                 this.specification = this.twinObject.aml;
-            this.$store.subscribe((mutation, state) => {
+            this.$store.subscribe((mutation) => {
                 if (mutation.type === "addTwinComponents") {
                     this.specification = this.twinObject.aml;
                 }

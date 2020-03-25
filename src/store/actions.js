@@ -3,6 +3,8 @@ import TruffleContract from '@truffle/contract'
 import config from '../../config.json'
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const ethereumjs = require('ethereumjs-wallet');
+import utils from 'web3-utils'
+let web3;
 
 function setupWeb3(){
     let wallet;
@@ -19,13 +21,15 @@ function setupWeb3(){
     let webSocketProvider = new Web3.providers.WebsocketProvider(config.ethereum.rpc);
     let provider = new HDWalletProvider([privateKey], webSocketProvider, 0, 1);
     window.web3 = new Web3(provider);
+    web3 = window.web3;
+    window.utils = utils;
     window.web3.eth.defaultAccount = wallet.getAddressString();
     return wallet;
 }
 
 async function getSpecification(address, state){
   //check role of user
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let vm = state;
     let utils = state.utils;
     state.contracts.Authorization.getRole(vm.user.address, address)
@@ -137,8 +141,8 @@ export default{
 
   async loadUsers({commit, state}){
     let users = await state.contracts.Authorization.getUsers();
-    return new Promise((resolve, reject) => {
-      commit('users', users)
+    return new Promise((resolve) => {
+      commit('users', users);
       resolve(users)
     })
   }

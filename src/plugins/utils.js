@@ -5,10 +5,11 @@ let ROLES = {
     DISTRIBUTOR: 3,
     MAINTAINER: 4
   };
+
 export default {
   install(Vue) {
-    Vue.prototype.$utils = {
 
+    Vue.prototype.$utils = {
       enum2String(enumVal) {
         switch (enumVal) {
           case ROLES.DEVICEAGENT:
@@ -32,7 +33,7 @@ export default {
       },
 
       swarmHashToBytes(hash){
-        return web3.utils.hexToBytes("0x" + hash);
+        return window.utils.hexToBytes("0x" + hash);
       },
 
       hexToSwarmHash(hex){

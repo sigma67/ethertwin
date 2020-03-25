@@ -15,8 +15,8 @@
           <ul class="navbar-nav">
             <li class="nav-item dropdown">
                 <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</a>
-              <div class="dropdown-menu" aria-labelledby="navbarDropdown" >
-                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }" v-for="twin in twins" v-if="twins.length > 0" class="dropdown-item" v-bind:class="{'font-weight-bold': twin.deviceId === selectedTwin}">{{ twin.deviceName }}</router-link>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown"  v-if="twins.length > 0">
+                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }" v-for="(twin, i) in twins" v-bind:key="i" class="dropdown-item" v-bind:class="{'font-weight-bold': twin.deviceId === selectedTwin}">{{ twin.deviceName }}</router-link>
               </div>
             </li>
             <template v-if="selectedTwin !== 0">
@@ -39,8 +39,8 @@
                 <router-link :to="{ name: 'programs', params: { twin: selectedTwin  }}" class="nav-link">Programs</router-link>
               </li>-->
             </template>
-            <template v-if="isOwner == true">
-              <li class="nav-item" v-if="true">
+            <template v-if="isOwner">
+              <li class="nav-item">
                 <router-link :to="{ name: 'roles', params: { twin: selectedTwin  }}" class="nav-link">Users</router-link>
               </li>
             </template>
@@ -63,8 +63,7 @@
   import registryAbi from '../public/contracts/ContractRegistry.json'
   import authorizationAbi from '../public/contracts/Authorization.json'
   import specificationAbi from '../public/contracts/Specification.json'
-  let crypto = require('crypto')
-  
+
   export default {
     components: {
       Spinner
@@ -88,11 +87,11 @@
         return this.$store.state.twins
       },
       isOwner() {
-         let twinID= this.$store.state.selectedTwin;
-         for(let i=0; i< this.$store.state.twins.length; i++){
-             if(this.$store.state.twins[i].deviceId === twinID && this.$store.state.twins[i].role === "Owner") return true
-         }
-        }
+        let twinID = this.$store.state.selectedTwin;
+        return this.$store.state.twins
+                .filter(twin => twin.deviceId === twinID && twin.role === "Owner")
+                .length > 0;
+      }
     },
 
     async beforeCreate() {
@@ -102,13 +101,13 @@
         specification: specificationAbi
       };
 
-      if(!this.$store.state.contracts.hasOwnProperty("Authorization")) {
-        this.$store.commit('setSpecificationAbi', ABIs.specification);
-        await this.$store.dispatch('initContracts', ABIs);
-      }
+      //if("Authorization" in this.$store.state.contracts) {
+      this.$store.commit('setSpecificationAbi', ABIs.specification);
+      await this.$store.dispatch('initContracts', ABIs);
+      //}
 
       await this.$store.dispatch('loadTwins');
-      this.$store.dispatch('loadUsers')
+      this.$store.dispatch('loadUsers');
       //create user-icon based on their address when component is mounted (DOM-reachable)
       let address = parseInt(this.account,16); //hex-user-address to int
       let img = jazzicon(50, Math.log(address)*1000);

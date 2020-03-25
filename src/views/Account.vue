@@ -66,6 +66,7 @@
 
 <script>
     const ethereumjs = require('ethereumjs-wallet');
+    const web3 = window.web3;
 
     export default {
         name: "Account",
@@ -87,13 +88,13 @@
                   try {
                     //check if valid
                     let buffer = Buffer.from(this.privateKeyNew, 'hex');
-                    let wallet = ethereumjs.fromPrivateKey(buffer);
+                    ethereumjs.fromPrivateKey(buffer);
                   } catch (e) {
                     console.log(e);
                     this.$swal.fire({
                       type: "warning",
                       title: "Error: Private key does not satisfy the curve requirements (i.e. it is invalid)"
-                    })
+                    });
                     return;
                   }
                 }
@@ -103,13 +104,13 @@
             },
 
             async checkRegistered(){
-              let users = await this.$store.dispatch('loadUsers')
-              users = users.map(u => u.toLowerCase())
+              let users = await this.$store.dispatch('loadUsers');
+              users = users.map(u => u.toLowerCase());
               this.registered = users.includes(this.account)
             },
 
             async register() {
-              await this.$store.state.contracts.Authorization.register({from: this.account})
+              await this.$store.state.contracts.Authorization.register({from: this.account});
               await this.checkRegistered()
             }
         },

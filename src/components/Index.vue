@@ -34,7 +34,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(twin, i) in twins" v-if="twins.length > 0" v-bind:class="{'table-active': twin.deviceId === selectedTwin}">
+                    <tr v-for="(twin, i) in twins" v-bind:key="i" v-bind:class="{'table-active': twin.deviceId === selectedTwin}">
                         <td>{{ twin.deviceName }}</td>
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
@@ -81,6 +81,7 @@
 </template>
 
 <script>
+  let utils = window.utils;
   export default {
     name: 'Index',
     computed: {
@@ -102,7 +103,7 @@
         if (deviceId != null) {
           this.$store.commit('selectTwin', deviceId);
           let twin = this.$store.state.twins.filter(f => f.deviceId === deviceId)[0];
-          if (twin.hasOwnProperty('components')) return;
+          if ('components' in twin) return;
           this.$store.commit('spinner', true);
           let length = await twin.specification.getAMLCount();
           let index = length.toNumber() - 1;
@@ -110,7 +111,7 @@
           //get latest version of specification-AML
           let amlInfo = await twin.specification.getAML(index);
           //get AML from Swarm using aml-hash: amlInfo.hash
-          let aml = (await this.$swarm.downloadEncryptedDoc(twin.owner, web3.utils.sha3(deviceId), this.$utils.hexToSwarmHash(amlInfo.hash))).content;
+          let aml = (await this.$swarm.downloadEncryptedDoc(twin.owner, utils.sha3(deviceId), this.$utils.hexToSwarmHash(amlInfo.hash))).content;
           //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
           // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
           let parser = new DOMParser();
@@ -126,7 +127,7 @@
             if (childNodes[i].nodeName === "InternalElement") {
               let id = childNodes[i].getAttribute("ID");
               let name = childNodes[i].getAttribute("Name");
-              let hash = web3.utils.sha3(id);
+              let hash = utils.sha3(id);
               // add parsed components to the components array
               components.push({id: id, name: name, hash: hash});
             }
@@ -135,7 +136,7 @@
           //filter by attributes
           if (twin.role !== "Owner") {
             let a = this.$store.state.contracts.Authorization;
-            let componentsBytes = components.map(c => web3.utils.hexToBytes(c.hash));
+            let componentsBytes = components.map(c => utils.hexToBytes(c.hash));
             let c = await a.hasAttributes.call(
               this.account,
               componentsBytes,
@@ -208,11 +209,11 @@
                     if (document.getElementById("swal-input3").children[i].children[0].checked == true)
                       attributes.push(document.getElementById("swal-input3").children[i].children[0].value); //hash of component is attribute in authorization contract
                   }
-                  attributes.map(web3.utils.hexToBytes);
+                  attributes.map(utils.hexToBytes);
                   vm.$store.commit('spinner', true);
                   //share specification, add role and attributes
                   Promise.all([
-                    vm.$swarm.shareFileKey(vm.account, web3.utils.sha3(deviceId), address),
+                    vm.$swarm.shareFileKey(vm.account, utils.sha3(deviceId), address),
                     self.contracts.Authorization.addRole(
                       address,
                       Number(role),
@@ -251,7 +252,7 @@
                 }
               },
               function (dismiss) {
-                if (dismiss == "cancel") {
+                if (dismiss === "cancel") {
                   vm.$swal.fire("Cancelled", "Device not shared!", "error");
                 }
               }

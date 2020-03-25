@@ -17,7 +17,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="update in updates">
+                <tr v-for="update in updates" v-bind:key="update.time">
                     <td>{{ $utils.date(update.time) }}</td>
                     <td>{{ update.content }}</td>
                 </tr>
