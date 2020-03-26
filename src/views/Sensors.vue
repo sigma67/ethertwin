@@ -56,7 +56,6 @@
 </template>
 
 <script>
-  let utils = window.utils;
   export default {
     name: "Sensors.vue",
     data() {
@@ -103,7 +102,7 @@
       async addSensor(){
         let hash = await this.$swarm.createFeed(
           this.twinObject.deviceAgent,
-          utils.sha3(this.selectedComponent + this.sensors.length)
+          window.web3.utils.sha3(this.selectedComponent + this.sensors.length)
         );
 
         await this.specification.addSensor(
@@ -136,7 +135,7 @@
       },
 
       async loadSensor(component) {
-        let componentHash = utils.sha3(component.id);
+        let componentHash = window.web3.utils.sha3(component.id);
         let count = await this.specification.getSensorCount(component.id);
         for(let i = 0; i < count.toNumber(); i++){
           let sensor = await this.specification.sensors(componentHash,i);

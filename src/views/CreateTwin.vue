@@ -42,7 +42,6 @@
 </template>
 
 <script>
-    let utils = window.utils;
     export default {
         name: "CreateTwin",
         data() {
@@ -76,13 +75,13 @@
                     //upload file to swarm and get swarm hash
                     let hash = this.$swarm.uploadEncryptedDoc(
                             this.twinAML, 'text/plain', this.account,
-                            utils.sha3(vm.twinID), true, this.deviceAgent);
+                            window.web3.utils.sha3(vm.twinID), true, this.deviceAgent);
 
                     hash.then(hash => {
                         vm.$store.state.contracts.ContractRegistry.registerContract(
                             vm.twinID,
                             vm.twinName,
-                            utils.hexToBytes("0x" + hash),
+                            window.web3.utils.hexToBytes("0x" + hash),
                             vm.deviceAgent,
                             {
                                 from: vm.account

@@ -72,7 +72,6 @@
 </template>
 
 <script>
-  let utils = window.web3;
   export default {
       name: "Specification",
       data() {
@@ -117,7 +116,7 @@
               this.version = versionNumber;
               this.author = version[1];
               let hash = this.$utils.hexToSwarmHash(version[2]);
-              this.$swarm.downloadEncryptedDoc(this.twinObject.owner, utils.sha3(this.twinObject.deviceId), hash)
+              this.$swarm.downloadEncryptedDoc(this.twinObject.owner, window.web3.utils.sha3(this.twinObject.deviceId), hash)
                       .then(doc => {
                           vm.aml = doc.content;
                           // highlighting
@@ -130,10 +129,10 @@
                 this.aml,
                 'text/plain',
                 this.twinObject.owner,//todo replace with deviceagent
-                utils.sha3(this.twinObject.deviceId)
+                window.web3.utils.sha3(this.twinObject.deviceId)
               ).then(hash => {
                   vm.specification.addNewAMLVersion.sendTransaction(
-                      utils.hexToBytes("0x" + hash),
+                      window.web3.utils.hexToBytes("0x" + hash),
                       {from: vm.account}
                   ).then(() => {
                       vm.loadVersions();
@@ -149,7 +148,7 @@
               let vm = this;
               this.$swarm.uploadDoc(Buffer.from(await this.fileObject.arrayBuffer()), 'text/plain').then(hash => {
                   vm.specification.addNewAMLVersion.sendTransaction(
-                          utils.hexToBytes("0x" + hash),
+                          window.web3.utils.hexToBytes("0x" + hash),
                           {from: vm.account}
                   ).then(() => {
                       vm.loadVersions();

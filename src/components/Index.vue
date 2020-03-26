@@ -81,7 +81,6 @@
 </template>
 
 <script>
-  let utils = window.utils;
   export default {
     name: 'Index',
     computed: {
@@ -111,7 +110,7 @@
           //get latest version of specification-AML
           let amlInfo = await twin.specification.getAML(index);
           //get AML from Swarm using aml-hash: amlInfo.hash
-          let aml = (await this.$swarm.downloadEncryptedDoc(twin.owner, utils.sha3(deviceId), this.$utils.hexToSwarmHash(amlInfo.hash))).content;
+          let aml = (await this.$swarm.downloadEncryptedDoc(twin.owner, window.web3.utils.sha3(deviceId), this.$utils.hexToSwarmHash(amlInfo.hash))).content;
           //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
           // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
           let parser = new DOMParser();
@@ -127,7 +126,7 @@
             if (childNodes[i].nodeName === "InternalElement") {
               let id = childNodes[i].getAttribute("ID");
               let name = childNodes[i].getAttribute("Name");
-              let hash = utils.sha3(id);
+              let hash = window.web3.utils.sha3(id);
               // add parsed components to the components array
               components.push({id: id, name: name, hash: hash});
             }
@@ -136,7 +135,7 @@
           //filter by attributes
           if (twin.role !== "Owner") {
             let a = this.$store.state.contracts.Authorization;
-            let componentsBytes = components.map(c => utils.hexToBytes(c.hash));
+            let componentsBytes = components.map(c => window.web3.utils.hexToBytes(c.hash));
             let c = await a.hasAttributes.call(
               this.account,
               componentsBytes,
@@ -209,11 +208,11 @@
                     if (document.getElementById("swal-input3").children[i].children[0].checked == true)
                       attributes.push(document.getElementById("swal-input3").children[i].children[0].value); //hash of component is attribute in authorization contract
                   }
-                  attributes.map(utils.hexToBytes);
+                  attributes.map(window.web3.utils.hexToBytes);
                   vm.$store.commit('spinner', true);
                   //share specification, add role and attributes
                   Promise.all([
-                    vm.$swarm.shareFileKey(vm.account, utils.sha3(deviceId), address),
+                    vm.$swarm.shareFileKey(vm.account, window.web3.utils.sha3(deviceId), address),
                     self.contracts.Authorization.addRole(
                       address,
                       Number(role),

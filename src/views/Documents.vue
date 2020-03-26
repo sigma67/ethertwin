@@ -86,7 +86,6 @@
 </template>
 
 <script>
-  let utils = window.utils;
   export default {
     name: "Documents.vue",
     data() {
@@ -142,7 +141,7 @@
           plaintext,
           file.type,
           this.twinObject.deviceAgent,
-          utils.sha3(component + "doc")
+          window.web3.utils.sha3(component + "doc")
         );
       },
 
@@ -172,7 +171,7 @@
 
         let file = await this.$swarm.downloadEncryptedDoc(
           this.twinObject.deviceAgent,
-          utils.sha3(component + "doc"),
+          window.web3.utils.sha3(component + "doc"),
           this.$utils.hexToSwarmHash(hash),
         );
 

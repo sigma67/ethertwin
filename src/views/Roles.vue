@@ -35,7 +35,6 @@
 </template>
 
 <script>
-    let utils = window.utils;
     export default {
         name: "Roles",
         props: {
@@ -165,8 +164,8 @@
                                     removeAttributes.push(previousAttributes[k]);
                                 }
                             }
-                            addAttributes.map(utils.hexToBytes);
-                            removeAttributes.map(utils.hexToBytes);
+                            addAttributes.map(window.web3.utils.hexToBytes);
+                            removeAttributes.map(window.web3.utils.hexToBytes);
                   
                             //only remove when there are attributes to remove
                             let remove = (removeAttributes.length > 0) ? self.contracts.Authorization.removeAttributes(userAddress, removeAttributes, twinAddress,
@@ -232,7 +231,7 @@
                 components = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].components;
                 let bytesComponents = [];
                 for (let j = 0; j < components.length; j++) { //for all possible attributes
-                    bytesComponents.push(utils.hexToBytes(components[j].hash));
+                    bytesComponents.push(window.web3.utils.hexToBytes(components[j].hash));
                 }
                 hasAttributes = await this.$store.state.contracts.Authorization.hasAttributes(userAddress, bytesComponents, twinAddress);
                 for (let k = 0; k < hasAttributes.length; k++) {

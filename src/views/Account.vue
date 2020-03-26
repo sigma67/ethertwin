@@ -66,7 +66,6 @@
 
 <script>
     const ethereumjs = require('ethereumjs-wallet');
-    const web3 = window.web3;
 
     export default {
         name: "Account",
@@ -117,7 +116,7 @@
         async beforeMount() {
              this.pubKey = this.$store.state.user.wallet.getPublicKey().toString('hex');
              this.privKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
-             let balanceTenEightteen = await web3.eth.getBalance(this.account);
+             let balanceTenEightteen = await window.web3.eth.getBalance(this.account);
              this.balance = (balanceTenEightteen/Math.pow(10,18));
 
              this.checkRegistered()
