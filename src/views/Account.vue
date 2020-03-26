@@ -7,6 +7,15 @@
     <table class="table table-hover">
       <tbody>
       <tr>
+          <td scope="row">Network</td>
+          <td>
+              <font-awesome-icon icon="project-diagram" data-placement="left" title="network"/>
+          </td>
+          <td>
+              {{ this.network }}
+          </td>
+      </tr>
+      <tr>
         <td scope="row">Address</td>
         <td>
           <font-awesome-icon icon="address-card" data-placement="left" title="address"/>
@@ -26,8 +35,8 @@
       </tr>
       <tr>
         <td scope="row" style="width:7em;">Public key</td>
-        <td>          
-          <font-awesome-icon icon="key" data-placement="left" title="public key"/>
+        <td>
+          <font-awesome-icon icon="lock-open" data-placement="left" title="unlock key"/>
         </td>
         <td>
           <span style="word-wrap: break-word; word-break: break-all;">
@@ -37,8 +46,8 @@
       </tr>
       <tr>
         <td scope="row">Private key</td>
-        <td>   
-          <font-awesome-icon icon="key" data-placement="left" title="private key"/>
+        <td>
+          <font-awesome-icon icon="lock" data-placement="left" title="unlock key"/>
         </td>
         <td>
           {{ this.privKey }}
@@ -78,7 +87,8 @@
             return{
                 balance: 0,
                 privateKeyNew: '',
-                registered: false
+                registered: false,
+                network: ''
             }
         },
         methods: {
@@ -118,6 +128,7 @@
              this.privKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
              let balanceTenEightteen = await window.web3.eth.getBalance(this.account);
              this.balance = (balanceTenEightteen/Math.pow(10,18));
+             this.network = await window.web3.eth.net.getNetworkType();
 
              this.checkRegistered()
         }
