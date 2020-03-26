@@ -21,9 +21,10 @@ const c = require('crypto');
 const ecies = require('eth-ecies');
 
 /** Config **/
-let privateKey = "90cecdf9597eb555edce7a4fbf780e8e7b1bd3123a13b8acb045ff9641752eea";
-let publicKey = "a82623416dc0925330432ac5e34719d0e4e00ca305d283eee94aff2ec63a58f06e2a8ff83af1a5e05a70037a944f4366f486c32c26fa31de23dbb161cd3d1956";
-let address = "0x472c27020ed212627d3087ad546e21d220fb1c49";
+let privateKey = config.agent_key
+let wallet = ethereumjs.fromPrivateKey(new Buffer(privateKey, 'hex'));
+let publicKey = wallet.getPublicKey().toString('hex');
+let address = wallet.getAddressString();
 
 /** Swarm Setup **/
 let keyPair = secp256k1.createKeyPair(privateKey);
@@ -47,7 +48,6 @@ var engine = new ProviderEngine();
 let web3 = new Web3(engine);
 engine.addProvider(new FixtureSubprovider());
 engine.addProvider(new FilterSubprovider());
-let wallet = ethereumjs.fromPrivateKey(new Buffer(privateKey, 'hex'));
 engine.addProvider(new WalletSubprovider(wallet));
 engine.addProvider(new WebsocketSubprovider({rpcUrl: config.ethereum.rpc}));
 engine.start();
@@ -89,6 +89,7 @@ async function createKeys(data){
   //add own address and publicKey
   users.push(address);
   usersPublicKeys.push(publicKey);
+  console.log(users)
 
   //check for each valid user and each component if the user has the attribute
   await Promise.all(components.map(component => createAllKeys(component, data.returnValues.contractAddress, users, usersPublicKeys)));
@@ -225,12 +226,12 @@ async function getSpecification(address){
 }
 
 async function downloadEncryptedDoc(user, topic, hash) {
-  user = user.toLowerCase();
   let key = await getFileKey(user, topic);
-  let response = await client.downloadData(hash);
+  let response = await client.download(hash);
+  let res = await response.json();
   return {
-    content: decryptAES(response.encryptedData, key, response.iv),
-    type: response.type
+    content: decryptAES(res.encryptedData, key, res.iv),
+    type: res.type
   };
 }
 
