@@ -4,10 +4,10 @@
         <div class="col">
             <h2>Sensor Feed:   <small class="text-muted">{{ sensorData.name }}</small></h2>
         </div>
-            <a href="#" class="btn btn-primary" v-on:click="addEntry">
+            <button href="#" class="btn btn-primary" v-on:click="addEntry" :disabled="!submitEnabled">
                 <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add entry"/>
                 Add random entry
-            </a>
+            </button>
         </div><br />
         <table class="table table-hover">
             <thead>
@@ -17,7 +17,8 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="update in updates" v-bind:key="update.time">
+                <tr v-if="!updates.length"><td>No updates found</td></tr>
+                <tr v-for="(update, i) in updates" v-bind:key="i">
                     <td>{{ $utils.date(update.time) }}</td>
                     <td>{{ update.content }}</td>
                 </tr>
@@ -33,7 +34,8 @@
       return {
         sensorData: {},
         swarmHash: "",
-        updates: []
+        updates: [],
+        submitEnabled: true
       }
     },
     computed: {
@@ -49,6 +51,10 @@
     },
     methods: {
       async addEntry(){
+        this.submitEnabled = false;
+        setTimeout(() => {
+          this.submitEnabled = true;
+        }, 1000);
         await this.$swarm.updateFeed(this.swarmHash, Math.random());
         let update = await this.$swarm.getFeedItemJson(this.swarmHash, (new Date()) / 1000 - 1);
         this.updates.unshift(update);
@@ -61,7 +67,7 @@
       },
 
       async loadUpdates(){
-        this.updates = await this.$swarm.getFeedUpdates(this.swarmHash, 600);
+        this.updates = await this.$swarm.getFeedUpdates(this.swarmHash, 10);
       }
     },
     async beforeMount() {

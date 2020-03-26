@@ -94,11 +94,14 @@ export default {
        */
       async updateFeed(feedHash, contents) {
         try {
+          let options = {contentType: "application/json"};
+          let meta = await feed.getMetadata(feedHash);
           let update = {
-            time: Math.floor(new Date() / 1000),
+            time: meta.epoch.time,
             content: contents
           };
-          await feed.setContent(feedHash, JSON.stringify(update), {contentType: "application/json"})
+          let hash = await client.uploadFile(JSON.stringify(update), options);
+          await feed.postChunk(meta, `0x${hash}`, options);
         } catch (err) {
           alert(err);
         }
@@ -107,29 +110,24 @@ export default {
       /** Retrieve past feed updates
        *
        * @param feedHash Feed manifest hash
-       * @param pastInterval Time in s to go back in time
+       * @param count Number of updates to get
        * @returns {Promise<*>}
        */
-      async getFeedUpdates(feedHash, pastInterval) {
+      async getFeedUpdates(feedHash, count) {
         let updates = Array();
         try {
           //only retrieves latest content
           let content = await this.getFeedItemJson(feedHash);
           updates.push(content);
+          let lastTime = content.time - 1;
 
-          let currentTime = Math.floor(Date.now() / 1000);
-          let lastTime = content.time;
-
-          //get past updates until time - pastInterval
-          while (lastTime > currentTime - pastInterval) {
-            let content = await this.getFeedItemJson(feedHash, lastTime - 2);
-            console.log(content.time);
-            if(lastTime === content.time)
-              break;
-            else {
-              updates.push(content);
-              lastTime = content.time;
-            }
+          //get past n updates
+          while (updates.length < count) {
+            let content = await this.getFeedItemJson(feedHash, lastTime);
+            lastTime = lastTime === content.time ?
+                content.time - 1 :
+                content.time;
+            updates.push(content);
           }
         } catch (err) {
           console.log(err.toString());
