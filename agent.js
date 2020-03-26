@@ -86,10 +86,11 @@ async function createKeys(data){
   users = users.filter((u, ind) => usersRoles[ind] < 5);
 
   let usersPublicKeys = await Promise.all(users.map(getUserFeedText));
-  //add own address and publicKey
-  users.push(address);
-  usersPublicKeys.push(publicKey);
-  console.log(users)
+  //add own address and publicKey if not included
+  if(!users.map(u => u.toLowerCase()).includes(address)){
+    users.push(address);
+    usersPublicKeys.push(publicKey);
+  }
 
   //check for each valid user and each component if the user has the attribute
   await Promise.all(components.map(component => createAllKeys(component, data.returnValues.contractAddress, users, usersPublicKeys)));
