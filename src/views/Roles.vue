@@ -49,9 +49,6 @@
             twinObject() {
                 return this.$store.state.twins
                     .filter(f => f.deviceId === this.twin)[0];
-            },
-            otherUsers(account) {
-                return this.usersObject.filter(u => u.address !== account);
             }
         },
         data() {
@@ -60,6 +57,10 @@
             }
         },
         methods: {
+            otherUsers(account) {
+              return this.usersObject.filter(u => u.address !== account);
+            },
+
             async changeRole(userAddress, twinAddress, userOldRoleNumber) {
                 let self = this.$store.state;
                 let vm = this;
