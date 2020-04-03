@@ -159,7 +159,7 @@
         })
           .then(function (result) {
             if (result.value) {
-              vm.contracts.Authorization.removeRole(vm.account, role, twinAddress, {from: vm.account})
+              vm.contracts.Authorization.removeRole(vm.account, role.toNumber(), twinAddress, {from: vm.account})
                 .then(function () {
                   vm.$store.commit('removeTwin', twinAddress);
 
