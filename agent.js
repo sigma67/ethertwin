@@ -292,7 +292,7 @@ async function getFileKey(user, topic) {
     topic: topic
   });
   let fileKeys = await content.json();
-  let keyObject = fileKeys.filter(f => f.address === address)[0];
+  let keyObject = fileKeys.filter(f => f.address.toLowerCase() === address.toLowerCase())[0];
   let plainKey = decryptECIES(privateKey, keyObject.fileKey);
   return Buffer.from(plainKey, 'base64');
 }
