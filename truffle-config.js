@@ -60,9 +60,9 @@ module.exports = {
       network_id: '*'
     },
     pi: {
-      host: "132.199.123.57",
-      port: "8545",
-      network_id: "*"
+      host: "132.199.123.240",
+      port: "7545",
+      network_id: "66"
     }
 
 
