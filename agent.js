@@ -19,6 +19,8 @@ const Specification = require('./public/contracts/Specification.json');
 //crypto
 const c = require('crypto');
 const ecies = require('eth-ecies');
+//temperature
+const vcgencmd = require('vcgencmd');
 
 /** Config **/
 let privateKey = config.agent_key
@@ -58,6 +60,23 @@ let authContract = TruffleContract(Authorization);
 authContract.setProvider(web3.currentProvider);
 
 subscribe();
+probeTemperature()
+
+async function probeTemperature(){
+  let feedHash = "8ff71c988265ccdb70841eebf26690dc7f0fdda234bfc4d72fd8cf5613c4ae90";
+  while(1){
+    //let temp = vcgencmd.measureTemp()
+    let temp = Math.random().toString()
+    updateFeed(feedHash, temp)
+    await sleep(1000)
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 async function subscribe() {
   await web3.eth.net.getId();
@@ -251,6 +270,20 @@ async function getUserFeedLatest(user, topic) {
 
 async function updateFeedSimple(feedParams, update){
   return feed.setContent(feedParams, JSON.stringify(update), {contentType: "application/json"})
+}
+
+async function updateFeed(feedHash, contents) {
+  let options = {contentType: "application/json"};
+  let meta = await feed.getMetadata(feedHash);
+  let update = {
+    time: meta.epoch.time,
+    content: contents
+  };
+  let hash = await client.uploadFile(JSON.stringify(update), options);
+  try {
+    await feed.postChunk(meta, `0x${hash}`, options);
+  }
+  catch(err){console.log(err)}
 }
 
 async function getFileKey(user, topic) {
