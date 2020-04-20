@@ -34,7 +34,7 @@
     "web3": "^1.2.6",
     "web3-provider-engine": "^15.0.7",
     "web3-utils": "^1.2.6",
-    "xmldom": "^0.3.0"
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.2.3",

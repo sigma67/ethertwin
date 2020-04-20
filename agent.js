@@ -19,6 +19,9 @@ const Specification = require('./public/contracts/Specification.json');
 //crypto
 const c = require('crypto');
 const ecies = require('eth-ecies');
+//sensor data
+const fs = require('fs');
+const xml2js = require('xml2js');
 
 /** Config **/
 let privateKey = config.agent_key
@@ -58,6 +61,47 @@ let authContract = TruffleContract(Authorization);
 authContract.setProvider(web3.currentProvider);
 
 subscribe();
+pushSensorData()
+
+async function pushSensorData(){
+  let samples = await getSamples();
+  let feedHash = "8ff71c988265ccdb70841eebf26690dc7f0fdda234bfc4d72fd8cf5613c4ae90";
+  while(1){
+    let logs = []
+    let totalDuration = 0
+    for await (log of samples.logset.log) {
+      logs.push(log)
+      let duration = Number(log.duration)
+      log.duration = Number(log.duration).toFixed(1)
+
+      //action takes more than 1s -> directly send
+      if(duration >= 1000 && totalDuration === 0){
+        await updateFeed(feedHash, log)
+        console.log(duration)
+        await sleep(duration)
+      }
+      //action takes less than 1s -> batch until > 1s
+      else if(totalDuration > 1000){
+        await updateFeed(feedHash, logs)
+        await sleep(totalDuration)
+        console.log(totalDuration)
+        totalDuration = 0
+        logs = []
+      }
+      else {
+        totalDuration = totalDuration + duration;
+        logs.push(log)
+        await sleep(100)
+      }
+    }
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 async function subscribe() {
   await web3.eth.net.getId();
@@ -193,24 +237,16 @@ async function getComponents(deviceId, amlHash, owner){
   let aml = (await downloadEncryptedDoc(owner, web3.utils.sha3(deviceId), amlHash.substr(2, amlHash.length))).content.toString();
   //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
   // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
-  var DomParser = require('xmldom').DOMParser;
-  let parser = new DomParser();
-  let amlDoc = parser.parseFromString(aml, "text/xml");
-  let instanceHierarchy = amlDoc.getElementsByTagName("InstanceHierarchy");
-
-  //all child nodes are high-level components
-  let childNodes = instanceHierarchy[0].childNodes;
+  let amlDoc = parseXML(aml)
   let components = [];
-  for (let i = 0; i < childNodes.length; i++) {
-    //all children of type "InternalElement" are high-level components
-    if (childNodes[i].nodeName === "InternalElement") {
-      let id = childNodes[i].getAttribute("ID");
-      let name = childNodes[i].getAttribute("Name");
-      let hash = web3.utils.sha3(id);
-      // add parsed components to the components array
-      components.push({id: id, name: name, hash: hash});
-    }
+  for (log of amlDoc.CAEXFile.InstanceHierarchy[0].InternalElement) {
+    let id = log.$.ID
+    let name = log.$.Name
+    let hash = web3.utils.sha3(id);
+    // add parsed components to the components array
+    components.push({id: id, name: name, hash: hash});
   }
+
   return components;
 }
 
@@ -219,12 +255,36 @@ async function getUsers(){
   return auth.getUsers();
 }
 
-/** HELPERS */
+/**
+ * HELPERS
+ */
+
 async function getSpecification(address){
   let truffle = TruffleContract(Specification);
   truffle.setProvider(web3.currentProvider);
   return await truffle.at(address)
 }
+
+async function getSamples(){
+  return new Promise((resolve, reject) => {
+    fs.readFile(__dirname + '/misc/logs.xml', function(err, data) {
+      resolve(parseXML(data))
+    });
+  });
+}
+
+async function parseXML(xml){
+  let parser = new xml2js.Parser();
+  return new Promise((resolve, reject) => {
+    parser.parseString(xml, function (err, result) {
+      resolve(result);
+    });
+  });
+}
+
+/**
+ * SWARM + CRYPTO HELPERS
+ */
 
 async function downloadEncryptedDoc(user, topic, hash) {
   let key = await getFileKey(user, topic);
@@ -251,6 +311,20 @@ async function getUserFeedLatest(user, topic) {
 
 async function updateFeedSimple(feedParams, update){
   return feed.setContent(feedParams, JSON.stringify(update), {contentType: "application/json"})
+}
+
+async function updateFeed(feedHash, contents) {
+  let options = {contentType: "application/json"};
+  let meta = await feed.getMetadata(feedHash);
+  let update = {
+    time: meta.epoch.time,
+    content: contents
+  };
+  let hash = await client.uploadFile(JSON.stringify(update), options);
+  try {
+    return await feed.postChunk(meta, `0x${hash}`, options);
+  }
+  catch(err){console.log(err)}
 }
 
 async function getFileKey(user, topic) {

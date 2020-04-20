@@ -26,3 +26,4 @@ public/contracts/*
 /network/
 
 config.json
+**.xml
