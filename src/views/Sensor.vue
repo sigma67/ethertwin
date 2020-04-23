@@ -23,7 +23,7 @@
             <tbody>
                 <tr v-if="!updates.length"><td>No updates found</td></tr>
                 <tr v-for="(update, i) in updates" v-bind:key="i">
-                    <td class="col-3" >{{ $utils.date(update.time) }}</td>
+                    <td width="25%" >{{ $utils.date(update.time) }}</td>
                     <td>
                         <vue-json-pretty
                                 :showLength="true"
