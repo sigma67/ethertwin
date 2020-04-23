@@ -228,7 +228,6 @@
                       }
                     )
                   ]).then(function () {
-                    vm.$store.commit('spinner', false);
                     vm.$swal.fire({
                       type: "success",
                       title: "Account has been successfully added.",
@@ -247,7 +246,11 @@
                         showConfirmButton: false,
                         timer: 6000
                       });
-                    });
+                    })
+                    .finally(() => {
+                      vm.$store.commit('spinner', false);
+                    })
+                  ;
                 }
               },
               function (dismiss) {

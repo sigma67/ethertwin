@@ -87,7 +87,7 @@
             return{
                 balance: 0,
                 privateKeyNew: '',
-                registered: false,
+                registered: true,
                 network: ''
             }
         },

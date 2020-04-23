@@ -203,6 +203,7 @@
           if (files.length === 0) return;
           let file = files[0];
 
+          this.$store.commit('spinner', true);
           let hash = await this.encryptAndUpload(file, componentId);
 
           await this.specification.addDocumentVersion(

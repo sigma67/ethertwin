@@ -4,9 +4,13 @@
         <div class="col">
             <h2>Sensor Feed:   <small class="text-muted">{{ sensorData.name }}</small></h2>
         </div>
-            <button href="#" class="btn btn-primary" v-on:click="addEntry" :disabled="!submitEnabled">
+            <!--<button href="#" class="btn btn-primary" v-on:click="addEntry" :disabled="!submitEnabled">
                 <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add entry"/>
                 Add random entry
+            </button>-->
+            <button href="#" class="btn btn-primary" v-on:click="loadUpdates" :disabled="!submitEnabled">
+                <font-awesome-icon id="createIcon" icon="sync-alt" data-toggle="tooltip" data-placement="bottom" title="add entry"/>
+                Refresh
             </button>
         </div><br />
         <table class="table table-hover">
@@ -19,8 +23,14 @@
             <tbody>
                 <tr v-if="!updates.length"><td>No updates found</td></tr>
                 <tr v-for="(update, i) in updates" v-bind:key="i">
-                    <td>{{ $utils.date(update.time) }}</td>
-                    <td>{{ update.content }}</td>
+                    <td class="col-3" >{{ $utils.date(update.time) }}</td>
+                    <td>
+                        <vue-json-pretty
+                                :showLength="true"
+                                :deep="1"
+                                :data="update.content">
+                        </vue-json-pretty>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -28,8 +38,13 @@
 </template>
 
 <script>
+  import VueJsonPretty from 'vue-json-pretty'
+
   export default {
     name: "Sensor.vue",
+    components: {
+      VueJsonPretty
+    },
     data() {
       return {
         sensorData: {},
@@ -67,7 +82,9 @@
       },
 
       async loadUpdates(){
+        this.$store.commit('spinner', true);
         this.updates = await this.$swarm.getFeedUpdates(this.swarmHash, 10);
+        this.$store.commit('spinner', false);
       }
     },
     async beforeMount() {

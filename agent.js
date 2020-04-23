@@ -105,8 +105,12 @@ function sleep(ms) {
 
 async function subscribe() {
   await web3.eth.net.getId();
-  let registry = await registryContract.deployed();
-  let auth = await authContract.deployed();
+  let registry = await ((config.ethereum.registry) ?
+    registryContract.at(config.ethereum.registry) :
+    registryContract.deployed());
+  let auth = await ((config.ethereum.authorization) ?
+    authContract.at(config.ethereum.authorization) :
+    authContract.deployed());
 
   registry.TwinCreated({}, (error, data) => {
     if (error)
@@ -237,7 +241,7 @@ async function getComponents(deviceId, amlHash, owner){
   let aml = (await downloadEncryptedDoc(owner, web3.utils.sha3(deviceId), amlHash.substr(2, amlHash.length))).content.toString();
   //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
   // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
-  let amlDoc = parseXML(aml)
+  let amlDoc = await parseXML(aml)
   let components = [];
   for (log of amlDoc.CAEXFile.InstanceHierarchy[0].InternalElement) {
     let id = log.$.ID

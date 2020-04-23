@@ -111,7 +111,7 @@
             }
         },
         beforeMount(){
-          this.deviceAgent = this.account;
+          this.deviceAgent = "0x472c27020ed212627d3087ad546e21d220fb1c49"//this.account;
         }
     }
 
