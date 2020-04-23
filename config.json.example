@@ -1,8 +1,9 @@
 {
   "swarm": "http://132.199.123.236:5000",
   "ethereum": {
-    "rpc": "http://localhost:7545",
+    "rpc": "ws://localhost:7545",
     "registry": "0x98abd356b17C8CD88d2321F219C04B825746B29D",
     "authorization": "0x9BDbCe5F41648d0C5F8ef2D05BfB8A52997f4e21"
   }
+  "agent_key": "90cecdf9597eb555edce7a4fbf780e8e7b1bd3123a13b8acb045ff9641752eea"
 }

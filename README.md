@@ -49,6 +49,7 @@ Note that the values for the `registry` and `authorization` are optional:
     "registry": "<RegistryContractAddress>",
     "authorization": "<AuthorizationContractAddress>"
   }
+  "agent_key": "<ethereum private key for device agent>"
 }
 ```
 
