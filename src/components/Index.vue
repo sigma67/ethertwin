@@ -66,7 +66,7 @@
                                                title="share twin"/>
                             </span>
                             <span v-on:click="removeRole(twin.address, twin.roleNo)" class="px-2">
-                                <font-awesome-icon icon="trash" data-placement="bottom" title="remove role"/>
+                                <font-awesome-icon icon="trash" data-placement="bottom" title="remove role from twin"/>
                               </span>
                         </td>
                     </tr>
