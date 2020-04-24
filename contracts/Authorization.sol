@@ -69,15 +69,17 @@ contract Authorization {
         permissions[_contract][uint(RBAC.OWNER)][uint(PERMISSION.SENSOR_DELETE)] = true;
         permissions[_contract][uint(RBAC.OWNER)][uint(PERMISSION.SPECIFICATION_UPDATE)] = true;
 
-        permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.TWIN_CREATE)] = true;
         permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.DOC_CREATE)] = true;
         permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.DOC_READ)] = true;
         permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.DOC_UPDATE)] = true;
+        permissions[_contract][uint(RBAC.MANUFACTURER)][uint(PERMISSION.SENSOR_READ)] = true;
 
         permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.DOC_CREATE)] = true;
         permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.DOC_READ)] = true;
         permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.DOC_UPDATE)] = true;
         permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.SENSOR_CREATE)] = true;
+        permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.SENSOR_READ)] = true;
+        permissions[_contract][uint(RBAC.MAINTAINER)][uint(PERMISSION.SENSOR_UPDATE)] = true;
 
         permissions[_contract][uint(RBAC.DISTRIBUTOR)][uint(PERMISSION.DOC_CREATE)] = true;
         permissions[_contract][uint(RBAC.DISTRIBUTOR)][uint(PERMISSION.DOC_READ)] = true;
