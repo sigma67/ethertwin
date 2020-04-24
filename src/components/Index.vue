@@ -1,15 +1,23 @@
 <template>
     <div class="container mt-5">
-        <div class="row justify-content-sm-center">
+        <div class="row">
             <div class="col">
                 <h2>Digital Twin Overview</h2>
-                <p>Select a twin by clicking an action or choosing from the menu dropdown.</p>
             </div>
-            <div class="col-md-1 mr-0"><br/>
+        </div>
+        <div class="row h-100">
+            <div class="col my-auto">
+                <div>Add a new twin or select a twin by clicking on an action.</div>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary float-right ml-1 mb-2" v-on:click="reload">
+                    <font-awesome-icon class="createIcon" icon="sync-alt" data-toggle="tooltip" data-placement="bottom" title="refresh"/>
+                    Refresh
+                </button>
                 <router-link :to="{ name: 'twin-create' }">
-                    <button type="submit" class="acticon">
-                        <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip"
-                                           data-placement="bottom" title="add twin"/>
+                    <button class="btn btn-dark float-right">
+                        <font-awesome-icon class="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="refresh"/>
+                        Add Twin
                     </button>
                 </router-link>
             </div>
@@ -211,7 +219,7 @@
                   attributes.map(window.web3.utils.hexToBytes);
                   vm.$store.commit('spinner', true);
                   //share specification, add role and attributes
-                  Promise.all([
+                  let transactions = [
                     vm.$swarm.shareFileKey(vm.account, window.web3.utils.sha3(deviceId), address),
                     self.contracts.Authorization.addRole(
                       address,
@@ -219,15 +227,19 @@
                       deviceAddress,
                       {
                         from: vm.account
-                      }),
-                    self.contracts.Authorization.addAttributes(address,
-                      attributes,
-                      deviceAddress,
-                      {
-                        from: vm.account
-                      }
+                      })];
+                  if (attributes.length > 0){
+                    transactions.push(
+                      self.contracts.Authorization.addAttributes(address,
+                        attributes,
+                        deviceAddress,
+                        {
+                          from: vm.account
+                        }
+                      )
                     )
-                  ]).then(function () {
+                  }
+                  Promise.all(transactions).then(function () {
                     vm.$swal.fire({
                       type: "success",
                       title: "Account has been successfully added.",
@@ -260,6 +272,12 @@
               }
             );
           })
+      },
+
+      async reload(){
+        this.$store.commit('spinner', true);
+        await this.$store.dispatch('loadTwins');
+        this.$store.commit('spinner', false);
       }
     }
   }
@@ -288,7 +306,7 @@
         background-color: transparent;
     }
 
-    #createIcon {
+    .icon {
         width: 30px;
         height: 30px;
     }
