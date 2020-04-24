@@ -16,7 +16,12 @@
             <li class="nav-item dropdown">
                 <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twins</a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown"  v-if="twins.length > 0">
-                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }" v-for="(twin, i) in twins" v-bind:key="i" class="dropdown-item" v-bind:class="{'font-weight-bold': twin.deviceId === selectedTwin}">{{ twin.deviceName }}</router-link>
+                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }"
+                             v-for="(twin, i) in twins" v-bind:key="i" class="dropdown-item"
+                             v-bind:class="{'font-weight-bold': twin.deviceId === selectedTwin}"
+                             v-on:click.native="parseAML(twin.deviceId, i)">
+                  {{ twin.deviceName }}
+                </router-link>
               </div>
             </li>
             <template v-if="selectedTwin !== 0">
@@ -71,6 +76,15 @@
     data(){
       return {
         twin: null,
+      }
+    },
+    methods: {
+      async parseAML(id, index){
+        return this.$store.dispatch('parseAML', {
+          deviceId: id,
+          twinIndex: index,
+          vm: this
+        })
       }
     },
     computed: {

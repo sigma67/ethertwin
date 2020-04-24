@@ -145,5 +145,56 @@ export default{
       commit('users', users);
       resolve(users)
     })
+  },
+
+  async parseAML({commit, state}, { deviceId, twinIndex, vm }) {
+    if (deviceId != null) {
+      commit('selectTwin', deviceId);
+      let twin = state.twins.filter(f => f.deviceId === deviceId)[0];
+      if ('components' in twin) return;
+      commit('spinner', true);
+      let length = await twin.specification.getAMLCount();
+      let index = length.toNumber() - 1;
+
+      //get latest version of specification-AML
+      let amlInfo = await twin.specification.getAML(index);
+      //get AML from Swarm using aml-hash: amlInfo.hash
+      let aml = (await vm.$swarm.downloadEncryptedDoc(twin.owner, window.web3.utils.sha3(deviceId), vm.$utils.hexToSwarmHash(amlInfo.hash))).content;
+      //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
+      // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
+      let parser = new DOMParser();
+      let amlDoc = parser.parseFromString(aml, "text/xml");
+      let instanceHierarchy = amlDoc.documentElement.getElementsByTagName("InstanceHierarchy");
+
+      //all child nodes are high-level components
+      let childNodes = instanceHierarchy[0].children;
+
+      let components = [];
+      for (let i = 0; i < childNodes.length; i++) {
+        //all children of type "InternalElement" are high-level components
+        if (childNodes[i].nodeName === "InternalElement") {
+          let id = childNodes[i].getAttribute("ID");
+          let name = childNodes[i].getAttribute("Name");
+          let hash = window.web3.utils.sha3(id);
+          // add parsed components to the components array
+          components.push({id: id, name: name, hash: hash});
+        }
+      }
+
+      //filter by attributes
+      if (twin.role !== "Owner") {
+        let a = state.contracts.Authorization;
+        let componentsBytes = components.map(c => window.web3.utils.hexToBytes(c.hash));
+        let c = await a.hasAttributes.call(
+          vm.account,
+          componentsBytes,
+          twin.specification.address
+        );
+        components = components.filter((d, ind) => c[ind]);
+      }
+      commit('addTwinComponents', {twin: twinIndex, aml: aml, components: components});
+      commit('spinner', false);
+    }
   }
+
 }
