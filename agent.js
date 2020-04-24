@@ -120,8 +120,8 @@ async function subscribe() {
         createKeys(data)
     }
   });
-  auth.RoleChanged({}, (error, data) => {updateKeys(error, data)});
-  auth.AttributesChanged({}, (error, data) => {updateKeys(error, data)});
+  auth.RoleChanged({}, (error, data) => {updateKeys(error, data, auth)});
+  auth.AttributesChanged({}, (error, data) => {updateKeys(error, data, auth)});
 }
 
 async function createKeys(data){
@@ -141,33 +141,24 @@ async function createKeys(data){
   }
 
   //check for each valid user and each component if the user has the attribute
-  await Promise.all(components.map(component => createAllKeys(component, data.returnValues.contractAddress, users, usersPublicKeys)));
+  await Promise.all([
+    components.map(component => createComponentKeys("doc", component, data.returnValues.contractAddress, users, usersPublicKeys)),
+    components.map(component => createComponentKeys("sensor", component, data.returnValues.contractAddress, users, usersPublicKeys)),
+  ]);
   let after = new Date();
   console.log(after - before);
 }
 
-async function createAllKeys(component, twin, users, usersPublicKeys){
-  // let c = await Promise.all(users.map(user => a.hasAttributes(
-  //   user,
-  //   web3.utils.hexToBytes(component.hash),
-  //   twin
-  // )));
-  // users = users.filter((d, ind) => c[ind]);
-  let update = await createComponentKeys(
+async function createComponentKeys(type, component, twin, users, usersPublicKeys){
+  return _createComponentKeys(
     address,
-    web3.utils.sha3(component.id + "doc"),
-    users,
-    usersPublicKeys
-  );
-  update = await createComponentKeys(
-    address,
-    web3.utils.sha3(component.id + "sensor"),
+    web3.utils.sha3(component.id + type),
     users,
     usersPublicKeys
   );
 }
 
-async function createComponentKeys(user, topic, shareAddresses, usersPublicKeys) {
+async function _createComponentKeys(user, topic, shareAddresses, usersPublicKeys) {
   let key = c.randomBytes(32);
   let update = shareAddresses.map((d, ind) => makeFileKey(key, d.toLowerCase(), usersPublicKeys[ind]));
   await updateFeedSimple({user: user, topic: topic}, update);
@@ -179,7 +170,7 @@ function makeFileKey(key, shareAddress, sharePublicKey){
   return {address: shareAddress, fileKey: ciphertext};
 }
 
-async function updateKeys(error, data){
+async function updateKeys(error, data, auth){
   if (error)
     console.log("Error: " + error);
   else {
@@ -189,9 +180,41 @@ async function updateKeys(error, data){
     if(deviceAgent.toLowerCase() === address) {
 
       if (data.returnValues.added) {
-        //todo role added
         if (data.returnValues.role) {
+          let [ twinData, amlHistory, publicKey ] = await Promise.all([
+            twin.getTwin(),
+            twin.getAMLHistory(),
+            getUserFeedText(data.returnValues.operator)
+          ]);
+          let aml = amlHistory[amlHistory.length - 1];
+          let components = await getComponents(twinData[0], aml.hash, twinData[3]);
+
           //add keys for all components if owner, else where attribute is present
+          let [permissionsDocuments, permissionsSensors] = await Promise.all([
+            getPermissions(auth, twin.address, data.returnValues.operator, components, 5),
+            getPermissions(auth, twin.address, data.returnValues.operator, components, 9)
+          ]);
+
+          //documents
+          let componentsFiltered = components.filter((c, ind) => permissionsDocuments[ind]);
+          let updateKeyCount = componentsFiltered.length;
+          componentsFiltered.map(component => createComponentKeys("doc",
+            component,
+            data.returnValues.twin,
+            [data.returnValues.operator],
+            [publicKey]
+          ));
+
+          //sensors
+          componentsFiltered = components.filter((c, ind) => permissionsSensors[ind]);
+          updateKeyCount += componentsFiltered.length;
+          componentsFiltered.map(component => createComponentKeys("sensor",
+            component,
+            data.returnValues.twin,
+            [data.returnValues.operator],
+            [publicKey]
+          ));
+          console.log("Role updated. " + updateKeyCount + " keys updated.")
         }
         //attribute added
         else {
@@ -235,6 +258,15 @@ async function updateKeys(error, data){
       }
     }
   }
+}
+
+async function getPermissions(auth, twin, user, components, permission){
+  return Promise.all(components.map(c => auth.hasPermissionAndAttribute(
+    user,
+    permission,
+    web3.utils.hexToBytes(c.hash),
+    twin
+  )));
 }
 
 async function getComponents(deviceId, amlHash, owner){
