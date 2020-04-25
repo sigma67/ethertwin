@@ -62,7 +62,7 @@
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
                             <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }"
-                                         v-on:click.native="parseAML(twin.deviceId, i)" class="px-2">
+                                         v-on:click.native="parseAML(twin.deviceId, i)" class="px-2" v-if="twin.role!=='Distributor'">
                                 <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                             </router-link>
                             <router-link :to="{ name: 'sources', params: { twin: twin.deviceId  } }" class="px-2">
