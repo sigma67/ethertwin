@@ -141,7 +141,7 @@
           plaintext,
           file.type,
           this.twinObject.deviceAgent,
-          window.web3.utils.sha3(component + "doc")
+          window.web3.utils.sha3(this.twinAddress + component + "doc")
         );
       },
 
@@ -171,7 +171,7 @@
 
         let file = await this.$swarm.downloadEncryptedDoc(
           this.twinObject.deviceAgent,
-          window.web3.utils.sha3(component + "doc"),
+          window.web3.utils.sha3(this.twinAddress + component + "doc"),
           this.$utils.hexToSwarmHash(hash),
         );
 

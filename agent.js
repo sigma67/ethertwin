@@ -142,17 +142,17 @@ async function createKeys(data){
 
   //check for each valid user and each component if the user has the attribute
   await Promise.all([
-    components.map(component => createComponentKeys("doc", component, data.returnValues.contractAddress, users, usersPublicKeys)),
-    components.map(component => createComponentKeys("sensor", component, data.returnValues.contractAddress, users, usersPublicKeys)),
+    components.map(component => createComponentKeys(data.returnValues.contractAddress, component, "doc", users, usersPublicKeys)),
+    components.map(component => createComponentKeys(data.returnValues.contractAddress, component, "sensor", users, usersPublicKeys)),
   ]);
   let after = new Date();
   console.log(after - before);
 }
 
-async function createComponentKeys(type, component, twin, users, usersPublicKeys){
+async function createComponentKeys(twinAddress, component, type, users, usersPublicKeys){
   return _createComponentKeys(
     address,
-    web3.utils.sha3(component.id + type),
+    web3.utils.sha3(twinAddress + component.id + type),
     users,
     usersPublicKeys
   );
@@ -198,9 +198,10 @@ async function updateKeys(error, data, auth){
           //documents
           let componentsFiltered = components.filter((c, ind) => permissionsDocuments[ind]);
           let updateKeyCount = componentsFiltered.length;
-          componentsFiltered.map(component => createComponentKeys("doc",
-            component,
+          componentsFiltered.map(component => createComponentKeys(
             data.returnValues.twin,
+            component,
+            "doc",
             [data.returnValues.operator],
             [publicKey]
           ));
@@ -208,9 +209,10 @@ async function updateKeys(error, data, auth){
           //sensors
           componentsFiltered = components.filter((c, ind) => permissionsSensors[ind]);
           updateKeyCount += componentsFiltered.length;
-          componentsFiltered.map(component => createComponentKeys("sensor",
-            component,
+          componentsFiltered.map(component => createComponentKeys(
             data.returnValues.twin,
+            component,
+            "sensor",
             [data.returnValues.operator],
             [publicKey]
           ));
@@ -221,14 +223,14 @@ async function updateKeys(error, data, auth){
           data.returnValues.attributes.map(attr =>
             shareFileKey(
               address,
-              web3.utils.sha3(attr + "doc"),
+              web3.utils.sha3(twin.address + attr + "doc"),
               data.returnValues.operator
             )
           );
           data.returnValues.attributes.map(attr =>
             shareFileKey(
               address,
-              web3.utils.sha3(attr + "sensor"),
+              web3.utils.sha3(twin.address + attr + "sensor"),
               data.returnValues.operator
             )
           );
@@ -243,14 +245,14 @@ async function updateKeys(error, data, auth){
           data.returnValues.attributes.map(attr =>
             removeFileKey(
               address,
-              web3.utils.sha3(attr + "doc"),
+              web3.utils.sha3(twin.address + attr + "doc"),
               data.returnValues.operator
             )
           );
           data.returnValues.attributes.map(attr =>
             removeFileKey(
               address,
-              web3.utils.sha3(attr + "sensor"),
+              web3.utils.sha3(twin.address + attr + "sensor"),
               data.returnValues.operator
             )
           );
