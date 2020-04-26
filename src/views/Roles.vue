@@ -47,9 +47,9 @@
                 return this.$store.state.user.address;
             },
             twinObject() {
-                return this.$store.state.twins
-                    .filter(f => f.deviceId === this.twin)[0];
-            }
+        return this.$store.state.twins
+          .filter(f => f.address === this.twin)[0];
+      }
         },
         data() {
             return {
@@ -244,7 +244,7 @@
                 let attributes = [];
                 let attributesHash = [];
                 let components = []; //otherwise undefined error is thrown
-                components = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].components;
+                components = this.$store.state.twins.filter(f => f.address === this.twin)[0].components;
                 let bytesComponents = [];
                 for (let j = 0; j < components.length; j++) { //for all possible attributes
                     bytesComponents.push(window.web3.utils.hexToBytes(components[j].hash));
@@ -268,7 +268,7 @@
         },
         async created() {
             let users = await this.$store.state.contracts.Authorization.getUsers();
-            let twinAddress = this.$store.state.twins.filter(f => f.deviceId === this.twin)[0].address;
+            let twinAddress = this.$store.state.twins.filter(f => f.address === this.twin)[0].address;
             for (let i = 0; i < users.length; i++) {
                 let loadedRole = await this.loadRole(users[i], twinAddress);
                 if(loadedRole.roleNo.toNumber() === 404) continue;

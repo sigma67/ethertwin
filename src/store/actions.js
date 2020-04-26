@@ -47,10 +47,9 @@ async function getSpecification(address, state){
             twin.specification = instance1;
             twin.address = instance1.address;
             return instance1.getTwin(function(err,res){
-              twin.deviceId = res[0];
-              twin.deviceName = res[1];
-              twin.deviceAgent = res[2];
-              twin.owner = res[3];
+              twin.deviceName = res[0];
+              twin.deviceAgent = res[1];
+              twin.owner = res[2];
             });
           }).then(function () {
             resolve(twin);
@@ -147,10 +146,11 @@ export default{
     })
   },
 
-  async parseAML({commit, state}, { deviceId, twinIndex, vm }) {
-    if (deviceId != null) {
-      commit('selectTwin', deviceId);
-      let twin = state.twins.filter(f => f.deviceId === deviceId)[0];
+  async parseAML({commit, state}, { twinAddress, vm }) {
+    if (twinAddress != null) {
+      commit('selectTwin', twinAddress);
+      let twinIndex = state.twins.findIndex(f => f.address === twinAddress)
+      let twin = state.twins[twinIndex]
       if ('components' in twin) return;
       commit('spinner', true);
       let length = await twin.specification.getAMLCount();
@@ -159,7 +159,7 @@ export default{
       //get latest version of specification-AML
       let amlInfo = await twin.specification.getAML(index);
       //get AML from Swarm using aml-hash: amlInfo.hash
-      let aml = (await vm.$swarm.downloadEncryptedDoc(twin.owner, window.web3.utils.sha3(deviceId), vm.$utils.hexToSwarmHash(amlInfo.hash))).content;
+      let aml = (await vm.$swarm.downloadEncryptedDoc(twin.owner, window.web3.utils.sha3(twinAddress), vm.$utils.hexToSwarmHash(amlInfo.hash))).content;
       //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
       // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
       let parser = new DOMParser();

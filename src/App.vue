@@ -18,10 +18,10 @@
               <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
                  aria-haspopup="true" aria-expanded="false">Twins</a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown" v-if="twins.length > 0">
-                <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }"
+                <router-link :to="{ name: 'components', params: { twin: twin.address  } }"
                              v-for="(twin, i) in twins" v-bind:key="i" class="dropdown-item"
-                             v-bind:class="{'font-weight-bold': twin.deviceId === selectedTwin}"
-                             v-on:click.native="parseAML(twin.deviceId, i)">
+                             v-bind:class="{'font-weight-bold': twin.address === selectedTwin}"
+                             v-on:click.native="parseAML(twin.address)">
                   {{ twin.deviceName }}
                 </router-link>
               </div>
@@ -90,10 +90,9 @@
             }
         },
         methods: {
-            async parseAML(id, index) {
+            async parseAML(address) {
                 return this.$store.dispatch('parseAML', {
-                    deviceId: id,
-                    twinIndex: index,
+                    twinAddress: address,
                     vm: this
                 })
             }
@@ -114,13 +113,13 @@
             isOwner() {
                 let twinID = this.$store.state.selectedTwin;
                 return this.$store.state.twins
-                    .filter(twin => twin.deviceId === twinID && twin.role === "Owner")
+                    .filter(twin => twin.address === twinID && twin.role === "Owner")
                     .length > 0;
             },
             isNotDistributor() {
                 let twinID = this.$store.state.selectedTwin;
                 return this.$store.state.twins
-                    .filter(twin => twin.deviceId === twinID && twin.role !== "Distributor")
+                    .filter(twin => twin.address === twinID && twin.role !== "Distributor")
                     .length > 0;
             }
         },

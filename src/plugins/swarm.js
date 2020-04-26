@@ -166,32 +166,31 @@ export default {
       },
       
       /** Functions related to uploading and downloading encrypted files **/
-      async createFileKey(user, topic, shareAddress) {
-        let key = c.randomBytes(32);
+      createFileKey() {
+        return c.randomBytes(32);
+      },
+
+      encryptKeyForSelf(key){
         let ownPublicKey = store.state.user.wallet.getPublicKey().toString('hex');
         let ciphertext = crypto.encryptECIES(ownPublicKey, key);
-        let update = [{address: user, fileKey: ciphertext}];
-        if(shareAddress){
-          let sharePublicKey = await this.getUserFeedText(shareAddress);
-          ciphertext = crypto.encryptECIES(sharePublicKey, key);
-          update.push({address: shareAddress, fileKey: ciphertext})
-        }
-        await this.updateFeedSimple({user: user, topic: topic}, update);
-        return key;
+        return [{address: user.address, fileKey: ciphertext}];
       },
 
       //share an existing key on the user's own feed with another user
-      async shareFileKey(user, topic, userAddress) {
+      async getAndShareFileKey(user, topic, userAddress) {
         //get existing keys and decrypt key
         let fileKeys = await this.getUserFeedLatest(user, topic);
         let keyObject = fileKeys.filter(f => f.address === user)[0];
         let privateKey = store.state.user.wallet.getPrivateKey().toString('hex');
         let plainKey = crypto.decryptECIES(privateKey, keyObject.fileKey);
-        //encrypt for new user
-        let userPublicKey = await this.getUserFeedText(userAddress);
-        let newKey = crypto.encryptECIES(userPublicKey, plainKey);
-        fileKeys.push({address: userAddress, fileKey: newKey});
-        await this.updateFeedSimple({user: user, topic: topic}, fileKeys);
+        return this.shareFileKey(user, topic, userAddress, plainKey, fileKeys)
+      },
+
+      async shareFileKey(user, topic, shareAddress, key,  fileKeys = []){
+        let sharePublicKey = await this.getUserFeedText(shareAddress);
+        let ciphertext = crypto.encryptECIES(sharePublicKey, key);
+        fileKeys.push({address: shareAddress, fileKey: ciphertext})
+        return this.updateFeedSimple({user: user, topic: topic}, fileKeys);
       },
 
       //gets from any feed and decrypts a file key, which was encrypted for the current user
@@ -203,11 +202,8 @@ export default {
         return new Buffer(plainKey, 'base64');
       },
 
-      async uploadEncryptedDoc (content, contentType, user, topic, newKey = false, shareAddress) {
-        let key = newKey ?
-          await this.createFileKey(user, topic, shareAddress) :
-          await this.getFileKey(user, topic) ;
-
+      async uploadEncryptedDoc (content, contentType, user, topic) {
+        let key = await this.getFileKey(user, topic);
         return this.encryptAndUpload(content, contentType, key)
       },
 

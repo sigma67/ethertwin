@@ -95,8 +95,8 @@
               return this.$store.state.user.address
           },
           twinObject() {
-              return this.$store.state.twins
-                      .filter(f => f.deviceId === this.twin)[0];
+            return this.$store.state.twins
+              .filter(f => f.address === this.twin)[0];
           },
           twinAddress() {
               return this.twinObject.address;
@@ -116,7 +116,7 @@
               this.version = versionNumber;
               this.author = version[1];
               let hash = this.$utils.hexToSwarmHash(version[2]);
-              this.$swarm.downloadEncryptedDoc(this.twinObject.owner, window.web3.utils.sha3(this.twinObject.deviceId), hash)
+              this.$swarm.downloadEncryptedDoc(this.twinObject.owner, window.web3.utils.sha3(this.twinAddress), hash)
                       .then(doc => {
                           vm.aml = doc.content;
                           // highlighting
@@ -128,8 +128,8 @@
               this.$swarm.uploadEncryptedDoc(
                 this.aml,
                 'text/plain',
-                this.twinObject.owner,//todo replace with deviceagent
-                window.web3.utils.sha3(this.twinObject.deviceId)
+                this.twinObject.owner,
+                window.web3.utils.sha3(this.twinAddress)
               ).then(hash => {
                   vm.specification.addNewAMLVersion.sendTransaction(
                       window.web3.utils.hexToBytes("0x" + hash),

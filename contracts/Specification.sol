@@ -9,7 +9,6 @@ contract Specification {
     address internal contractRegistry;
 
     string public deviceName;
-    string public deviceID;
     address public deviceAgent;
     address public owner;
 
@@ -60,14 +59,13 @@ contract Specification {
     //array index of the most recently run program
     mapping(bytes32 => uint) public programCounter;
 
-    function getTwin() external view returns (string memory, string memory, address, address){
-        return (deviceID, deviceName, deviceAgent, owner);
+    function getTwin() external view returns (string memory, address, address){
+        return (deviceName, deviceAgent, owner);
     }
 
-    function updateTwin(string calldata _deviceID, string calldata _deviceName, address _deviceAgent, address _owner) external
+    function updateTwin(string calldata _deviceName, address _deviceAgent, address _owner) external
     {
         require(msg.sender == contractRegistry || auth.hasPermission(msg.sender, Authorization.PERMISSION.TWIN_UPDATE, address(this)));
-        deviceID = _deviceID;
         deviceName = _deviceName;
         deviceAgent = _deviceAgent;
         owner = _owner;

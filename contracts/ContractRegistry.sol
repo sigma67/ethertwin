@@ -6,7 +6,7 @@ import "./Specification.sol";
 import "./Authorization.sol";
 
 contract ContractRegistry {
-    event TwinCreated(string deviceId, address contractAddress, address owner, bytes32 aml, address deviceAgent);
+    event TwinCreated(address contractAddress, address owner, bytes32 aml, address deviceAgent);
     address[] public contracts;
 
     Authorization internal auth;
@@ -16,7 +16,7 @@ contract ContractRegistry {
         auth = Authorization(_auth);
     }
 
-    function registerContract(string calldata _deviceID, string calldata _deviceName, bytes32 _deviceAML, address _deviceAgent) external returns(address) {
+    function registerContract(string calldata _deviceName, bytes32 _deviceAML, address _deviceAgent) external returns(address) {
 
         //require RBAC.DEVICEAGENT PRIVILEGES --> device agent has value 0
         //require(auth.getRole(msg.sender, address(this)) == 0, "Your account has no privileges of device agent!");
@@ -29,7 +29,7 @@ contract ContractRegistry {
         auth.initializeDevice(contractAddress, msg.sender, _deviceAgent);
 
         //set params in the specification contract
-        spec.updateTwin(_deviceID, _deviceName, _deviceAgent, msg.sender);
+        spec.updateTwin(_deviceName, _deviceAgent, msg.sender);
 
         //add AML to specification contract
         spec._addNewAMLVersion(_deviceAML, msg.sender);
@@ -37,7 +37,7 @@ contract ContractRegistry {
         //add contract to all contracts
         contracts.push(contractAddress);
 
-        emit TwinCreated(_deviceID, contractAddress, msg.sender, _deviceAML, _deviceAgent);
+        emit TwinCreated(contractAddress, msg.sender, _deviceAML, _deviceAgent);
 
         return contractAddress;
     }

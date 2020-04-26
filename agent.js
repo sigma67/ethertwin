@@ -126,7 +126,8 @@ async function subscribe() {
 
 async function createKeys(data){
   let before = new Date();
-  let components = await getComponents(data.returnValues.deviceId, data.returnValues.aml, data.returnValues.owner);
+  await sleep(1000) //wait for key update by client
+  let components = await getComponents(data.returnValues.contractAddress, data.returnValues.aml, data.returnValues.owner);
   let users = await getUsers();
   //get user role
   let a = await authContract.deployed();
@@ -271,10 +272,9 @@ async function getPermissions(auth, twin, user, components, permission){
   )));
 }
 
-async function getComponents(deviceId, amlHash, owner){
-  let aml = (await downloadEncryptedDoc(owner, web3.utils.sha3(deviceId), amlHash.substr(2, amlHash.length))).content.toString();
-  //parse aml to get the relevant components: CAEXFile -> InstanceHierarchy -> InternalElement (=Array with all components)
-  // InternalElement.[0] ._Name  ._ID  ._RefBaseSystemUnitPath
+async function getComponents(twinAddress, amlHash, owner){
+  let aml = (await downloadEncryptedDoc(owner, web3.utils.sha3(twinAddress), amlHash.substr(2, amlHash.length)))
+    .content.toString();
   let amlDoc = await parseXML(aml)
   let components = [];
   for (log of amlDoc.CAEXFile.InstanceHierarchy[0].InternalElement) {

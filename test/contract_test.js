@@ -23,7 +23,7 @@ contract("ContractRegistry", accounts => {
   })
 
   it("should create a new twin", async () => {
-    let tx = await c.registerContract("12", "My Twin", hashBytes, accounts[1]);
+    let tx = await c.registerContract("My Twin", hashBytes, accounts[1]);
     let contracts = await c.getContracts();
     s = await Specification.at(contracts[0]);
     assert.equal(contracts.length, 1, "Twin Specification Contract not deployed");

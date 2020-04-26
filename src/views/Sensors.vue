@@ -90,7 +90,7 @@
       },
       twinObject() {
         return this.$store.state.twins
-          .filter(f => f.deviceId === this.twin)[0];
+          .filter(f => f.address === this.twin)[0];
       }
     },
     props: {

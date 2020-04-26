@@ -8,9 +8,6 @@
           <button class="btn btn-secondary btn-block" type="submit">Add Twin</button>
           <br/>
           <div class="form-group">
-            <label class="text-center" for="twinID">ID</label>
-            <input class="form-control" type="text" id="twinID" v-model.lazy="twinID"/>
-            <br/>
             <label class="text-center" for="twinName">Twin Name</label>
             <br/>
             <input class="form-control" type="text" id="twinName" v-model.lazy="twinName"/>
@@ -51,7 +48,6 @@
                     {text: 'File', value: 'File'},
                     {text: 'Text', value: 'Text'}
                 ],
-                twinID: "",
                 twinName: "",
                 twinAML: "",
                 deviceAgent: "",
@@ -64,40 +60,33 @@
         },
         methods: {
 
-            addTwin() {
+            async addTwin() {
                 let vm = this;
 
-                if (this.twinID === "" || this.twinName === "" || this.twinAML === "" && this.selected === "Text" ) {
+                if (this.twinName === "" || this.twinAML === "" && this.selected === "Text" ) {
                     alert("Empty values are not accepted!");
-                } else {
-
-                    this.$store.commit('spinner', true);
-                    //upload file to swarm and get swarm hash
-                    let hash = this.$swarm.uploadEncryptedDoc(
-                            this.twinAML, 'text/plain', this.account,
-                            window.web3.utils.sha3(vm.twinID), true, this.deviceAgent);
-
-                    hash.then(hash => {
-                        vm.$store.state.contracts.ContractRegistry.registerContract(
-                            vm.twinID,
-                            vm.twinName,
-                            window.web3.utils.hexToBytes("0x" + hash),
-                            vm.deviceAgent,
-                            {
-                                from: vm.account
-                            }
-                        )
-                        .then(() => {
-                            vm.$store.commit('spinner', false);
-                            vm.$store.dispatch('loadTwins');
-                            vm.$router.push('/');
-                        })
-                        .catch(function (err) {
-                            vm.$store.commit('spinner', false);
-                            alert(err);
-                        });
-                    });
                 }
+                this.$store.commit('spinner', true)
+                let key = this.$swarm.createFileKey();
+                let swarmHash = await this.$swarm.encryptAndUpload(this.twinAML, 'text/plain', key);
+                let receipt = await vm.$store.state.contracts.ContractRegistry.registerContract(
+                    vm.twinName,
+                    this.$utils.swarmHashToBytes(swarmHash),
+                    vm.deviceAgent,
+                    {
+                        from: vm.account
+                    }
+                )
+                await this.$swarm.shareFileKey(
+                        this.account,
+                        window.web3.utils.sha3(receipt.logs[0].args.contractAddress),
+                        this.deviceAgent,
+                        key,
+                        this.$swarm.encryptKeyForSelf(key)
+                );
+                vm.$store.dispatch('loadTwins');
+                vm.$router.push('/');
+                vm.$store.commit('spinner', false);
             },
             async processFile(event) {
                 try {

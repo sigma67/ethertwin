@@ -4,11 +4,11 @@
         <div class="col">
             <h2>Sensor Feed:   <small class="text-muted">{{ sensorData.name }}</small></h2>
         </div>
-            <!--<button href="#" class="btn btn-primary" v-on:click="addEntry" :disabled="!submitEnabled">
+            <!--<button class="btn btn-primary" v-on:click="addEntry" :disabled="!submitEnabled">
                 <font-awesome-icon id="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="add entry"/>
                 Add random entry
             </button>-->
-            <button href="#" class="btn btn-primary" v-on:click="loadUpdates" :disabled="!submitEnabled">
+            <button class="btn btn-primary" v-on:click="loadUpdates" :disabled="!submitEnabled">
                 <font-awesome-icon id="createIcon" icon="sync-alt" data-toggle="tooltip" data-placement="bottom" title="add entry"/>
                 Refresh
             </button>
@@ -56,7 +56,7 @@
     computed: {
       twinObject() {
         return this.$store.state.twins
-          .filter(f => f.deviceId === this.twin)[0];
+          .filter(f => f.address === this.twin)[0];
       }
     },
     props: {

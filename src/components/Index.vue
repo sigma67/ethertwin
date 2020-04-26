@@ -42,34 +42,34 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(twin, i) in twins" v-bind:key="i" v-bind:class="{'table-active': twin.deviceId === selectedTwin}">
+                    <tr v-for="(twin, i) in twins" v-bind:key="i" v-bind:class="{'table-active': twin.address === selectedTwin}">
                         <td>{{ twin.deviceName }}</td>
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
                         <td>
-                            <router-link :to="{ name: 'twin-spec', params: { twin: twin.deviceId  } }"
-                                         v-on:click.native="parseAML(twin.deviceId, i)" class="px-2">
+                            <router-link :to="{ name: 'twin-spec', params: { twin: twin.address  } }"
+                                         v-on:click.native="parseAML(twin.address)" class="px-2">
                                 <font-awesome-icon icon="search" data-toggle="tooltip" data-placement="bottom"
                                                    title="see specification"/>
                             </router-link>
-                            <router-link :to="{ name: 'components', params: { twin: twin.deviceId  } }"
-                                         v-on:click.native="parseAML(twin.deviceId, i)" class="px-2">
+                            <router-link :to="{ name: 'components', params: { twin: twin.address  } }"
+                                         v-on:click.native="parseAML(twin.address)" class="px-2">
                                 <font-awesome-icon icon="sitemap" data-toggle="tooltip" data-placement="bottom"
                                                    title="see components"/>
                             </router-link>
-                            <router-link :to="{ name: 'documents', params: { twin: twin.deviceId  } }"
-                                         v-on:click.native="parseAML(twin.deviceId, i)" class="px-2">
+                            <router-link :to="{ name: 'documents', params: { twin: twin.address  } }"
+                                         v-on:click.native="parseAML(twin.address)" class="px-2">
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
-                            <router-link :to="{ name: 'sensors', params: { twin: twin.deviceId  } }"
-                                         v-on:click.native="parseAML(twin.deviceId, i)" class="px-2" v-if="twin.role!=='Distributor'">
+                            <router-link :to="{ name: 'sensors', params: { twin: twin.address  } }"
+                                         v-on:click.native="parseAML(twin.address)" class="px-2" v-if="twin.role!=='Distributor'">
                                 <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                             </router-link>
-                            <router-link :to="{ name: 'sources', params: { twin: twin.deviceId  } }" class="px-2">
+                            <router-link :to="{ name: 'sources', params: { twin: twin.address  } }" class="px-2">
                                 <font-awesome-icon icon="database" data-placement="bottom"
                                                    title="view external sources"/>
                             </router-link>
-                            <span v-on:click="shareTwin(twin.address, twin.deviceId, i)" class="px-2">
+                            <span v-on:click="shareTwin(twin.address, i)" class="px-2">
                                 <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom"
                                                title="share twin"/>
                             </span>
@@ -106,10 +106,9 @@
       }
     },
     methods: {
-      async parseAML(id, index){
+      async parseAML(address){
         return this.$store.dispatch('parseAML', {
-          deviceId: id,
-          twinIndex: index,
+          twinAddress: address,
           vm: this
         })
       },
@@ -143,10 +142,10 @@
             }
           });
       },
-      async shareTwin(deviceAddress, deviceId, twinIndex) {
+      async shareTwin(twinAddress, twinIndex) {
         let self = this.$store.state;
         let vm = this;
-        vm.parseAML(deviceId, twinIndex).then(
+        vm.parseAML(twinAddress, twinIndex).then(
           () => {
             let options = '';
             for (let i = 0; i < self.twins[twinIndex].components.length; i++) {
@@ -179,11 +178,11 @@
                   vm.$store.commit('spinner', true);
                   //share specification, add role and attributes
                   let transactions = [
-                    vm.$swarm.shareFileKey(vm.account, window.web3.utils.sha3(deviceId), address),
+                    vm.$swarm.getAndShareFileKey(vm.account, twinAddress, address),
                     self.contracts.Authorization.addRole(
                       address,
                       Number(role),
-                      deviceAddress,
+                      twinAddress,
                       {
                         from: vm.account
                       })];
@@ -191,7 +190,7 @@
                     transactions.push(
                       self.contracts.Authorization.addAttributes(address,
                         attributes,
-                        deviceAddress,
+                        twinAddress,
                         {
                           from: vm.account
                         }
