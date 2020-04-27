@@ -27,13 +27,13 @@
               </div>
             </li>
             <template v-if="selectedTwin !== 0">
-              <li class="nav-item"> <!-- v-if twin selected, show link to twin overview-->
-                <router-link :to="{ name: 'components', params: { twin: selectedTwin  }}" class="nav-link">Components
+              <li class="nav-item"><!-- v-if twin selected, show link to twin overview-->
+                <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">
+                  Specification
                 </router-link>
               </li>
               <li class="nav-item">
-                <router-link :to="{ name: 'twin-spec', params: { twin: selectedTwin  }}" class="nav-link">
-                  Specification
+                <router-link :to="{ name: 'components', params: { twin: selectedTwin  }}" class="nav-link">Components
                 </router-link>
               </li>
               <li class="nav-item">
