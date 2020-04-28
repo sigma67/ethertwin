@@ -19,12 +19,14 @@
             </div>
             <div class="col-md-4">
                 <button class="btn btn-primary float-right ml-1 mb-2" v-on:click="reload">
-                    <font-awesome-icon class="createIcon" icon="sync-alt" data-toggle="tooltip" data-placement="bottom" title="refresh"/>
+                    <font-awesome-icon class="createIcon" icon="sync-alt" data-toggle="tooltip" data-placement="bottom"
+                                       title="refresh"/>
                     Refresh
                 </button>
                 <router-link :to="{ name: 'twin-create' }">
                     <button class="btn btn-dark float-right" :disabled="!this.registered">
-                        <font-awesome-icon class="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="refresh"/>
+                        <font-awesome-icon class="createIcon" icon="plus-square" data-toggle="tooltip"
+                                           data-placement="bottom" title="refresh"/>
                         Add Twin
                     </button>
                 </router-link>
@@ -50,7 +52,8 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(twin, i) in twins" v-bind:key="i" v-bind:class="{'table-active': twin.address === selectedTwin}">
+                    <tr v-for="(twin, i) in twins" v-bind:key="i"
+                        v-bind:class="{'table-active': twin.address === selectedTwin}">
                         <td>{{ twin.deviceName }}</td>
                         <td>{{ twin.address }}</td>
                         <td>{{ twin.role }}</td>
@@ -70,7 +73,8 @@
                                 <font-awesome-icon icon="file-alt" data-placement="bottom" title="view documents"/>
                             </router-link>
                             <router-link :to="{ name: 'sensors', params: { twin: twin.address  } }"
-                                         v-on:click.native="parseAML(twin.address)" class="px-2" v-if="twin.role!=='Distributor'">
+                                         v-on:click.native="parseAML(twin.address)" class="px-2"
+                                         v-if="twin.role!=='Distributor'">
                                 <font-awesome-icon icon="wifi" data-placement="bottom" title="view sensors"/>
                             </router-link>
                             <router-link :to="{ name: 'sources', params: { twin: twin.address  } }" class="px-2">
@@ -79,7 +83,7 @@
                             </router-link>
                             <span v-on:click="shareTwin(twin.address, i)" class="px-2">
                                 <font-awesome-icon icon="share-alt" data-toggle="tooltip" data-placement="bottom"
-                                               title="share twin"/>
+                                                   title="share twin"/>
                             </span>
                             <span v-on:click="removeRole(twin.address, twin.roleNo)" class="px-2">
                                 <font-awesome-icon icon="trash" data-placement="bottom" title="remove role from twin"/>
@@ -106,7 +110,7 @@
       contracts() {
         return this.$store.state.contracts;
       },
-      funded(){
+      funded() {
         return this.$store.state.balance === -1 || this.$store.state.balance > 0.1
       },
       registered() {
@@ -116,19 +120,19 @@
       twins() {
         return this.$store.state.twins;
       },
-      selectedTwin(){
+      selectedTwin() {
         return this.$store.state.selectedTwin
       }
     },
     methods: {
-      async parseAML(address){
+      async parseAML(address) {
         return this.$store.dispatch('parseAML', {
           twinAddress: address,
           vm: this
         })
       },
 
-      async register(){
+      async register() {
         this.$store.dispatch('register', this)
       },
 
@@ -164,94 +168,85 @@
       async shareTwin(twinAddress, twinIndex) {
         let self = this.$store.state;
         let vm = this;
-        vm.parseAML(twinAddress, twinIndex).then(
-          () => {
-            let options = '';
-            for (let i = 0; i < self.twins[twinIndex].components.length; i++) {
-              options += '<li><input type="checkbox" class="mr-2 custom-control-input" id="component' + i + '"value="' + self.twins[twinIndex].components[i].hash + '"/><label class="custom-control-label" for="component' + i + '">' + self.twins[twinIndex].components[i].name + '</label></li>';
-            }
-            vm.$swal({
-              title: "Share this device",
-              confirmButtonClass: "confirm-class",
-              cancelButtonClass: "cancel-class",
-              showCancelButton: true,
-              reverseButtons: true,
-              html:
-                `<p>You can allow another account to participate in the life cycle of this device. Specify the account and its role to grant it access.</p></br>
-                 <h5>Address</h5>
-                 <input id="swal-input2" class="swal2-input"></br>
-                 <h5>Role</h5>
-                 <select id="swal-input1" class="swal2-input"> <option value="1">Manufacturer</option><option value="2">Owner</option><option value="3">Distributor</option><option value="4">Maintainer</option></select></br>
-                 <h5>Attributes</h5>
-                 <ul id="swal-input3" class="checkbox-grid custom-control custom-checkbox">${options}</ul>`
-            }).then((result) => {
-                if (result.value) { // function when confirm button clicked
-                  let role = document.getElementById("swal-input1").value;
-                  let address = document.getElementById("swal-input2").value;
-                  let attributes = []; //all checked attributes
-                  for (let i = 0; i < document.getElementById("swal-input3").children.length; i++) {
-                    if (document.getElementById("swal-input3").children[i].children[0].checked == true)
-                      attributes.push(document.getElementById("swal-input3").children[i].children[0].value); //hash of component is attribute in authorization contract
-                  }
-                  attributes.map(window.web3.utils.hexToBytes);
-                  vm.$store.commit('spinner', true);
-                  //share specification, add role and attributes
-                  let transactions = [
-                    vm.$swarm.getAndShareFileKey(vm.account, twinAddress, address),
-                    self.contracts.Authorization.addRole(
-                      address,
-                      Number(role),
-                      twinAddress,
-                      {
-                        from: vm.account
-                      })];
-                  if (attributes.length > 0){
-                    transactions.push(
-                      self.contracts.Authorization.addAttributes(address,
-                        attributes,
-                        twinAddress,
-                        {
-                          from: vm.account
-                        }
-                      )
-                    )
-                  }
-                  Promise.all(transactions).then(function () {
-                    vm.$swal.fire({
-                      type: "success",
-                      title: "Account has been successfully added.",
-                      showConfirmButton: false,
-                      timer: 2000
-                    });
-                  })
-                    .catch(function (err) {
-                      alert(err);
-                      vm.$swal.fire({
-                        type: "error",
-                        title: "Oops...",
-                        text: "Something went wrong!",
-                        footer:
-                          "Please check if the account address is correct and keep your privileges in mind!",
-                        showConfirmButton: false,
-                        timer: 6000
-                      });
-                    })
-                    .finally(() => {
-                      vm.$store.commit('spinner', false);
-                    })
-                  ;
+        await vm.parseAML(twinAddress, twinIndex);
+        let options = '';
+        for (let i = 0; i < self.twins[twinIndex].components.length; i++) {
+          options += '<li><input type="checkbox" class="mr-2 custom-control-input" id="component' + i + '"value="' + self.twins[twinIndex].components[i].hash + '"/><label class="custom-control-label" for="component' + i + '">' + self.twins[twinIndex].components[i].name + '</label></li>';
+        }
+        let result = await vm.$swal({
+          title: "Share this device",
+          confirmButtonClass: "confirm-class",
+          cancelButtonClass: "cancel-class",
+          showCancelButton: true,
+          reverseButtons: true,
+          html:
+            `<p>You can allow another account to participate in the life cycle of this device. Specify the account and its role to grant it access.</p></br>
+             <h5>Address</h5>
+             <input id="swal-input2" class="swal2-input"></br>
+             <h5>Role</h5>
+             <select id="swal-input1" class="swal2-input"> <option value="1">Manufacturer</option><option value="2">Owner</option><option value="3">Distributor</option><option value="4">Maintainer</option></select></br>
+             <h5>Attributes</h5>
+             <ul id="swal-input3" class="checkbox-grid custom-control custom-checkbox">${options}</ul>`
+        });
+        if (result.value) { // function when confirm button clicked
+          let role = document.getElementById("swal-input1").value;
+          let address = document.getElementById("swal-input2").value;
+          let attributes = []; //all checked attributes
+          for (let i = 0; i < document.getElementById("swal-input3").children.length; i++) {
+            if (document.getElementById("swal-input3").children[i].children[0].checked == true)
+              attributes.push(document.getElementById("swal-input3").children[i].children[0].value); //hash of component is attribute in authorization contract
+          }
+          attributes.map(window.web3.utils.hexToBytes);
+          vm.$store.commit('spinner', true);
+          //share specification, add role and attributes
+          let transactions = [
+            vm.$swarm.getAndShareFileKey(vm.account,
+              window.web3.utils.sha3(twinAddress), address),
+
+            self.contracts.Authorization.addRole(
+              address,
+              Number(role),
+              twinAddress,
+              {
+                from: vm.account
+              })
+          ];
+          if (attributes.length > 0) {
+            transactions.push(
+              self.contracts.Authorization.addAttributes(address,
+                attributes,
+                twinAddress,
+                {
+                  from: vm.account
                 }
-              },
-              function (dismiss) {
-                if (dismiss === "cancel") {
-                  vm.$swal.fire("Cancelled", "Device not shared!", "error");
-                }
-              }
-            );
+              )
+            )
+          }
+          Promise.all(transactions).then(() => {
+            vm.$swal.fire({
+              type: "success",
+              title: "Account has been successfully added.",
+              showConfirmButton: false,
+              timer: 2000
+            });
+          }).catch((err) => {
+            alert(err);
+            vm.$swal.fire({
+                type: "error",
+                title: "Oops...",
+                text: "Something went wrong!",
+                footer:
+                  "Please check if the account address is correct and keep your privileges in mind!",
+                showConfirmButton: false,
+                timer: 6000
+            });
+          }).finally(() => {
+            vm.$store.commit('spinner', false);
           })
+        }
       },
 
-      async reload(){
+      async reload() {
         this.$store.commit('spinner', true);
         await this.$store.dispatch('loadTwins');
         this.$store.commit('spinner', false);
@@ -264,8 +259,8 @@
     .checkbox-grid li {
         float: left;
         width: 50%;
-        text-align:left;
-        list-style:none
+        text-align: left;
+        list-style: none
     }
 </style>
 
