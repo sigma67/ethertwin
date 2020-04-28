@@ -68,7 +68,7 @@ export default{
     commit('account', wallet);
   },
 
-  async initContracts({ commit, state }, ABIs){
+  async initContracts({ commit }, ABIs){
     let contracts = {};
     let addresses = {};
     let instances = {};
@@ -95,10 +95,6 @@ export default{
           auth.then(function (instance2) {
               instances.Authorization = instance2;
               addresses.AuthorizationAddress = instance2.address;
-              web3.eth.getBalance(state.user.address).then((res) => {
-                  if (web3.utils.fromWei(res,'ether') < 80)
-                      instance2.register({from: state.user.address})
-              });
               commit('contracts', instances);
               commit('addresses',
                 {
@@ -138,10 +134,28 @@ export default{
       });
   },
 
+  async updateBalance({commit, state}){
+    let balanceTenEightteen = await window.web3.eth.getBalance(state.user.address);
+    let balance = (balanceTenEightteen/Math.pow(10,18));
+    commit('balance', balance)
+  },
+
+  async register({state, dispatch}, vm){
+    await Promise.all([
+      state.contracts.Authorization.register({from: state.user.address}),
+      //If not yet published, publish user public key to feed
+      vm.$swarm.updateFeedText(
+        {user: state.user.address},
+        state.user.wallet.getPublicKey().toString('hex')
+      )
+    ]);
+    dispatch('loadUsers')
+  },
+
   async loadUsers({commit, state}){
     let users = await state.contracts.Authorization.getUsers();
     return new Promise((resolve) => {
-      commit('users', users);
+      commit('users', users.map(u => u.toLowerCase()));
       resolve(users)
     })
   },

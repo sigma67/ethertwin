@@ -19,6 +19,9 @@ export default {
         state.twins[data.twin].components = data.components;
         state.twins[data.twin].aml = data.aml;
     },
+    balance(state, balance){
+        state.balance = balance;
+    },
     selectTwin(state, id){
         state.selectedTwin = id;
     },

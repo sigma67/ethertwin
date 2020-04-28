@@ -1,5 +1,13 @@
 <template>
     <div class="container mt-5">
+        <div class="alert alert-danger" role="alert" v-if="!this.funded">
+            Your account has insufficient funds. Please get some Ether before proceeding.
+            <a class="alert-link" href="/" v-on:click="location.reload()">Reload</a>
+        </div>
+        <div class="alert alert-warning" role="alert" v-if="this.funded && !this.registered">
+            You must register this user with the blockchain before you can create a twin:
+            <a class="alert-link" href="#" v-on:click="register()">Register</a>
+        </div>
         <div class="row">
             <div class="col">
                 <h2>Digital Twin Overview</h2>
@@ -15,7 +23,7 @@
                     Refresh
                 </button>
                 <router-link :to="{ name: 'twin-create' }">
-                    <button class="btn btn-dark float-right">
+                    <button class="btn btn-dark float-right" :disabled="!this.registered">
                         <font-awesome-icon class="createIcon" icon="plus-square" data-toggle="tooltip" data-placement="bottom" title="refresh"/>
                         Add Twin
                     </button>
@@ -98,6 +106,13 @@
       contracts() {
         return this.$store.state.contracts;
       },
+      funded(){
+        return this.$store.state.balance === -1 || this.$store.state.balance > 0.1
+      },
+      registered() {
+        return this.$store.state.users.includes('0x0') ||
+          this.$store.state.users.includes(this.account)
+      },
       twins() {
         return this.$store.state.twins;
       },
@@ -111,6 +126,10 @@
           twinAddress: address,
           vm: this
         })
+      },
+
+      async register(){
+        this.$store.dispatch('register', this)
       },
 
       async removeRole(twinAddress, role) {

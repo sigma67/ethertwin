@@ -17,20 +17,15 @@ export default {
       signBytes: bytes => Promise.resolve(sign(bytes, keyPair)),
     });
 
-    //If not yet published, publish user public key to feed
-    feed.getContent({user: user.address}).catch(() => {
-      feed.setContent(
-        {user: user.address},
-        user.wallet.getPublicKey().toString('hex'),
-        {contentType: "text/plain"}
-      );
-    });
-
     Vue.prototype.$swarm = {
 
       async updateFeedSimple(feedParams, update){
         await feed.createManifest(feedParams);
         return feed.setContent(feedParams, JSON.stringify(update), {contentType: "application/json"})
+      },
+
+      async updateFeedText(feedParams, update){
+        return feed.setContent(feedParams, update, {contentType: "text/plain"})
       },
 
       async uploadDoc(content, contentType) {
@@ -196,6 +191,7 @@ export default {
       //gets from any feed and decrypts a file key, which was encrypted for the current user
       async getFileKey(user, topic) {
         let fileKeys = await this.getUserFeedLatest(user, topic);
+        console.log(fileKeys)
         let keyObject = fileKeys.filter(f => f.address.toLowerCase() === store.state.user.address)[0];
         let privateKey = store.state.user.wallet.getPrivateKey().toString('hex');
         let plainKey = crypto.decryptECIES(privateKey, keyObject.fileKey);

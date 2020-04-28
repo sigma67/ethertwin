@@ -91,7 +91,7 @@ contract Authorization {
         require(!userRegistered[msg.sender]);
         users.push(msg.sender);
         userRegistered[msg.sender] = true;
-        msg.sender.transfer(50 ether);
+        //msg.sender.transfer(50 ether);
     }
 
     //////////

@@ -7,37 +7,52 @@
     <table class="table table-hover">
       <tbody>
       <tr>
+        <td>
+          <font-awesome-icon icon="project-diagram" data-placement="left" title="network"/>
+        </td>
           <td scope="row">Network</td>
           <td>
-              <font-awesome-icon icon="project-diagram" data-placement="left" title="network"/>
-          </td>
-          <td>
-              {{ this.network }}
+            <div>
+              <h5 class="m-0">
+                <button class="btn btn-info p-1" type="button" data-toggle="collapse" :data-target="'#contracts'"
+                        aria-expanded="false" :aria-controls="'contracts'">
+                  {{ this.network }}
+                </button>
+              </h5>
+            </div>
+            <div class="collapse" :id="'contracts'">
+              <div>
+                Registry Contract:
+                {{ this.$store.state.addresses.ContractRegistryAddress }}<br/>
+                Authorization Contract:
+                {{ this.$store.state.addresses.AuthorizationAddress }}
+              </div>
+            </div>
           </td>
       </tr>
       <tr>
-        <td scope="row">Address</td>
         <td>
           <font-awesome-icon icon="address-card" data-placement="left" title="address"/>
         </td>
+        <td scope="row">Account</td>
         <td>
           {{ this.account }}
         </td>
       </tr>
       <tr>
-        <td scope="row">Balance</td>
         <td>
           <font-awesome-icon :icon="['fab', 'ethereum']"  data-placement="left" title="ethereum balance"/>
         </td>
+        <td scope="row">Balance</td>
         <td>
-          {{ this.balance }} ETH
+          {{ this.$store.state.balance }} ETH
         </td>
       </tr>
       <tr>
-        <td scope="row" style="width:7em;">Public key</td>
         <td>
           <font-awesome-icon icon="lock-open" data-placement="left" title="unlock key"/>
         </td>
+        <td scope="row" style="width:7em;">Public key</td>
         <td>
           <span style="word-wrap: break-word; word-break: break-all;">
             {{ this.pubKey }}
@@ -45,10 +60,10 @@
         </td>
       </tr>
       <tr>
-        <td scope="row">Private key</td>
         <td>
           <font-awesome-icon icon="lock" data-placement="left" title="unlock key"/>
         </td>
+        <td scope="row">Private key</td>
         <td>
           {{ this.privKey }}
         </td>
@@ -81,13 +96,15 @@
         computed: {
             account() {
                 return this.$store.state.user.address;
+            },
+            registered() {
+                return this.$store.state.users.includes(this.account)
             }
         },
         data(){
             return{
                 balance: 0,
                 privateKeyNew: '',
-                registered: true,
                 network: ''
             }
         },
@@ -112,25 +129,16 @@
                 location.reload()//refresh site
             },
 
-            async checkRegistered(){
-              let users = await this.$store.dispatch('loadUsers');
-              users = users.map(u => u.toLowerCase());
-              this.registered = users.includes(this.account)
-            },
-
             async register() {
-              await this.$store.state.contracts.Authorization.register({from: this.account});
-              await this.checkRegistered()
+              await this.$store.dispatch('register');
             }
         },
         async beforeMount() {
-             this.pubKey = this.$store.state.user.wallet.getPublicKey().toString('hex');
-             this.privKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
-             let balanceTenEightteen = await window.web3.eth.getBalance(this.account);
-             this.balance = (balanceTenEightteen/Math.pow(10,18));
-             this.network = await window.web3.eth.net.getNetworkType();
-
-             this.checkRegistered()
+            this.pubKey = this.$store.state.user.wallet.getPublicKey().toString('hex');
+            this.privKey = this.$store.state.user.wallet.getPrivateKey().toString('hex');
+            this.network = await window.web3.eth.net.getNetworkType();
+            this.$store.dispatch('updateBalance');
+            this.$store.dispatch('loadUsers');
         }
     }
 </script>
