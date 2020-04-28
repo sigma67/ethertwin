@@ -188,7 +188,7 @@ async function updateKeys(error, data, auth){
             getUserFeedText(data.returnValues.operator)
           ]);
           let aml = amlHistory[amlHistory.length - 1];
-          let components = await getComponents(twinData[0], aml.hash, twinData[3]);
+          let components = await getComponents(data.returnValues.twin, aml.hash, twinData[2]);
 
           //add keys for all components if owner, else where attribute is present
           let [permissionsDocuments, permissionsSensors] = await Promise.all([
