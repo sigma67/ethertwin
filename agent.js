@@ -125,8 +125,8 @@ async function subscribe() {
 }
 
 async function createKeys(data){
-  let before = new Date();
   await sleep(1000) //wait for key update by client
+  let before = new Date()
   let components = await getComponents(data.returnValues.contractAddress, data.returnValues.aml, data.returnValues.owner);
   let users = await getUsers();
   //get user role
@@ -142,28 +142,30 @@ async function createKeys(data){
   }
 
   //check for each valid user and each component if the user has the attribute
-  await Promise.all([
-    components.map(component => createComponentKeys(data.returnValues.contractAddress, component, "doc", users, usersPublicKeys)),
-    components.map(component => createComponentKeys(data.returnValues.contractAddress, component, "sensor", users, usersPublicKeys)),
-  ]);
-  let after = new Date();
-  console.log(after - before);
+  let promises =
+    components.map(component => createComponentKeys(data.returnValues.contractAddress, component, "doc", users, usersPublicKeys));
+  promises.push(...
+    components.map(component => createComponentKeys(data.returnValues.contractAddress, component, "sensor", users, usersPublicKeys)));
+  await Promise.all(promises);
+  console.log("File keys created. " + components.length * 2 + " feeds updated in " + (new Date() - before) + "ms.")
 }
 
 async function createComponentKeys(twinAddress, component, type, users, usersPublicKeys){
-  return _createComponentKeys(
-    address,
-    web3.utils.sha3(twinAddress + component.id + type),
+  let update = createSymmetricKeys(
     users,
     usersPublicKeys
   );
+  await updateFeedSimple(
+    {
+      user: address,
+      topic: web3.utils.sha3(twinAddress + component.id + type)
+    }, update);
+  return web3.utils.sha3(twinAddress + component.id + type);
 }
 
-async function _createComponentKeys(user, topic, shareAddresses, usersPublicKeys) {
+function createSymmetricKeys(shareAddresses, usersPublicKeys) {
   let key = c.randomBytes(32);
-  let update = shareAddresses.map((d, ind) => makeFileKey(key, d.toLowerCase(), usersPublicKeys[ind]));
-  await updateFeedSimple({user: user, topic: topic}, update);
-  return update;
+  return shareAddresses.map((d, ind) => makeFileKey(key, d.toLowerCase(), usersPublicKeys[ind]));
 }
 
 function makeFileKey(key, shareAddress, sharePublicKey){
@@ -176,89 +178,48 @@ async function updateKeys(error, data, auth){
     console.log("Error: " + error);
   else {
     //check if deviceAgent for this twin
+    let before = new Date();
     let twin = await getSpecification(data.returnValues.twin);
     let deviceAgent = await twin.deviceAgent();
     if(deviceAgent.toLowerCase() === address) {
+      let [ twinData, amlHistory, publicKey ] = await Promise.all([
+        twin.getTwin(),
+        twin.getAMLHistory(),
+        getUserFeedText(data.returnValues.operator)
+      ]);
+      let aml = amlHistory[amlHistory.length - 1];
+      let components = await getComponents(data.returnValues.twin, aml.hash, twinData[2]);
 
-      if (data.returnValues.added) {
-        if (data.returnValues.role) {
-          let [ twinData, amlHistory, publicKey ] = await Promise.all([
-            twin.getTwin(),
-            twin.getAMLHistory(),
-            getUserFeedText(data.returnValues.operator)
-          ]);
-          let aml = amlHistory[amlHistory.length - 1];
-          let components = await getComponents(data.returnValues.twin, aml.hash, twinData[2]);
+      //add keys for all components if owner, else where attribute is present
+      let [permissionsDocuments, permissionsSensors] = await Promise.all([
+        getPermissions(auth, twin.address, data.returnValues.operator, components, 5),
+        getPermissions(auth, twin.address, data.returnValues.operator, components, 9)
+      ]);
 
-          //add keys for all components if owner, else where attribute is present
-          let [permissionsDocuments, permissionsSensors] = await Promise.all([
-            getPermissions(auth, twin.address, data.returnValues.operator, components, 5),
-            getPermissions(auth, twin.address, data.returnValues.operator, components, 9)
-          ]);
+      //documents
+      let componentsFiltered = components.filter((c, ind) => permissionsDocuments[ind]);
+      let updateKeyCount = componentsFiltered.length;
+      let updateFunc = data.returnValues.added ? shareFileKey : removeFileKey;
+      let promises = componentsFiltered.map(component => updateFunc(
+        address,
+        web3.utils.sha3(data.returnValues.twin + component.id + "doc"),
+        data.returnValues.operator,
+        publicKey
+      ));
 
-          //documents
-          let componentsFiltered = components.filter((c, ind) => permissionsDocuments[ind]);
-          let updateKeyCount = componentsFiltered.length;
-          componentsFiltered.map(component => createComponentKeys(
-            data.returnValues.twin,
-            component,
-            "doc",
-            [data.returnValues.operator],
-            [publicKey]
-          ));
-
-          //sensors
-          componentsFiltered = components.filter((c, ind) => permissionsSensors[ind]);
-          updateKeyCount += componentsFiltered.length;
-          componentsFiltered.map(component => createComponentKeys(
-            data.returnValues.twin,
-            component,
-            "sensor",
-            [data.returnValues.operator],
-            [publicKey]
-          ));
-          console.log("Role updated. " + updateKeyCount + " keys updated.")
-        }
-        //attribute added
-        else {
-          data.returnValues.attributes.map(attr =>
-            shareFileKey(
-              address,
-              web3.utils.sha3(twin.address + attr + "doc"),
-              data.returnValues.operator
-            )
-          );
-          data.returnValues.attributes.map(attr =>
-            shareFileKey(
-              address,
-              web3.utils.sha3(twin.address + attr + "sensor"),
-              data.returnValues.operator
-            )
-          );
-        }
-      } else {
-        //todo role removed: remove keys for all components
-        if (data.returnValues.role){
-
-        }
-        //attribute removed: remove key for that component
-        else{
-          data.returnValues.attributes.map(attr =>
-            removeFileKey(
-              address,
-              web3.utils.sha3(twin.address + attr + "doc"),
-              data.returnValues.operator
-            )
-          );
-          data.returnValues.attributes.map(attr =>
-            removeFileKey(
-              address,
-              web3.utils.sha3(twin.address + attr + "sensor"),
-              data.returnValues.operator
-            )
-          );
-        }
-      }
+      //sensors
+      componentsFiltered = components.filter((c, ind) => permissionsSensors[ind]);
+      updateKeyCount += componentsFiltered.length;
+      promises.push(...
+        componentsFiltered.map(component => updateFunc(
+          address,
+          web3.utils.sha3(data.returnValues.twin + component.id + "sensor"),
+          data.returnValues.operator,
+          publicKey
+        ))
+      );
+      await Promise.all(promises);
+      console.log("File keys updated. " + updateKeyCount + " feeds updated in " + (new Date() - before) + "ms.")
     }
   }
 }
@@ -377,15 +338,15 @@ async function getFileKey(user, topic) {
 }
 
 //share an existing key on the user's own feed with another user
-async function shareFileKey(user, topic, userAddress) {
+async function shareFileKey(user, topic, shareAddress, publicKey = "") {
   //get existing keys and decrypt key
-  let fileKeys = await getUserFeedLatest(user, topic);
+  let fileKeys = await getUserFeedLatest(user, topic);//encrypt for new user
+  if(!Array.isArray(fileKeys) || fileKeys.includes(shareAddress)) return;
+  publicKey = publicKey === "" ? await getUserFeedText(shareAddress) : publicKey;
   let keyObject = fileKeys.filter(f => f.address === user)[0];
   let plainKey = decryptECIES(privateKey, keyObject.fileKey);
-  //encrypt for new user
-  let userPublicKey = await getUserFeedText(userAddress);
-  let newKey = encryptECIES(userPublicKey, plainKey);
-  fileKeys.push({address: userAddress, fileKey: newKey});
+  let newKey = encryptECIES(publicKey, plainKey);
+  fileKeys.push({address: shareAddress, fileKey: newKey});
   await updateFeedSimple({user: user, topic: topic}, fileKeys);
 }
 
