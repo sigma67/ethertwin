@@ -13,6 +13,8 @@ The **ethertwin** prototype allows to:
 
 An exemplary use case is given in the following [video](https://drive.google.com/open?id=1Bq8xNVj2TEluJ3_-DK3eLaDQvqv9rLQ8).
 
+**Live demo**: For a live demonstration of the prototype using a private Ethereum blockchain, visit http://132.199.123.240/.
+An Ethereum account will be automatically created for you in-browser. Before you can issue transactions, you'll need to request some Ether at http://132.199.123.240:3333/0x0 (replace 0x0 with your Ethereum account).
 ## Project setup
 ```
 npm install
