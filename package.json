@@ -25,7 +25,7 @@
     "eth-ecies": "^1.0.4",
     "ethereumjs-wallet": "^0.6.3",
     "jazzicon": "^1.5.0",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "rxjs": "^6.5.4",
     "vue": "^2.6.11",
     "vue-json-pretty": "^1.6.3",
