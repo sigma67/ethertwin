@@ -70,6 +70,14 @@ async function pushSensorData(){
     let logs = []
     let totalDuration = 0
     for await (log of samples.logset.log) {
+      //blind data
+      log.program = Number((log.program *0.159846) +30).toFixed(0);
+      log.programText = String(log.programText).replace(/[0-9]/g, "X");
+      if(String(log.programText).includes(":\\") || String(log.programText).includes("\\\\") ){
+        let arr = String(log.programText).split(":\\");
+        log.programText = arr[0] + ":\\..."
+      }
+
       logs.push(log)
       let duration = Number(log.duration)
       log.duration = Number(log.duration).toFixed(1)
