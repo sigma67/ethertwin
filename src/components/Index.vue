@@ -1,8 +1,10 @@
 <template>
     <div class="container mt-5">
         <div class="alert alert-danger" role="alert" v-if="!this.funded">
-            Your account has insufficient funds. Please get some Ether before proceeding.
-            <a class="alert-link" href="/" v-on:click="location.reload()">Reload</a>
+            Your account has insufficient funds. Please
+            <a class="alert-link" href="#" v-on:click="openFaucet">get some Ether</a>
+            before proceeding.
+            <a class="alert-link" href="#" v-on:click="refresh">Reload</a>
         </div>
         <div class="alert alert-warning" role="alert" v-if="this.funded && !this.registered">
             You must register this user with the blockchain before you can create a twin:
@@ -125,6 +127,12 @@
       }
     },
     methods: {
+      openFaucet(){
+        window.open("http://" + window.location.hostname + ":3333/" + this.account)
+      },
+      refresh(){
+        window.location.reload()
+      },
       async parseAML(address) {
         return this.$store.dispatch('parseAML', {
           twinAddress: address,
