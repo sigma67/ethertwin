@@ -63,6 +63,11 @@ module.exports = {
       host: "132.199.123.240",
       port: "7545",
       network_id: "66"
+    },
+    ethertwin: {
+      host: "132.199.123.29",
+      port: "7545",
+      network_id: "66"
     }
 
 
