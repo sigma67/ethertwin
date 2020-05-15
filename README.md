@@ -11,10 +11,10 @@ The **ethertwin** prototype allows to:
 - control access of users by lifecycle roles and asset attributes
 - list asset components (specification parsing)
 
-An exemplary use case is given in the following [video](https://drive.google.com/open?id=1Bq8xNVj2TEluJ3_-DK3eLaDQvqv9rLQ8).
+An exemplary use case is given in the following [video](https://drive.google.com/open?id=1Bq8xNVj2TEluJ3_-DK3eLaDQvqv9rLQ8). The video is based on a slightly outdated version of EtherTwin, but it illustrates the core functionality well.
 
-**Live demo**: For a live demonstration of the prototype using a private Ethereum blockchain, visit http://132.199.123.240/.
-An Ethereum account will be automatically created for you in-browser. Before you can issue transactions, you'll need to request some Ether at http://132.199.123.240:3333/0x0 (replace 0x0 with your Ethereum account).
+**Live demo**: For a live demonstration of the prototype using a private Ethereum blockchain, visit http://ethertwin.ur.de/.
+An Ethereum account will be automatically created for you in-browser. Before you can issue transactions, you'll need to request some Ether at http://ethertwin.ur.de:3333/0x0 (replace 0x0 with your Ethereum account).
 ## Project setup
 ```
 npm install
