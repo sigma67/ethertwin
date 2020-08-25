@@ -76,8 +76,3 @@ An exemplary specification for the twin creation can be found at `misc/CandyFact
 Various screenshots showing the **ethertwin** prototype functionality can be found at `misc/Screenshots`. The following screenshot illustrates the Home site of our
 **ethertwin** prototype - showing  all twins of the user.
 ![Start page of the **ethertwin** prototype](./misc/Screenshots/Screenshot_Home.PNG "Start page of the **ethertwin** prototype")
-
-
-## Research and Citation
-Please consider citing our [publication introducing the theoretical concept](https://link.springer.com/chapter/10.1007/978-3-030-22479-0_15) 
-if you are using our **ethertwin** prototype for your research. 
