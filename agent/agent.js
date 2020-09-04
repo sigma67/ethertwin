@@ -1,4 +1,4 @@
-const config = require('./config');
+const config = require('../config.json');
 //swarm
 const secp256k1 = require("@erebos/secp256k1");
 const bzzfeed = require('@erebos/bzz-feed');
@@ -13,9 +13,9 @@ const WebsocketSubprovider = require('web3-provider-engine/subproviders/websocke
 //contracts
 const Web3 = require('web3');
 const TruffleContract = require('@truffle/contract');
-const ContractRegistry = require('./public/contracts/ContractRegistry.json');
-const Authorization = require('./public/contracts/Authorization.json');
-const Specification = require('./public/contracts/Specification.json');
+const ContractRegistry = require('../public/contracts/ContractRegistry.json');
+const Authorization = require('../public/contracts/Authorization.json');
+const Specification = require('../public/contracts/Specification.json');
 //crypto
 const c = require('crypto');
 const ecies = require('eth-ecies');
@@ -24,11 +24,9 @@ const fs = require('fs');
 const xml2js = require('xml2js');
 
 /** Config **/
-console.log(Wallet)
 let privateKey = config.agent_key
-let wallet = Wallet.default.fromPrivateKey(new Buffer(privateKey, 'hex'));
+let wallet = Wallet.default.fromPrivateKey(Buffer.from(privateKey, 'hex'));
 let publicKey = wallet.getPublicKey().toString('hex');
-console.log(publicKey)
 let address = wallet.getAddressString();
 
 /** Swarm Setup **/
@@ -268,7 +266,7 @@ async function getSpecification(address){
 
 async function getSamples(){
   return new Promise((resolve, reject) => {
-    fs.readFile(__dirname + '/misc/logs.xml', function(err, data) {
+    fs.readFile('misc/logs.xml', function(err, data) {
       resolve(parseXML(data))
     });
   });
@@ -366,7 +364,7 @@ async function removeFileKey(user, topic, userAddress) {
  * @returns {String}
  */
 function encryptECIES(publicKey, data) {
-  let userPublicKey = new Buffer(publicKey, 'hex');
+  let userPublicKey = Buffer.from(publicKey, 'hex');
   return ecies.encrypt(userPublicKey, data).toString('base64');
 }
 
@@ -377,7 +375,7 @@ function encryptECIES(publicKey, data) {
  * @returns {Buffer}
  */
 function decryptECIES(privateKey, encryptedData) {
-  let bufferData = new Buffer(encryptedData, 'base64');
+  let bufferData = Buffer.from(encryptedData, 'base64');
   return ecies.decrypt(privateKey, bufferData);
 }
 
