@@ -2,7 +2,7 @@ import Web3 from 'web3'
 import TruffleContract from '@truffle/contract'
 import config from '../../config.json'
 const HDWalletProvider = require("@truffle/hdwallet-provider");
-const ethereumjs = require('ethereumjs-wallet');
+import Wallet from 'ethereumjs-wallet'
 import utils from 'web3-utils'
 let web3;
 
@@ -10,13 +10,13 @@ function setupWeb3(){
     let wallet;
     let privateKey = localStorage.getItem('privateKey');
     if(!privateKey) {
-      wallet = ethereumjs.generate();
+      wallet = Wallet.generate();
       privateKey = wallet.getPrivateKey().toString('hex');
       localStorage.setItem('privateKey', wallet.getPrivateKey().toString('hex'))
     }
     else{
       let privateKeyBuffer = new Buffer(privateKey, "hex");
-      wallet = ethereumjs.fromPrivateKey(privateKeyBuffer)
+      wallet = Wallet.fromPrivateKey(privateKeyBuffer)
     }
     let webSocketProvider = new Web3.providers.WebsocketProvider(config.ethereum.rpc);
     let provider = new HDWalletProvider([privateKey], webSocketProvider, 0, 1);

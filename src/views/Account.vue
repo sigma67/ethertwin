@@ -89,7 +89,7 @@
 </template>
 
 <script>
-    const ethereumjs = require('ethereumjs-wallet');
+    import Wallet from 'ethereumjs-wallet'
 
     export default {
         name: "Account",
@@ -114,7 +114,7 @@
                   try {
                     //check if valid
                     let buffer = Buffer.from(this.privateKeyNew, 'hex');
-                    ethereumjs.fromPrivateKey(buffer);
+                    Wallet.fromPrivateKey(buffer);
                   } catch (e) {
                     console.log(e);
                     this.$swal.fire({
