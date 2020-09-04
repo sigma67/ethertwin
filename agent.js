@@ -4,8 +4,8 @@ const secp256k1 = require("@erebos/secp256k1");
 const bzzfeed = require('@erebos/bzz-feed');
 const bzznode = require('@erebos/bzz-node');
 //web3
-const ethereumjs = require('ethereumjs-wallet');
-const WalletSubprovider = require('ethereumjs-wallet/provider-engine');
+const Wallet = require('ethereumjs-wallet')
+const WalletSubprovider = require('./provider-engine');
 const ProviderEngine = require('web3-provider-engine');
 const FixtureSubprovider = require('web3-provider-engine/subproviders/fixture.js');
 const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js');
@@ -24,9 +24,11 @@ const fs = require('fs');
 const xml2js = require('xml2js');
 
 /** Config **/
+console.log(Wallet)
 let privateKey = config.agent_key
-let wallet = ethereumjs.fromPrivateKey(new Buffer(privateKey, 'hex'));
+let wallet = Wallet.default.fromPrivateKey(new Buffer(privateKey, 'hex'));
 let publicKey = wallet.getPublicKey().toString('hex');
+console.log(publicKey)
 let address = wallet.getAddressString();
 
 /** Swarm Setup **/
