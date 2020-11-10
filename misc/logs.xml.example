@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<logset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<log>
+		<program>1111</program>
+		<machine>SOFTC1 </machine>
+		<programText>:SimKey &lt;start&gt; [ bl ]</programText>
+		<duration>0</duration>
+	</log>
+	<log>
+		<program>1112</program>
+		<machine>SOFTC1       </machine>
+		<programText>:Key &lt;start&gt;</programText>
+		<duration>0</duration>
+	</log>
+	<log>
+		<program>3320</program>
+		<machine>SOFTC1       </machine>
+		<programText>Redacted</programText>
+		<duration>999.123</duration>
+	</log>>
+</logset>

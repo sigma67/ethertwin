@@ -58,6 +58,8 @@ Note that the values for the `registry` and `authorization` are optional:
 }
 ```
 
+You also need to add an appropriate log file in the `misc` folder, for example by renaming `logs.xml.example` to `logs.xml`.
+
 ### Run
 Run the device agent
 ```
