@@ -1,9 +1,12 @@
-# ethertwin
-The **ethertwin** prototype orginates from a research approach to share digital twin data over its lifecycle.
-To allow the participation of the multiple lifecycle parties without relying on trusted third parties (TTPs), **ethertwin** relies on a distributed approach by integrating the [Ethereum](ethereum.org) blockchain and the distributed hash table (DHT) [Swarm](swarm.ethereum.org).
-On the basis of [AutomationML](https://www.automationml.org/) (AML) files that specify assets, a digital twin can be created and shared with the twin's lifecycle parties.
-The **ethertwin** prototype allows to:
-- create digital twins
+# EtherTwin
+
+*This repository is part of a research project on blockchain-based Digital Twins: https://doi.org/10.1016/j.ipm.2020.102425*
+
+The **EtherTwin** prototype orginates from a research approach to share Digital Twin data over its lifecycle.
+To allow the participation of the multiple lifecycle parties without relying on trusted third parties (TTPs), **EtherTwin** relies on a distributed approach by integrating the [Ethereum](ethereum.org) blockchain and the distributed hash table (DHT) [Swarm](swarm.ethereum.org).
+On the basis of [AutomationML](https://www.automationml.org/) (AML) files that specify assets, a Digital Twin can be created and shared with the twin's lifecycle parties.
+The **EtherTwin** prototype allows to:
+- create Digital Twins
 - share each twin  
 - upload documents
 - update twin specification and documents (versioning)
@@ -14,7 +17,7 @@ The **ethertwin** prototype allows to:
 An exemplary use case is given in the following [video](https://drive.google.com/open?id=1Bq8xNVj2TEluJ3_-DK3eLaDQvqv9rLQ8). The video is based on a slightly outdated version of EtherTwin, but it illustrates the core functionality well.
 
 **Live demo**: For a live demonstration of the prototype using a private Ethereum blockchain, visit http://ethertwin.ur.de/.
-An Ethereum account will be automatically created for you in-browser. Before you can issue transactions, you'll need to request some Ether at http://ethertwin.ur.de:3333/0x0 (replace 0x0 with your Ethereum account).
+An Ethereum account will be automatically created for you with the private key stored in your browser's local storage. Before you can issue transactions, you'll need to request some Ether on our test blockchain at http://ethertwin.ur.de:3333/0x0 (replace 0x0 with your Ethereum account).
 ## Project setup
 ```
 npm install
@@ -73,6 +76,14 @@ npm run build
 
 ## Usage
 An exemplary specification for the twin creation can be found at `misc/CandyFactory.aml`, which originates from the [CPS Twinning](https://github.com/sbaresearch/cps-twinning) prototype. 
-Various screenshots showing the **ethertwin** prototype functionality can be found at `misc/Screenshots`. The following screenshot illustrates the Home site of our
-**ethertwin** prototype - showing  all twins of the user.
-![Start page of the **ethertwin** prototype](./misc/Screenshots/Screenshot_Home.PNG "Start page of the **ethertwin** prototype")
+Various screenshots showing the **EtherTwin** prototype functionality can be found at `misc/Screenshots`. The following screenshot illustrates the Home site of our
+**EtherTwin** prototype - showing  all twins of the user.
+![Start page of the **EtherTwin** prototype](./misc/Screenshots/Screenshot_Home.PNG "Start page of the **EtherTwin** prototype")
+
+
+## Research and Citation
+Please consider citing our publication if you are using our **EtherTwin** prototype for your research: https://doi.org/10.1016/j.ipm.2020.102425 
+
+```
+B. Putz, M. Dietz, P. Empl, and G. Pernul, "EtherTwin: Blockchain-based Secure Digital Twin Information Management", Information Processing & Management, vol. 58, no. 1, 2021.
+```
