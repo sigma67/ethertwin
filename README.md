@@ -2,7 +2,7 @@
 
 *This repository is part of a research project on blockchain-based Digital Twins: https://doi.org/10.1016/j.ipm.2020.102425*
 
-The **EtherTwin** prototype orginates from a research approach to share Digital Twin data over its lifecycle.
+The **EtherTwin** prototype originates from a research approach to share Digital Twin data over its lifecycle.
 To allow the participation of the multiple lifecycle parties without relying on trusted third parties (TTPs), **EtherTwin** relies on a distributed approach by integrating the [Ethereum](ethereum.org) blockchain and the distributed hash table (DHT) [Swarm](swarm.ethereum.org).
 On the basis of [AutomationML](https://www.automationml.org/) (AML) files that specify assets, a Digital Twin can be created and shared with the twin's lifecycle parties.
 The **EtherTwin** prototype allows to:
